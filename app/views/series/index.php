@@ -28,13 +28,26 @@
   <?php endforeach; ?>
 </div>
 <?php endif; ?>
+<?php
+// Per groep: onder de eerste groep van de reeks; groepen eerst op categorie, dan op naam.
+$cats = array_keys(group_categories());
+$catOf = array_column(Database::all('SELECT name, category FROM `groups`'), 'category', 'name');
+$byGroup = [];
+foreach ($series as $s) { $byGroup[$s['groups'][0] ?? 'Zonder groep'][] = $s; }
+uksort($byGroup, function ($a, $b) use ($cats, $catOf) {
+    $ca = array_search($catOf[$a] ?? '', $cats, true); $cb = array_search($catOf[$b] ?? '', $cats, true);
+    return [$ca === false ? 99 : $ca, $a] <=> [$cb === false ? 99 : $cb, $b];
+});
+?>
+<?php foreach ($byGroup as $gname => $list): ?>
+<h2 class="section-title"><?= e($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h2>
 <div class="cards">
-<?php foreach ($series as $s): ?>
+<?php foreach ($list as $s): ?>
   <div class="card <?= (int) $s['is_active'] ? '' : 'is-off' ?>">
     <a class="card-link" href="<?= e(url('series_show', ['id' => $s['id']])) ?>">
     <h2><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
       <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h2>
-    <p><?= e(implode(', ', $s['groups'])) ?></p>
+    <?php if (count($s['groups']) > 1): ?><p class="small">Ook: <?= e(implode(', ', array_slice($s['groups'], 1))) ?></p><?php endif; ?>
     <p class="muted"><?= e(SeriesService::summary($s['slots'])) ?></p>
     <p class="muted small"><?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?> · <?= (int) $s['upcoming'] ?> komende trainingen</p>
     </a>
@@ -49,3 +62,4 @@
   </div>
 <?php endforeach; ?>
 </div>
+<?php endforeach; ?>

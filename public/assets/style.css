@@ -358,3 +358,8 @@ form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
   form.filters input:not([type=radio]):not([type=checkbox]), form.filters select, form.filters input[type=search] { flex: 0 0 auto; width: 100%; min-width: 0; }
 }
 @media (min-width: 641px) { form.filters input[type=search] { min-width: 140px; flex: 1 1 140px; } form.filters select { flex: 1 1 220px; } }
+.cards.cards-compact { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.cards-compact .card { padding: 10px 12px; }
+.cards-compact .card h2 { font-size: 1rem; margin: 0 0 4px; }
+.cards-compact .card p { margin: 2px 0; }
+.cards-series { gap: 12px; }
