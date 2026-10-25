@@ -1,0 +1,3 @@
+config.php
+storage/data/*
+!storage/data/.gitkeep

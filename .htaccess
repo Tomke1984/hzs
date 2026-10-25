@@ -1,0 +1,7 @@
+# Alle verzoeken gaan naar public/. app/, db/, storage/ en config.php zijn daardoor nooit bereikbaar.
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^$ public/ [L]
+  RewriteRule ^(?!public/)(.*)$ public/$1 [L]
+</IfModule>

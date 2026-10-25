@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= e($title ? $title . ' · ' : '') ?><?= e(config('app_name', 'HZS Clubapp')) ?></title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js" defer></script>
+</head>
+<body>
+<?php $user = Auth::user(); ?>
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="<?= e(url('dashboard')) ?>"><span class="wave">≈</span> <?= e(config('app_name', 'HZS Clubapp')) ?></a>
+    <?php if ($user): ?>
+    <nav class="nav">
+      <a href="<?= e(url('dashboard')) ?>">Overzicht</a>
+      <?php if (Auth::can('activities.read')): ?><a href="<?= e(url('calendar')) ?>">Kalender</a><?php endif; ?>
+      <?php if (Auth::can('members.read')): ?><a href="<?= e(url('members')) ?>"><?= Scope::clubWide() || Auth::hasRole('TRAINER') ? 'Leden' : 'Mijn gegevens' ?></a><?php endif; ?>
+      <?php if (Auth::can('groups.read')): ?><a href="<?= e(url('groups')) ?>">Groepen</a><?php endif; ?>
+    </nav>
+    <form class="userbox" method="post" action="<?= e(url('logout')) ?>">
+      <?= csrf_field() ?>
+      <span class="who"><?= e($user['display_name']) ?></span>
+      <button class="btn btn-small btn-ghost" type="submit">Afmelden</button>
+    </form>
+    <?php endif; ?>
+  </div>
+</header>
+<main class="wrap">
+  <?php foreach (pull_flash() as [$type, $msg]): ?>
+    <div class="alert alert-<?= e($type) ?>" role="status"><?= e($msg) ?></div>
+  <?php endforeach; ?>
+  <?= $content ?>
+</main>
+<footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp V1</footer>
+</body>
+</html>
