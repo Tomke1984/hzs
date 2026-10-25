@@ -404,8 +404,19 @@ h3.section-title { margin: 16px 0 8px; font-size: 1.05rem; }
 .week-block .chip,.week-block .group-chip{margin:0 .25rem .25rem 0}
 
 .table td form.assign-form,.assign-form{display:flex !important;gap:10px;align-items:center;margin:0}
-.assign-select{flex:1 1 auto;min-width:0;max-width:340px;padding:9px 38px 9px 12px;font:inherit;font-weight:600;color:var(--text,#12233f);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23064ca2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 13px center;border:2px solid #9db6d9;border-radius:8px;appearance:none;-webkit-appearance:none;cursor:pointer}
-.assign-select:hover{border-color:#064ca2}
-.assign-select:focus-visible{outline:3px solid #8fb4ee;outline-offset:1px;border-color:#064ca2}
-.assign-btn{padding:10px 20px;font-weight:700;white-space:nowrap}
-@media (max-width:700px){.assign-form{flex-direction:column;align-items:stretch}.assign-select,.assign-btn{width:100%;min-height:44px}}
+@media (max-width:700px){.assign-form{flex-direction:column;align-items:stretch}.assign-form select,.assign-form .btn{width:100%;min-height:44px}}
+
+/* ===== Uniforme keuzelijsten en knoppen (overal) ===== */
+select{appearance:none;-webkit-appearance:none;padding-right:40px;font-weight:600;color:var(--ink);cursor:pointer;border:2px solid #9db6d9;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23064ca2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 13px center}
+select:hover{border-color:#064ca2}
+select:focus,select:focus-visible{border-color:#064ca2}
+.assign-form select{flex:1 1 auto;min-width:0;max-width:340px;width:auto}
+.btn{font-weight:700;padding:10px 20px;border-width:2px;line-height:1.3;white-space:nowrap}
+.btn-small{padding:7px 14px;font-size:.92rem}
+.btn-ghost{border-color:#9db6d9}
+.btn-ghost:hover{border-color:var(--blue)}
+@media (max-width:700px){.btn-small{padding:10px 16px;min-height:44px}}
+input:not([type=radio]):not([type=checkbox]):not([type=file]), textarea{border:2px solid #9db6d9}
+input:not([type=radio]):not([type=checkbox]):hover, textarea:hover{border-color:#064ca2}
+label + .btn, label + button.btn{margin-top:12px}
+form.filters select{min-width:230px}

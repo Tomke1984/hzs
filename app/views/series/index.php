@@ -32,10 +32,10 @@
         <?php if ($u['blocks']): ?>
           <form method="post" action="<?= e(url('series_member_add')) ?>" class="assign-form">
             <?= csrf_field() ?><input type="hidden" name="member_id" value="<?= (int) $u['id'] ?>"><input type="hidden" name="back" value="?r=series">
-            <select class="assign-select" name="series_id" aria-label="Blok voor <?= e($u['first_name'] . ' ' . $u['last_name']) ?>">
+            <select name="series_id" aria-label="Blok voor <?= e($u['first_name'] . ' ' . $u['last_name']) ?>">
               <?php foreach ($u['blocks'] as $b): ?><option value="<?= (int) $b['id'] ?>"><?= e($b['label']) ?></option><?php endforeach; ?>
             </select>
-            <button class="btn assign-btn" type="submit">Indelen</button>
+            <button class="btn" type="submit">Indelen</button>
           </form>
         <?php else: ?><span class="muted small">Geen blok voor deze groep: maak er een.</span><?php endif; ?>
         </td>

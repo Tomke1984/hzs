@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Uniforme keuzelijsten en knoppen:** overal (ledenpagina's, filters, formulieren, publieke zwemtestaanvraag) hebben keuzelijsten nu het duidelijke veld met pijltje, invulvelden dezelfde duidelijke rand, en knoppen een stevigere vorm (vet, ruimere padding, duidelijke rand bij de lichte knoppen). Op smalle schermen zijn de kleine knoppen groter om aan te raken.
 - **Duidelijkere indeling:** in *Nog niet ingedeeld* heeft de blokkeuze een duidelijk keuzeveld met pijltje en een volwaardige knop *Indelen* ernaast (op smalle schermen onder elkaar, volle breedte).
 - **Nog niet ingedeeld:** de blokkeuze toont enkel dag en uur (bv. *Ma 18:00–19:00*), zonder reeksnaam.
 - **Weekoverzicht zwemschool:** nieuwe pagina (knop op *Trainingsreeksen*): dagen als kolommen, uurblokken als rijen, per blok de groepen (met kleur) en het aantal ingedeelde leden (link naar de blokpagina), plus een melding hoeveel leden nog niet ingedeeld zijn.
