@@ -5,15 +5,14 @@ final class GroupController
     {
         $gids = Scope::groupIds();
         $where = '1=1';
-        $params = [today(), today()];
+        $params = [];
         if ($gids !== null) {
             $where = $gids ? 'g.id IN (' . Scope::in($gids) . ')' : '0=1';
             $params = array_merge($params, $gids);
         }
         $groups = Database::all(
             "SELECT g.*,
-                (SELECT COUNT(*) FROM group_memberships gm WHERE gm.group_id = g.id
-                   AND gm.start_date <= ? AND (gm.end_date IS NULL OR gm.end_date >= ?)) AS member_count
+                (SELECT COUNT(*) FROM group_memberships gm WHERE gm.group_id = g.id) AS member_count
              FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.category, g.name",
             $params
         );
@@ -59,9 +58,9 @@ final class GroupController
         }
 
         $memberships = Database::all(
-            "SELECT gm.id AS membership_id, gm.start_date, gm.end_date, m.id, m.birth_date, m.first_name, m.last_name, m.status
+            "SELECT gm.id AS membership_id, m.id, m.birth_date, m.first_name, m.last_name, m.status
              FROM group_memberships gm JOIN members m ON m.id = gm.member_id
-             WHERE $where ORDER BY (gm.end_date IS NOT NULL), m.last_name, m.first_name",
+             WHERE $where ORDER BY m.last_name, m.first_name",
             $params
         );
 
@@ -76,10 +75,8 @@ final class GroupController
             $candidates = Database::all(
                 "SELECT m.id, m.birth_date, m.first_name, m.last_name FROM members m
                  WHERE m.status = 'ACTIVE' AND NOT EXISTS (
-                    SELECT 1 FROM group_memberships gm WHERE gm.member_id = m.id
-                      AND (gm.end_date IS NULL OR gm.end_date >= ?))
-                 ORDER BY m.last_name, m.first_name",
-                [$today]
+                    SELECT 1 FROM group_memberships gm WHERE gm.member_id = m.id)
+                 ORDER BY m.last_name, m.first_name"
             );
         }
         $targets = Auth::can('groups.write')
@@ -149,55 +146,75 @@ final class GroupController
     }
 
     /** Lid aan groep koppelen; kan vanaf zowel de ledenpagina als de groepspagina. */
+    /** Lid in een groep plaatsen (enkel als het lid nog in geen enkele groep zit). */
     public static function addMember(): void
     {
         $memberId = (int) input('member_id', '0');
         $groupId = (int) input('group_id', '0');
-        $start = input('start_date', today());
         $back = input('return') === 'group' ? url('group', ['id' => $groupId]) : url('member', ['id' => $memberId]);
 
-        $member = Database::one('SELECT id, status, birth_date FROM members WHERE id = ?', [$memberId]);
-        $group = Database::one('SELECT id, is_active FROM `groups` WHERE id = ?', [$groupId]);
-
-        if (!$member || !$group) {
-            flash('error', 'Lid of groep bestaat niet.');
-            redirect(url('members'));
+        $error = self::placeMember($memberId, $groupId, false);
+        if ($error) {
+            flash('error', $error);
+        } else {
+            flash('success', 'Lid in de groep geplaatst.');
         }
-        if ($member['status'] !== 'ACTIVE' || (int) $group['is_active'] !== 1) {
-            flash('error', 'Enkel actieve leden kunnen aan actieve groepen gekoppeld worden.');
-            redirect($back);
-        }
-        if (!valid_date($start)) {
-            flash('error', 'Startdatum is ongeldig.');
-            redirect($back);
-        }
-        if (Guardianship::isMinor($member['birth_date']) && Guardianship::count($memberId) === 0) {
-            flash('error', 'Dit lid is jonger dan 18 en heeft nog geen ouder of voogd. Koppel eerst een ouder of voogd.');
-            redirect(url('member', ['id' => $memberId]));
-        }
-        // Een lid zit op elk moment in maximaal één groep.
-        $current = Database::one(
-            'SELECT gm.group_id, g.name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
-             WHERE gm.member_id = ? AND (gm.end_date IS NULL OR gm.end_date >= ?) ORDER BY gm.id LIMIT 1',
-            [$memberId, $start]
-        );
-        if ($current) {
-            flash('error', (int) $current['group_id'] === $groupId
-                ? 'Dit lid zit al in deze groep (of de vorige koppeling loopt nog).'
-                : 'Dit lid zit al in de groep "' . $current['name'] . '". Een lid kan maar in één groep zitten: verplaats het lid naar de nieuwe groep of beëindig eerst de huidige koppeling.');
-            redirect($back);
-        }
-
-        $id = Database::insert(
-            'INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)',
-            [$memberId, $groupId, $start]
-        );
-        audit('CREATE', 'group_membership', $id);
-        flash('success', 'Lid gekoppeld aan groep.');
         redirect($back);
     }
 
-    /** Groep verwijderen: enkel als er geen ledenhistoriek, activiteiten of reeksen aan hangen. */
+    /** Groep van één lid instellen of wijzigen vanaf de ledenpagina (0 = geen groep). */
+    public static function setMemberGroup(): void
+    {
+        $memberId = (int) input('member_id', '0');
+        $groupId = (int) input('group_id', '0');
+        $back = url('member', ['id' => $memberId]);
+        if (!Database::val('SELECT COUNT(*) FROM members WHERE id = ?', [$memberId])) {
+            abort(404, 'Lid niet gevonden.');
+        }
+        if ($groupId === 0) {
+            Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
+            audit('DELETE', 'group_membership', null, "member=$memberId");
+            flash('success', 'Lid zit nu in geen enkele groep.');
+            redirect($back);
+        }
+        $error = self::placeMember($memberId, $groupId, true);
+        flash($error ? 'error' : 'success', $error ?: 'Groep van het lid bijgewerkt.');
+        redirect($back);
+    }
+
+    /** @return ?string foutmelding, of null bij succes */
+    private static function placeMember(int $memberId, int $groupId, bool $replace): ?string
+    {
+        $member = Database::one('SELECT id, status, birth_date FROM members WHERE id = ?', [$memberId]);
+        $group = Database::one('SELECT id, is_active FROM `groups` WHERE id = ?', [$groupId]);
+        if (!$member || !$group) {
+            return 'Lid of groep bestaat niet.';
+        }
+        if ($member['status'] !== 'ACTIVE' || (int) $group['is_active'] !== 1) {
+            return 'Enkel actieve leden kunnen in actieve groepen geplaatst worden.';
+        }
+        if (Guardianship::isMinor($member['birth_date']) && Guardianship::count($memberId) === 0) {
+            return 'Dit lid is jonger dan 18 en heeft nog geen ouder of voogd. Koppel eerst een ouder of voogd.';
+        }
+        $current = Database::one(
+            'SELECT gm.id, gm.group_id, g.name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id WHERE gm.member_id = ? ORDER BY gm.id LIMIT 1',
+            [$memberId]
+        );
+        if ($current && (int) $current['group_id'] === $groupId) {
+            return 'Dit lid zit al in deze groep.';
+        }
+        if ($current && !$replace) {
+            return 'Dit lid zit al in de groep "' . $current['name'] . '". Een lid kan maar in één groep zitten: verplaats het lid naar de nieuwe groep.';
+        }
+        Database::tx(function () use ($memberId, $groupId) {
+            Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
+            $id = Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$memberId, $groupId, today()]);
+            audit('CREATE', 'group_membership', $id);
+        });
+        return null;
+    }
+
+    /** Groep verwijderen: enkel als er geen leden, activiteiten of reeksen aan hangen. */
     public static function delete(): void
     {
         $id = (int) input('id', '0');
@@ -210,10 +227,10 @@ final class GroupController
         $series = (int) Database::val('SELECT COUNT(*) FROM activity_series_groups WHERE group_id = ?', [$id]);
         if ($members || $acts || $series) {
             $why = [];
-            if ($members) { $why[] = 'er hangt ledenhistoriek aan'; }
+            if ($members) { $why[] = 'er zitten nog leden in'; }
             if ($acts) { $why[] = 'er zijn activiteiten aan gekoppeld'; }
             if ($series) { $why[] = 'ze zit in een trainingsreeks'; }
-            flash('error', 'Deze groep kan niet verwijderd worden: ' . implode(', ', $why) . '. Zet de groep op inactief om ze te bewaren zonder dat ze nog gebruikt wordt.');
+            flash('error', 'Deze groep kan niet verwijderd worden: ' . implode(', ', $why) . '. Verplaats eerst de leden, of zet de groep op inactief.');
             redirect(url('group', ['id' => $id]));
         }
         Database::tx(function () use ($id) {
@@ -230,7 +247,6 @@ final class GroupController
     {
         $from = (int) input('from_group_id', '0');
         $to = (int) input('to_group_id', '0');
-        $date = input('start_date', today());
         $back = url('group', ['id' => $from]);
         $raw = $_POST['membership_ids'] ?? [];
         $ids = is_array($raw) ? array_values(array_unique(array_filter(array_map('intval', $raw)))) : [];
@@ -247,70 +263,38 @@ final class GroupController
             flash('error', 'Kies een andere, actieve groep als bestemming.');
             redirect($back);
         }
-        if (!valid_date($date)) {
-            flash('error', 'De datum is ongeldig.');
-            redirect($back);
-        }
-
         $moved = 0;
-        $skipped = 0;
-        $dayBefore = date('Y-m-d', strtotime($date . ' -1 day'));
-        Database::tx(function () use ($ids, $from, $to, $date, $dayBefore, &$moved, &$skipped) {
-            foreach ($ids as $mid) {
-                $ms = Database::one(
-                    "SELECT gm.* FROM group_memberships gm JOIN members m ON m.id = gm.member_id
-                     WHERE gm.id = ? AND gm.group_id = ? AND m.status = 'ACTIVE' AND (gm.end_date IS NULL OR gm.end_date >= ?)",
-                    [$mid, $from, today()]
-                );
-                if (!$ms) {
-                    $skipped++;
-                    continue;
-                }
-                // Heeft het lid al een andere lopende koppeling (oude data)? Beëindig die ook.
-                $others = Database::all(
-                    'SELECT id, start_date FROM group_memberships WHERE member_id = ? AND id != ? AND (end_date IS NULL OR end_date >= ?)',
-                    [$ms['member_id'], $ms['id'], $date]
-                );
-                foreach ($others as $o) {
-                    Database::exec('UPDATE group_memberships SET end_date = ? WHERE id = ?', [max($dayBefore, $o['start_date']), $o['id']]);
-                }
-                if ($ms['start_date'] >= $date) {
-                    // Koppeling begint pas op of na de verplaatsdatum: gewoon naar de nieuwe groep zetten.
-                    Database::exec('UPDATE group_memberships SET group_id = ? WHERE id = ?', [$to, $ms['id']]);
-                } else {
-                    Database::exec('UPDATE group_memberships SET end_date = ? WHERE id = ?', [$dayBefore, $ms['id']]);
-                    Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$ms['member_id'], $to, $date]);
-                }
-                audit('MOVE', 'group_membership', (int) $ms['id'], json_encode(['from' => $from, 'to' => $to, 'date' => $date]));
-                $moved++;
+        foreach ($ids as $mid) {
+            $ms = Database::one(
+                "SELECT gm.id, gm.member_id FROM group_memberships gm JOIN members m ON m.id = gm.member_id
+                 WHERE gm.id = ? AND gm.group_id = ? AND m.status = 'ACTIVE'",
+                [$mid, $from]
+            );
+            if (!$ms) {
+                continue;
             }
-        });
+            Database::exec('UPDATE group_memberships SET group_id = ? WHERE id = ?', [$to, $ms['id']]);
+            audit('MOVE', 'group_membership', (int) $ms['id'], json_encode(['from' => $from, 'to' => $to]));
+            $moved++;
+        }
+        $skipped = count($ids) - $moved;
         flash($moved ? 'success' : 'error', $moved
             ? $moved . ($moved === 1 ? ' lid' : ' leden') . ' verplaatst naar "' . $target['name'] . '"' . ($skipped ? ", $skipped overgeslagen" : '') . '.'
             : 'Geen enkel lid kon worden verplaatst.');
         redirect($moved ? url('group', ['id' => $to]) : $back);
     }
 
-    /** Koppeling beëindigen via einddatum; er wordt niets verwijderd. */
-    public static function endMembership(): void
+    /** Lid uit de groep halen. */
+    public static function removeMember(): void
     {
-        $id = (int) input('membership_id', '0');
-        $row = Database::one('SELECT * FROM group_memberships WHERE id = ?', [$id]);
+        $row = Database::one('SELECT * FROM group_memberships WHERE id = ?', [(int) input('membership_id', '0')]);
         if (!$row) {
-            abort(404, 'Deze koppeling bestaat niet.');
+            abort(404, 'Dit lid zit niet in een groep.');
         }
-        $back = input('return') === 'group' ? url('group', ['id' => $row['group_id']]) : url('member', ['id' => $row['member_id']]);
-
-        if ($row['end_date'] !== null && $row['end_date'] < today()) {
-            flash('error', 'Deze koppeling is al beëindigd.');
-            redirect($back);
-        }
-        // Einddatum nooit vóór de startdatum.
-        $end = max(today(), $row['start_date']);
-        Database::exec('UPDATE group_memberships SET end_date = ? WHERE id = ?', [$end, $id]);
-        audit('END', 'group_membership', $id);
-        flash('success', 'Koppeling beëindigd per ' . fmt_date($end) . '.');
-        redirect($back);
+        Database::exec('DELETE FROM group_memberships WHERE id = ?', [$row['id']]);
+        audit('DELETE', 'group_membership', (int) $row['id']);
+        flash('success', 'Lid uit de groep gehaald.');
+        redirect(input('return') === 'group' ? url('group', ['id' => $row['group_id']]) : url('member', ['id' => $row['member_id']]));
     }
 
     private static function loadVisible(int $id): array

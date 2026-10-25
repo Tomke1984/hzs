@@ -28,9 +28,7 @@ final class MemberController
         [$cat, $gid] = GroupController::readFilter();
         if ($cat !== '' || $gid) {
             $sub = 'EXISTS (SELECT 1 FROM group_memberships fgm JOIN `groups` fg ON fg.id = fgm.group_id
-                    WHERE fgm.member_id = m.id AND fgm.start_date <= ? AND (fgm.end_date IS NULL OR fgm.end_date >= ?)';
-            $params[] = today();
-            $params[] = today();
+                    WHERE fgm.member_id = m.id';
             if ($cat !== '') {
                 $sub .= ' AND fg.category = ?';
                 $params[] = $cat;
@@ -64,9 +62,9 @@ final class MemberController
             $mids = array_map('intval', array_column($members, 'id'));
             $rows = Database::all(
                 'SELECT gm.member_id, g.name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
-                 WHERE gm.member_id IN (' . Scope::in($mids) . ') AND gm.start_date <= ? AND (gm.end_date IS NULL OR gm.end_date >= ?)
+                 WHERE gm.member_id IN (' . Scope::in($mids) . ')
                  ORDER BY g.name',
-                array_merge($mids, [today(), today()])
+                $mids
             );
             foreach ($rows as $r) {
                 $groupsByMember[$r['member_id']][] = $r['name'];
@@ -113,7 +111,7 @@ final class MemberController
 
         $memberships = Database::all(
             'SELECT gm.*, g.name AS group_name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
-             WHERE gm.member_id = ? ORDER BY gm.start_date DESC, gm.id DESC',
+             WHERE gm.member_id = ? ORDER BY gm.id DESC',
             [$member['id']]
         );
 

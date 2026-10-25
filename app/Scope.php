@@ -90,14 +90,12 @@ final class Scope
         if (!$groupIds) {
             return [];
         }
-        $date = substr($activity['starts_at'], 0, 10);
         return Database::all(
             "SELECT DISTINCT m.* FROM members m
              JOIN group_memberships gm ON gm.member_id = m.id
              WHERE m.status = 'ACTIVE' AND gm.group_id IN (" . self::in($groupIds) . ')
-               AND gm.start_date <= ? AND (gm.end_date IS NULL OR gm.end_date >= ?)
              ORDER BY m.last_name, m.first_name',
-            array_merge($groupIds, [$date, $date])
+            $groupIds
         );
     }
 
@@ -161,9 +159,8 @@ final class Scope
             self::$coachMembers = [];
             if ($tg) {
                 $members = array_merge($members, array_column(Database::all(
-                    'SELECT DISTINCT member_id FROM group_memberships
-                     WHERE group_id IN (' . self::in($tg) . ') AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)',
-                    array_merge($tg, [$today, $today])
+                    'SELECT DISTINCT member_id FROM group_memberships WHERE group_id IN (' . self::in($tg) . ')',
+                    $tg
                 ), 'member_id'));
                 self::$coachMembers = array_map('intval', $members);
             }
@@ -181,9 +178,8 @@ final class Scope
             $members = array_merge($members, $own);
             $groups = array_merge($groups, array_column(Database::all(
                 'SELECT DISTINCT gm.group_id FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
-                 WHERE gm.member_id IN (' . self::in($own) . ') AND g.is_active = 1
-                   AND gm.start_date <= ? AND (gm.end_date IS NULL OR gm.end_date >= ?)',
-                array_merge($own, [$today, $today])
+                 WHERE gm.member_id IN (' . self::in($own) . ') AND g.is_active = 1',
+                $own
             ), 'group_id'));
         }
 

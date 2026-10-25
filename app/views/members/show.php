@@ -217,56 +217,29 @@
 <?php endif; ?>
 
 <section class="card">
-  <h2>Groepen</h2>
-  <?php if (!$memberships): ?>
-    <p class="muted">Nog niet gekoppeld aan een groep.</p>
+  <h2>Groep</h2>
+  <?php $cur = $memberships[0] ?? null; ?>
+  <?php if (!$cur): ?>
+    <p class="muted">Nog niet in een groep.</p>
   <?php else: ?>
-  <div class="table-wrap">
-  <table class="table">
-    <thead><tr><th>Groep</th><th>Van</th><th>Tot</th><?php if ($availableGroups || Auth::can('groups.write')): ?><th></th><?php endif; ?></tr></thead>
-    <tbody>
-    <?php foreach ($memberships as $ms):
-        $open = $ms['end_date'] === null || $ms['end_date'] >= today(); ?>
-      <tr>
-        <td><?= Auth::can('groups.read') && Scope::canSeeGroup((int) $ms['group_id'])
-              ? '<a href="' . e(url('group', ['id' => $ms['group_id']])) . '">' . e($ms['group_name']) . '</a>'
-              : e($ms['group_name']) ?></td>
-        <td><?= e(fmt_date($ms['start_date'])) ?></td>
-        <td><?= $ms['end_date'] ? e(fmt_date($ms['end_date'])) : '<span class="chip ok">lopend</span>' ?></td>
-        <?php if (Auth::can('groups.write')): ?>
-        <td class="right">
-          <?php if ($ms['end_date'] === null): ?>
-          <form method="post" action="<?= e(url('membership_end')) ?>" data-confirm="Koppeling met deze groep beëindigen per vandaag?">
-            <?= csrf_field() ?>
-            <input type="hidden" name="membership_id" value="<?= (int) $ms['id'] ?>">
-            <button class="btn btn-small btn-ghost" type="submit">Beëindigen</button>
-          </form>
-          <?php endif; ?>
-        </td>
-        <?php endif; ?>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
-  </div>
+    <p><?= Auth::can('groups.read') && Scope::canSeeGroup((int) $cur['group_id'])
+          ? '<a href="' . e(url('group', ['id' => $cur['group_id']])) . '">' . e($cur['group_name']) . '</a>'
+          : e($cur['group_name']) ?></p>
   <?php endif; ?>
 
   <?php if ($availableGroups && $member['status'] === 'ACTIVE'): ?>
-  <form class="inline-form" method="post" action="<?= e(url('membership_add')) ?>">
+  <form class="inline-form" method="post" action="<?= e(url('member_group')) ?>">
     <?= csrf_field() ?>
     <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
-    <label>Aan groep koppelen
-      <select name="group_id" required>
-        <option value="">— kies een groep —</option>
+    <label><?= $cur ? 'Groep wijzigen' : 'In groep plaatsen' ?>
+      <select name="group_id">
+        <option value="0">— geen groep —</option>
         <?php foreach ($availableGroups as $g): ?>
-          <option value="<?= (int) $g['id'] ?>"><?= e($g['name']) ?></option>
+          <option value="<?= (int) $g['id'] ?>" <?= $cur && (int) $cur['group_id'] === (int) $g['id'] ? 'selected' : '' ?>><?= e($g['name']) ?></option>
         <?php endforeach; ?>
       </select>
     </label>
-    <label>Vanaf
-      <input type="date" name="start_date" value="<?= e(today()) ?>" required>
-    </label>
-    <button class="btn" type="submit">Koppelen</button>
+    <button class="btn" type="submit">Opslaan</button>
   </form>
   <?php endif; ?>
 </section>

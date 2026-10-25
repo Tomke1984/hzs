@@ -64,6 +64,13 @@ final class Installer
             Database::exec('ALTER TABLE activities ADD COLUMN is_custom TINYINT NOT NULL DEFAULT 0');
             Database::exec('ALTER TABLE activities ADD COLUMN status_note VARCHAR(200) NULL');
         }
+        // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
+        if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
+            Database::exec('DELETE FROM group_memberships WHERE end_date IS NOT NULL');
+        }
+        if (Database::one('SELECT member_id FROM group_memberships GROUP BY member_id HAVING COUNT(*) > 1 LIMIT 1')) {
+            Database::exec('DELETE FROM group_memberships WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_memberships GROUP BY member_id) k)');
+        }
         try {
             Database::val('SELECT is_public FROM activities LIMIT 1');
         } catch (Throwable $e) {

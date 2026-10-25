@@ -54,7 +54,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
 - Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
 - Leden zoeken, toevoegen, wijzigen (nooit verwijderen; wel inactief zetten).
-- Groepen aanmaken en wijzigen; leden historisch koppelen met start- en einddatum.
+- Groepen aanmaken en wijzigen; elk lid zit in maximaal één groep (zonder historiek); leden in bulk naar een andere groep verplaatsen.
 - Activiteiten voor groep(en) of hele club; kalender met trainingen, wedstrijden en clubactiviteiten.
 - Presentielijst met Onbekend / Aanwezig / Afwezig.
 - Regel voor minderjarigen: een actief lid jonger dan 18 heeft minstens één ouder of voogd. Zonder ouder verschijnt een waarschuwing (ledenlijst, ledenpagina, overzicht), kan het lid niet aan een groep gekoppeld worden en kan de laatste ouder niet ontkoppeld worden. Leden zonder geboortedatum vallen buiten de regel.
