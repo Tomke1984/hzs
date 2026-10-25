@@ -21,6 +21,13 @@ $dagnaam = fn($d) => date('j/n', strtotime($d));
   Test door de website te openen in een <strong>privévenster zonder aan te melden</strong> (of op je gsm), en vernieuw daarna dit scherm.</div>
 <?php endif; ?>
 <p class="muted small"><?= $r['last'] !== '' ? 'Laatste meting: ' . e(fmt_dt($r['last'])) . '.' : 'Er is nog niets geteld sinds de teller actief is.' ?></p>
+<?php if ($r['error'] !== ''): ?>
+<div class="alert alert-error" role="alert"><strong>De teller kon een bezoek niet wegschrijven.</strong> Laatste fout: <code><?= e($r['error']) ?></code>. Controleer of de database beschrijfbaar is.</div>
+<?php endif; ?>
+<?php if ($r['skipped']): $lbl = ['DNT' => 'Do Not Track / Global Privacy Control', 'BOT' => 'bots en automatische programma\'s', 'STAFF' => 'beheerders en bestuur op de website']; ?>
+<p class="muted small"><strong>Niet meegeteld in deze periode:</strong>
+  <?php $parts = []; foreach ($r['skipped'] as $k => $n) { $parts[] = $fmt($n) . '× ' . ($lbl[$k] ?? $k); } echo e(implode(' · ', $parts)); ?>.</p>
+<?php endif; ?>
 <?php foreach ($r['areas'] as $area => $a):
     $max = max(1, max(array_column($a['series'], 'views')));
     $totalDev = max(1, array_sum(array_column($a['devices'], 'views')));

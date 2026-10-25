@@ -14,31 +14,38 @@ final class Stats
     public static function track(string $route): void
     {
         try {
-            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET' || $route === 'stats' || self::optedOut()) {
+            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET' || $route === 'stats') {
                 return;
             }
             $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
-            if ($ua === '' || self::isBot($ua)) {
-                return;
-            }
             $user = Auth::user();
             $site = in_array($route, self::SITE_ROUTES, true);
             if (!$site && !$user) {
                 return;
             }
-            if ($site && $user && Auth::can('content.manage') && !config('stats.count_staff', false)) {
-                return; // eigen bezoek van beheerders telt niet mee
+            $skip = null; // reden waarom dit bezoek niet meetelt (wordt anoniem als teller bijgehouden)
+            if (self::optedOut()) {
+                $skip = 'DNT';
+            } elseif ($ua === '' || self::isBot($ua)) {
+                $skip = 'BOT';
+            } elseif ($site && $user && Auth::can('content.manage') && !config('stats.count_staff', false)) {
+                $skip = 'STAFF'; // eigen bezoek van beheerders telt niet mee
             }
             $day = today();
-            $row = [
-                'day' => $day, 'viewed_at' => now(), 'area' => $site ? 'SITE' : 'APP', 'route' => substr($route, 0, 40),
-                'path' => $site ? self::sitePath($route) : '/app/' . $route,
-                'visitor' => self::visitor($day, $user && !$site ? 'u' . (int) $user['id'] : (string) ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . $ua),
-                'device' => self::device($ua), 'referrer' => $site ? self::referrerHost() : '',
-            ];
+            if ($skip !== null) {
+                $row = ['day' => $day, 'viewed_at' => now(), 'area' => 'SKIP', 'route' => $skip, 'path' => '', 'visitor' => '', 'device' => '', 'referrer' => ''];
+            } else {
+                $row = [
+                    'day' => $day, 'viewed_at' => now(), 'area' => $site ? 'SITE' : 'APP', 'route' => substr($route, 0, 40),
+                    'path' => $site ? self::sitePath($route) : '/app/' . $route,
+                    'visitor' => self::visitor($day, $user && !$site ? 'u' . (int) $user['id'] : (string) ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . $ua),
+                    'device' => self::device($ua), 'referrer' => $site ? self::referrerHost() : '',
+                ];
+            }
             register_shutdown_function(static function () use ($row): void {
-                if (http_response_code() !== 200) {
-                    return;
+                $code = http_response_code();
+                if ($code !== false && (int) $code !== 200) {
+                    return; // omleidingen en fouten tellen niet (sommige servers geven geen code terug: dan is het 200)
                 }
                 try {
                     Database::exec(
@@ -49,12 +56,19 @@ final class Stats
                         Database::exec('DELETE FROM page_views WHERE day < ?', [date('Y-m-d', strtotime('-' . self::RETENTION_DAYS . ' days'))]);
                     }
                 } catch (Throwable $e) {
-                    // statistieken mogen de site nooit breken, maar de fout hoort wel in het serverlog
-                    error_log('Stats: ' . $e->getMessage());
+                    self::logError($e->getMessage());
                 }
             });
         } catch (Throwable $e) {
+            self::logError($e->getMessage());
         }
+    }
+
+    /** Statistieken mogen de site nooit breken, maar een fout hoort wel zichtbaar te zijn (serverlog en storage/stats-error.log). */
+    private static function logError(string $msg): void
+    {
+        error_log('Stats: ' . $msg);
+        @file_put_contents(APP_ROOT . '/storage/stats-error.log', date('Y-m-d H:i:s') . ' ' . substr(str_replace("\n", ' ', $msg), 0, 300) . "\n", FILE_APPEND);
     }
 
     /** Redenen waarom het huidige bezoek NIET zou meetellen (voor de uitleg op het dashboard). */
@@ -158,7 +172,13 @@ final class Stats
             ];
         }
         $out['first'] = (string) Database::val('SELECT MIN(day) FROM page_views');
-        $out['last'] = (string) Database::val('SELECT MAX(viewed_at) FROM page_views');
+        $out['last'] = (string) Database::val("SELECT MAX(viewed_at) FROM page_views WHERE area <> 'SKIP'");
+        $out['skipped'] = [];
+        foreach (Database::all("SELECT route, COUNT(*) AS n FROM page_views WHERE area = 'SKIP' AND day >= ? GROUP BY route", [$from]) as $r) {
+            $out['skipped'][$r['route']] = (int) $r['n'];
+        }
+        $log = APP_ROOT . '/storage/stats-error.log';
+        $out['error'] = is_file($log) ? trim((string) array_slice(file($log, FILE_IGNORE_NEW_LINES) ?: [], -1)[0]) : '';
         return $out;
     }
 
