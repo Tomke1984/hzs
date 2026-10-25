@@ -108,6 +108,15 @@
     show(false);
   });
 
+  // "Terug": naar de vorige pagina in de browsergeschiedenis (anders valt de link terug op de verwijzende pagina of het overzicht)
+  var back = document.querySelector('a[data-back]');
+  if (back) {
+    back.addEventListener('click', function (ev) {
+      var sameOrigin = document.referrer && document.referrer.indexOf(location.origin) === 0;
+      if (sameOrigin && history.length > 1) { ev.preventDefault(); history.back(); }
+    });
+  }
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

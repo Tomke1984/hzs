@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Terug-link:** bovenaan elke pagina (behalve het overzicht) staat *← Terug* om naar de vorige pagina terug te keren.
 - **Filter trainingsreeksen:** de lijst met reeksen is te filteren op soort (zwemschool/competitie) of op één groep.
 - **Trainingsreeksen met verleden:** een reeks met een startdatum in het verleden maakt ook de trainingen van het verleden aan, zodat ze in de kalender (en voor aanwezigheden) staan. Een vroegere startdatum bij een bestaande reeks vult het verleden aan; bestaande trainingen uit het verleden blijven altijd ongemoeid.
 - **Relatie bewerken:** de relatie tussen ouder en kind (moeder, vader, voogd, …) is nu aanpasbaar (knop *Bewerken*) of leeg te maken, zowel op de ledenpagina als op de gebruikerspagina van de ouder (enkel met gebruikersbeheer).

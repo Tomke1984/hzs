@@ -255,3 +255,6 @@ fieldset.child-extra.is-collapsed { display: none; }
 fieldset.child-extra { position: relative; }
 .remove-child { position: absolute; top: -27px; right: 14px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: var(--muted, #667); font-size: 24px; line-height: 1; cursor: pointer; }
 .remove-child:hover, .remove-child:focus-visible { background: #fdecee; color: #b00020; }
+.backlink { margin: 0 0 10px; font-size: .95rem; }
+.backlink a { display: inline-block; padding: 6px 0; text-decoration: none; }
+.backlink a:hover { text-decoration: underline; }
