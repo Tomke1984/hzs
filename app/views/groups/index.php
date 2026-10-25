@@ -1,13 +1,7 @@
 <div class="row-between">
   <h1>Groepen</h1>
   <?php if (Auth::can('groups.write')): ?>
-    <span class="actions-inline">
-      <form method="post" action="<?= e(url('groups_seed')) ?>" data-confirm="De 9 standaardgroepen van de zwemschool toevoegen (Startersgroep, Groep 1 – Grijs … Pre-competitie 1)? Bestaande groepen blijven ongemoeid.">
-        <?= csrf_field() ?>
-        <button class="btn btn-ghost" type="submit">Zwemschoolgroepen toevoegen</button>
-      </form>
-      <a class="btn" href="<?= e(url('group_form')) ?>">+ Nieuwe groep</a>
-    </span>
+    <a class="btn" href="<?= e(url('group_form')) ?>">+ Nieuwe groep</a>
   <?php endif; ?>
 </div>
 
