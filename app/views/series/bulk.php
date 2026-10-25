@@ -1,5 +1,5 @@
-<h1>Trainingen schrappen of verplaatsen</h1>
-<p class="muted">Voor vakantie, wedstrijden of een tijdelijk andere locatie. Geldt voor trainingen die uit een reeks komen.</p>
+<h1>Activiteiten schrappen of verplaatsen</h1>
+<p class="muted">Voor vakantie, een gesloten zwembad of een tijdelijk andere locatie. Kies één dag (van = tot en met) of een periode.</p>
 <?php if ($errors): ?>
   <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
@@ -10,9 +10,14 @@
     <label>Tot en met *<input type="date" name="to" value="<?= e($v['to']) ?>" required></label>
   </div>
   <fieldset>
+    <legend>Welke activiteiten *</legend>
+    <label class="check"><input type="radio" name="kind" value="all" <?= ($v['kind'] ?? 'all') !== 'series' ? 'checked' : '' ?>> Alle activiteiten (trainingen, wedstrijden en clubevenementen)</label>
+    <label class="check"><input type="radio" name="kind" value="series" <?= ($v['kind'] ?? 'all') === 'series' ? 'checked' : '' ?>> Enkel trainingen uit een reeks</label>
+  </fieldset>
+  <fieldset>
     <legend>Actie *</legend>
     <label class="check"><input type="radio" name="do" value="cancel" <?= $v['do'] === 'cancel' ? 'checked' : '' ?>> Schrappen</label>
-    <label class="check"><input type="radio" name="do" value="restore" <?= $v['do'] === 'restore' ? 'checked' : '' ?>> Geschrapte trainingen herstellen</label>
+    <label class="check"><input type="radio" name="do" value="restore" <?= $v['do'] === 'restore' ? 'checked' : '' ?>> Geschrapte activiteiten herstellen</label>
     <label class="check"><input type="radio" name="do" value="location" <?= $v['do'] === 'location' ? 'checked' : '' ?>> Locatie wijzigen</label>
   </fieldset>
   <label>Reden (bij schrappen)<input name="reason" value="<?= e($v['reason']) ?>" maxlength="200" placeholder="bv. Krokusvakantie"></label>

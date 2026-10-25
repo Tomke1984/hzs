@@ -221,7 +221,8 @@ final class SeriesController
 
     public static function bulkForm(): void
     {
-        self::renderBulk(['from' => today(), 'to' => today(), 'scope' => 'all', 'do' => 'cancel', 'reason' => '', 'location' => ''], [], []);
+        $d = isset($_GET['date']) && valid_date((string) $_GET['date']) ? (string) $_GET['date'] : today();
+        self::renderBulk(['from' => $d, 'to' => $d, 'scope' => 'all', 'kind' => ($_GET['kind'] ?? '') === 'series' ? 'series' : 'all', 'do' => 'cancel', 'reason' => '', 'location' => ''], [], []);
     }
 
     public static function bulk(): void
@@ -229,6 +230,7 @@ final class SeriesController
         $v = [
             'from' => input('from'), 'to' => input('to'), 'scope' => input('scope', 'all'),
             'do' => input('do'), 'reason' => mb_substr(input('reason'), 0, 200), 'location' => input('location'),
+            'kind' => input('kind') === 'series' ? 'series' : 'all',
         ];
         $raw = $_POST['group_ids'] ?? [];
         $sel = is_array($raw) ? array_values(array_unique(array_map('intval', $raw))) : [];
@@ -250,7 +252,7 @@ final class SeriesController
             self::renderBulk($v, $sel, $errors);
             return;
         }
-        $sql = 'series_id IS NOT NULL AND starts_at >= ? AND starts_at < ?';
+        $sql = ($v['kind'] === 'series' ? 'series_id IS NOT NULL AND ' : '') . 'starts_at >= ? AND starts_at < ?';
         $p = [$v['from'] . ' 00:00:00', date('Y-m-d', strtotime($v['to'] . ' +1 day')) . ' 00:00:00'];
         if ($v['scope'] === 'groups') {
             $sql .= ' AND EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = activities.id AND ag.group_id IN (' . Scope::in($sel) . '))';
@@ -258,13 +260,13 @@ final class SeriesController
         }
         if ($v['do'] === 'cancel') {
             $n = Database::exec("UPDATE activities SET status='CANCELLED', status_note=? WHERE status='PLANNED' AND $sql", array_merge([$v['reason'] === '' ? null : $v['reason']], $p));
-            $msg = '%d trainingen geschrapt.';
+            $msg = '%d activiteiten geschrapt.';
         } elseif ($v['do'] === 'restore') {
             $n = Database::exec("UPDATE activities SET status='PLANNED', status_note=NULL WHERE status='CANCELLED' AND $sql", $p);
-            $msg = '%d trainingen hersteld.';
+            $msg = '%d activiteiten hersteld.';
         } else {
             $n = Database::exec("UPDATE activities SET location=?, is_custom=1 WHERE $sql", array_merge([$v['location']], $p));
-            $msg = 'Locatie aangepast voor %d trainingen.';
+            $msg = 'Locatie aangepast voor %d activiteiten.';
         }
         $n = is_int($n) ? $n : 0;
         audit('BULK', 'activity_series', null, json_encode($v + ['count' => $n]));
@@ -323,6 +325,6 @@ final class SeriesController
         render('series/bulk', [
             'v' => $v, 'sel' => $sel, 'errors' => $errors,
             'groups' => Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 ORDER BY category, name'),
-        ], 'Trainingen schrappen of verplaatsen');
+        ], 'Activiteiten schrappen of verplaatsen');
     }
 }

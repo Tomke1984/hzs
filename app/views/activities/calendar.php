@@ -54,6 +54,7 @@ $todayStr = today();
         <span class="cal-dayname"><?= DAYS_NL_SHORT[(int) $dt->format('N')] ?></span> <?= $day ?>
         <?php if (Auth::can('activities.write')): ?>
           <a class="cal-add" href="<?= e(url('activity_form', ['date' => $date])) ?>" title="Activiteit toevoegen op deze dag" aria-label="Activiteit toevoegen op <?= e(fmt_date($date)) ?>">+</a>
+          <?php if ($events): ?><a class="cal-add cal-skip" href="<?= e(url('series_bulk', ['date' => $date])) ?>" title="Alle activiteiten van deze dag schrappen" aria-label="Alle activiteiten van <?= e(fmt_date($date)) ?> schrappen">&times;</a><?php endif; ?>
         <?php endif; ?>
       </div>
       <?php foreach ($events as $ev): ?>
