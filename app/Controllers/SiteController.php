@@ -11,7 +11,7 @@ final class SiteController
         $events = Database::all(
             "SELECT a.id, a.title, a.starts_at, a.ends_at, a.location, a.status, t.code AS type_code
              FROM activities a JOIN activity_types t ON t.id = a.type_id
-             WHERE a.is_public = 1 AND a.ends_at >= ? ORDER BY a.starts_at LIMIT 6",
+             WHERE (a.is_public = 1 OR t.code IN ('COMPETITION', 'CLUB')) AND a.ends_at >= ? ORDER BY a.starts_at LIMIT 6",
             [now()]
         );
         render_public('site/home', compact('intro', 'posts', 'events'), 'Hasseltse Zwemvereniging Spartacus');
@@ -60,7 +60,7 @@ final class SiteController
         $events = Database::all(
             "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
-             WHERE a.is_public = 1 AND a.starts_at >= ? AND a.starts_at < ? ORDER BY a.starts_at",
+             WHERE (a.is_public = 1 OR t.code IN ('COMPETITION', 'CLUB')) AND a.starts_at >= ? AND a.starts_at < ? ORDER BY a.starts_at",
             [$first->format('Y-m-d 00:00:00'), $next->format('Y-m-d 00:00:00')]
         );
         $byDay = [];
