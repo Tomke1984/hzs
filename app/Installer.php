@@ -98,7 +98,7 @@ final class Installer
         );
         // Het oorspronkelijke privacybeleid (nog onaangepast, overname uit 2018) krijgt de nieuwe AVG-tekst.
         Database::exec(
-            "UPDATE pages SET body = ?, updated_at = ? WHERE slug = 'privacybeleid' AND body LIKE '%overname van de vorige website (laatst bijgewerkt op 24 mei 2018)%'",
+            "UPDATE pages SET body = ?, updated_at = ? WHERE slug = 'privacybeleid' AND body LIKE '%24 mei 2018%' AND body NOT LIKE '%26 oktober 2026%'",
             [SiteSeed::privacyBody(), now()]
         );
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
