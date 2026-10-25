@@ -119,7 +119,7 @@ final class SeriesService
                     [$gid, today()]
                 ) as $b) {
                     $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$b['id']]);
-                    $blocks[$gid][] = ['id' => (int) $b['id'], 'label' => ucfirst(self::summary($slots)) . ' · ' . $b['title']];
+                    $blocks[$gid][] = ['id' => (int) $b['id'], 'label' => ucfirst(self::summary($slots))];
                 }
             }
             $r['blocks'] = $blocks[$gid];
