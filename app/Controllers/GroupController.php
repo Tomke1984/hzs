@@ -266,24 +266,42 @@ final class GroupController
         if (!$group) {
             abort(404, 'Groep niet gevonden.');
         }
-        $members = (int) Database::val('SELECT COUNT(*) FROM group_memberships WHERE group_id = ?', [$id]);
-        $acts = (int) Database::val('SELECT COUNT(*) FROM activity_groups WHERE group_id = ?', [$id]);
-        $series = (int) Database::val('SELECT COUNT(*) FROM activity_series_groups WHERE group_id = ?', [$id]);
-        if ($members || $acts || $series) {
-            $why = [];
-            if ($members) { $why[] = 'er zitten nog leden in'; }
-            if ($acts) { $why[] = 'er zijn activiteiten aan gekoppeld'; }
-            if ($series) { $why[] = 'ze zit in een trainingsreeks'; }
-            flash('error', 'Deze groep kan niet verwijderd worden: ' . implode(', ', $why) . '. Verplaats eerst de leden, of zet de groep op inactief.');
-            redirect(url('group', ['id' => $id]));
-        }
         Database::tx(function () use ($id) {
+            // Reeksen die enkel voor deze groep bestaan verdwijnen mee, met hun trainingen.
+            $solo = array_column(Database::all(
+                'SELECT series_id FROM activity_series_groups GROUP BY series_id HAVING COUNT(*) = 1 AND MAX(CASE WHEN group_id = ? THEN 1 ELSE 0 END) = 1',
+                [$id]
+            ), 'series_id');
+            foreach ($solo as $sid) {
+                foreach (array_column(Database::all('SELECT id FROM activities WHERE series_id = ?', [$sid]), 'id') as $aid) {
+                    self::deleteActivity((int) $aid);
+                }
+                Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$sid]);
+                Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$sid]);
+                Database::exec('DELETE FROM activity_series WHERE id = ?', [$sid]);
+            }
+            Database::exec('DELETE FROM group_memberships WHERE group_id = ?', [$id]);
             Database::exec('DELETE FROM group_trainers WHERE group_id = ?', [$id]);
+            Database::exec('DELETE FROM activity_series_groups WHERE group_id = ?', [$id]);
+            Database::exec('DELETE FROM activity_groups WHERE group_id = ?', [$id]);
+            // Groepsactiviteiten die nu aan geen enkele groep meer hangen, verdwijnen ook.
+            foreach (array_column(Database::all(
+                "SELECT a.id FROM activities a WHERE a.audience = 'GROUPS' AND NOT EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = a.id)"
+            ), 'id') as $aid) {
+                self::deleteActivity((int) $aid);
+            }
             Database::exec('DELETE FROM `groups` WHERE id = ?', [$id]);
         });
         audit('DELETE', 'group', $id, $group['name']);
         flash('success', 'Groep "' . $group['name'] . '" verwijderd.');
         redirect(url('groups'));
+    }
+
+    private static function deleteActivity(int $id): void
+    {
+        Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$id]);
+        Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$id]);
+        Database::exec('DELETE FROM activities WHERE id = ?', [$id]);
     }
 
     /** Meerdere leden van de ene groep naar de andere verplaatsen. */

@@ -3,7 +3,7 @@
   <?php if (Auth::can('groups.write')): ?>
     <span class="actions-inline">
       <a class="btn btn-ghost" href="<?= e(url('group_form', ['id' => $group['id']])) ?>">Wijzigen</a>
-      <form method="post" action="<?= e(url('group_delete')) ?>" data-confirm="Groep &quot;<?= e($group['name']) ?>&quot; definitief verwijderen? Dit kan enkel als er geen leden, activiteiten of reeksen aan gekoppeld zijn.">
+      <form method="post" action="<?= e(url('group_delete')) ?>" data-confirm="Groep &quot;<?= e($group['name']) ?>&quot; definitief verwijderen? De leden blijven bestaan maar zitten dan in geen groep meer. Trainingsreeksen en activiteiten die enkel voor deze groep zijn, worden ook verwijderd (inclusief aanwezigheden).">
         <?= csrf_field() ?>
         <input type="hidden" name="id" value="<?= (int) $group['id'] ?>">
         <button class="btn btn-ghost" type="submit">Verwijderen</button>

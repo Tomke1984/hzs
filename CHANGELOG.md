@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Groep verwijderen kan altijd:** ook met leden, activiteiten of reeksen. De leden blijven bestaan maar zitten dan in geen groep meer; trainingsreeksen en activiteiten die enkel voor die groep waren (met aanwezigheden) worden mee verwijderd; gedeelde activiteiten/reeksen blijven voor de andere groepen. De bevestigingsvraag legt dit uit.
 - **Activiteiten bij een groep:** de groepspagina toont de gekoppelde trainingsreeksen (met link, voor wie activiteiten mag beheren) en de eerstvolgende activiteiten van de groep, met geschrapte trainingen gemarkeerd en een link naar de kalender gefilterd op die groep.
 - **Trainers kiezen bij een groep:** in het formulier *Groep wijzigen* (en *Nieuwe groep*) vink je één of meerdere trainers aan; bij opslaan worden de trainers van de groep bijgewerkt. Enkel gebruikers met de rol Trainer verschijnen in de lijst.
 - **Geen Van/Tot meer bij trainers:** een trainer is gewoon aan groepen gekoppeld, zonder begin- en einddatum of historiek. Op de gebruikerspagina kies je een groep en klik je *Toewijzen*; *Verwijderen* haalt de trainer uit de groep. Bestaande databases worden opgeruimd (afgesloten en dubbele koppelingen verdwijnen).
