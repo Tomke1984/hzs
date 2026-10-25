@@ -108,15 +108,6 @@
     show(false);
   });
 
-  // "Terug": naar de vorige pagina in de browsergeschiedenis (anders valt de link terug op de verwijzende pagina of het overzicht)
-  var back = document.querySelector('a[data-back]');
-  if (back) {
-    back.addEventListener('click', function (ev) {
-      var sameOrigin = document.referrer && document.referrer.indexOf(location.origin) === 0;
-      if (sameOrigin && history.length > 1) { ev.preventDefault(); history.back(); }
-    });
-  }
-
   // Publiek menu: op smalle schermen inklapbaar achter een knop
   var menuBtn = document.querySelector('.menu-btn'), siteNav = document.getElementById('site-nav');
   if (menuBtn && siteNav && window.matchMedia) {

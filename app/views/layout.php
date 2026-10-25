@@ -36,11 +36,8 @@
 </header>
 <main class="wrap">
   <?php if ($user && (string) ($_GET['r'] ?? 'dashboard') !== 'dashboard'):
-      $ref = (string) ($_SERVER['HTTP_REFERER'] ?? '');
-      $refHost = (string) parse_url($ref, PHP_URL_HOST);
-      $myHost = explode(':', (string) ($_SERVER['HTTP_HOST'] ?? ''))[0];
-      $backHref = ($refHost !== '' && $refHost === $myHost) ? $ref : url('dashboard'); ?>
-    <p class="backlink"><a href="<?= e($backHref) ?>" data-back>← Terug</a></p>
+      $backHref = back_url((string) ($_GET['r'] ?? ''), $_GET); ?>
+    <p class="backlink"><a href="<?= e($backHref) ?>">← Terug</a></p>
   <?php endif; ?>
   <?php foreach (pull_flash() as [$type, $msg]): ?>
     <div class="alert alert-<?= e($type) ?>" role="status"><?= e($msg) ?></div>

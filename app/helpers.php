@@ -214,3 +214,25 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
     }
     return $h . '</select>';
 }
+
+/** Doelpagina van de knop "Terug": altijd de bovenliggende pagina in de app, niet de browsergeschiedenis. */
+function back_url(string $route, array $get): string
+{
+    $id = (int) ($get['id'] ?? 0);
+    return match ($route) {
+        'member' => url('members'),
+        'member_form', 'member_save' => $id ? url('member', ['id' => $id]) : url('members'),
+        'group' => url('groups'),
+        'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : url('groups'),
+        'user_form', 'user_save' => url('users'),
+        'registration' => url('registrations'),
+        'swimtest_show' => url('swimtests'),
+        'activity' => url('calendar'),
+        'activity_form', 'activity_save' => $id ? url('activity', ['id' => $id]) : url('calendar'),
+        'series_show' => url('series'),
+        'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : url('series'),
+        'post_form', 'post_save' => url('content', ['tab' => 'news']),
+        'page_form', 'page_save' => url('content', ['tab' => 'pages']),
+        default => url('dashboard'),
+    };
+}
