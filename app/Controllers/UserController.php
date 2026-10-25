@@ -226,6 +226,27 @@ final class UserController
         redirect($back);
     }
 
+    /** Relatie (bv. moeder, vader, voogd) van een bestaande koppeling wijzigen. */
+    public static function updateRelation(): void
+    {
+        $link = Database::one('SELECT * FROM guardian_links WHERE id = ?', [(int) input('link_id', '0')]);
+        if (!$link) {
+            abort(404, 'Deze koppeling bestaat niet.');
+        }
+        $back = input('return') === 'member'
+            ? url('member', ['id' => $link['member_id']])
+            : url('user_form', ['id' => $link['user_id']]);
+        $relationship = input('relationship');
+        if (mb_strlen($relationship) > 40) {
+            flash('error', 'Omschrijving van de relatie is te lang (max. 40 tekens).');
+            redirect($back);
+        }
+        Database::exec('UPDATE guardian_links SET relationship = ? WHERE id = ?', [$relationship === '' ? null : $relationship, $link['id']]);
+        audit('UPDATE', 'guardian_link', (int) $link['id']);
+        flash('success', 'Relatie bijgewerkt.');
+        redirect($back);
+    }
+
     /** Koppeling tussen ouder en kind opheffen. Het lid en de aanwezigheidshistoriek blijven bestaan. */
     public static function removeChild(): void
     {

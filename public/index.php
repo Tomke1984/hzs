@@ -34,6 +34,7 @@ $routes = [
     'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
     'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
     'user_child_add'   => ['POST' => ['UserController', 'addChild', 'users.manage']],
+    'user_child_relation' => ['POST' => ['UserController', 'updateRelation', 'users.manage']],
     'user_child_remove' => ['POST' => ['UserController', 'removeChild', 'users.manage']],
     'user_trainer_add' => ['POST' => ['UserController', 'addTrainerGroup', 'users.manage']],
     'user_trainer_end' => ['POST' => ['UserController', 'endTrainerGroup', 'users.manage']],

@@ -48,7 +48,15 @@
         <td><?= Auth::can('users.manage')
               ? '<a href="' . e(url('user_form', ['id' => $p['user_id']])) . '">' . e($p['display_name']) . '</a>'
               : e($p['display_name']) ?></td>
-        <td><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?></td>
+        <td><?php if (Auth::can('users.manage')): ?>
+          <form class="inline-form" method="post" action="<?= e(url('user_child_relation')) ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="link_id" value="<?= (int) $p['link_id'] ?>">
+            <input type="hidden" name="return" value="member">
+            <input name="relationship" value="<?= e($p['relationship']) ?>" maxlength="40" placeholder="bv. moeder, vader, voogd" aria-label="Relatie">
+            <button class="btn btn-small btn-ghost" type="submit">Opslaan</button>
+          </form>
+          <?php else: ?><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?><?php endif; ?></td>
         <td><a href="mailto:<?= e($p['email']) ?>"><?= e($p['email']) ?></a></td>
         <td><span class="chip <?= (int) $p['is_active'] ? 'ok' : 'off' ?>"><?= (int) $p['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
       </tr>
@@ -115,7 +123,15 @@
         <td><?= Auth::can('users.manage')
               ? '<a href="' . e(url('user_form', ['id' => $p['user_id']])) . '">' . e($p['display_name']) . '</a>'
               : e($p['display_name']) ?></td>
-        <td><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?></td>
+        <td><?php if (Auth::can('users.manage')): ?>
+          <form class="inline-form" method="post" action="<?= e(url('user_child_relation')) ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="link_id" value="<?= (int) $p['link_id'] ?>">
+            <input type="hidden" name="return" value="member">
+            <input name="relationship" value="<?= e($p['relationship']) ?>" maxlength="40" placeholder="bv. moeder, vader, voogd" aria-label="Relatie">
+            <button class="btn btn-small btn-ghost" type="submit">Opslaan</button>
+          </form>
+          <?php else: ?><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?><?php endif; ?></td>
         <td><a href="mailto:<?= e($p['email']) ?>"><?= e($p['email']) ?></a></td>
         <td><span class="chip <?= (int) $p['is_active'] ? 'ok' : 'off' ?>"><?= (int) $p['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
       </tr>

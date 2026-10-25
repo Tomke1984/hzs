@@ -125,7 +125,7 @@ final class MemberController
         $parents = [];
         if (Auth::can('members.contact')) {
             $parents = Database::all(
-                'SELECT gl.relationship, u.id AS user_id, u.display_name, u.email, u.is_active
+                'SELECT gl.id AS link_id, gl.relationship, u.id AS user_id, u.display_name, u.email, u.is_active
                  FROM guardian_links gl JOIN users u ON u.id = gl.user_id
                  WHERE gl.member_id = ? ORDER BY u.display_name',
                 [$member['id']]
