@@ -34,6 +34,29 @@ final class SeriesController
         render('series/index', ['unassigned' => Auth::can('activities.write') ? SeriesService::unassignedSwimMembers() : [], 'series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
+    /** Weekoverzicht van de zwemblokken: dagen als kolommen, uurblokken als rijen. */
+    public static function week(): void
+    {
+        $cells = [];
+        $rows = [];
+        foreach (Database::all('SELECT * FROM activity_series WHERE is_active = 1 AND end_date >= ? ORDER BY title', [today()]) as $s) {
+            if (!SeriesService::isSwim((int) $s['id'])) {
+                continue;
+            }
+            $groups = Database::all('SELECT g.id, g.name FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]);
+            foreach (Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]) as $sl) {
+                $hour = $sl['start_time'] . '–' . $sl['end_time'];
+                $rows[$hour] = true;
+                $cells[(int) $sl['weekday']][$hour][] = [
+                    'id' => (int) $s['id'], 'title' => $s['title'], 'groups' => $groups,
+                    'count' => (int) Database::val('SELECT COUNT(DISTINCT member_id) FROM member_series WHERE series_id = ? AND (weekday = 0 OR weekday = ?)', [$s['id'], (int) $sl['weekday']]),
+                ];
+            }
+        }
+        ksort($rows);
+        render('series/week', ['cells' => $cells, 'hours' => array_keys($rows), 'unassigned' => count(SeriesService::unassignedSwimMembers())], 'Weekoverzicht zwemschool');
+    }
+
     /** Reeks(en) op de website tonen of verbergen (één reeks via id, meerdere via ids[]). */
     public static function setPublic(): void
     {

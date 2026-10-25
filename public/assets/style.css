@@ -398,3 +398,7 @@ form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
 .cat-banner-competition { background: var(--competition); }
 .cat-banner .small { opacity: .85; font-weight: 400; }
 h3.section-title { margin: 16px 0 8px; font-size: 1.05rem; }
+
+.week-grid td{vertical-align:top;min-width:9rem}
+.week-block{margin-bottom:.5rem}
+.week-block .chip,.week-block .group-chip{margin:0 .25rem .25rem 0}
