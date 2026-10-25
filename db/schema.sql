@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS members (
   birth_date VARCHAR(10) NULL,
   email VARCHAR(190) NULL,
   phone VARCHAR(40) NULL,
+  street VARCHAR(120) NULL,
+  postal_code VARCHAR(10) NULL,
+  city VARCHAR(80) NULL,
   status VARCHAR(10) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','INACTIVE')),
   created_at VARCHAR(19) NOT NULL
 ){{ENGINE}};
@@ -151,4 +154,39 @@ CREATE TABLE IF NOT EXISTS audit_log (
   entity_id INT NULL,
   detail VARCHAR(255) NULL,
   created_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS registrations (
+  id {{PK}},
+  status VARCHAR(12) NOT NULL DEFAULT 'UNCONFIRMED',
+  applicant_type VARCHAR(10) NOT NULL,
+  contact_name VARCHAR(120) NOT NULL,
+  contact_email VARCHAR(190) NOT NULL,
+  contact_phone VARCHAR(40) NOT NULL,
+  relationship VARCHAR(40) NULL,
+  street VARCHAR(120) NOT NULL,
+  postal_code VARCHAR(10) NOT NULL,
+  city VARCHAR(80) NOT NULL,
+  remarks VARCHAR(500) NULL,
+  consent_at VARCHAR(19) NOT NULL,
+  confirm_token_hash VARCHAR(64) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  confirmed_at VARCHAR(19) NULL,
+  decided_by INT NULL,
+  decided_at VARCHAR(19) NULL,
+  reject_reason VARCHAR(500) NULL,
+  CHECK (status IN ('UNCONFIRMED','PENDING','APPROVED','REJECTED')),
+  CHECK (applicant_type IN ('PARENT','SELF'))
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS registration_persons (
+  id {{PK}},
+  registration_id INT NOT NULL,
+  first_name VARCHAR(80) NOT NULL,
+  last_name VARCHAR(80) NOT NULL,
+  birth_date VARCHAR(10) NOT NULL,
+  preferred_category VARCHAR(20) NULL,
+  member_id INT NULL,
+  FOREIGN KEY (registration_id) REFERENCES registrations(id),
+  FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};

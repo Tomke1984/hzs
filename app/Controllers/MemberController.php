@@ -163,7 +163,7 @@ final class MemberController
         $id = (int) ($_GET['id'] ?? 0);
         $member = $id ? self::loadVisible($id) : [
             'id' => 0, 'first_name' => '', 'last_name' => '',
-            'birth_date' => '', 'email' => '', 'phone' => '', 'status' => 'ACTIVE',
+            'birth_date' => '', 'email' => '', 'phone' => '', 'street' => '', 'postal_code' => '', 'city' => '', 'status' => 'ACTIVE',
         ];
         render('members/form', ['member' => $member, 'errors' => []], $id ? 'Lid wijzigen' : 'Nieuw lid');
     }
@@ -179,6 +179,9 @@ final class MemberController
             'birth_date' => input('birth_date'),
             'email'      => input('email'),
             'phone'      => input('phone'),
+            'street'     => input('street'),
+            'postal_code' => input('postal_code'),
+            'city'       => input('city'),
             'status'     => input('status', 'ACTIVE'),
         ];
 
@@ -191,6 +194,9 @@ final class MemberController
         }
         if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'E-mailadres is ongeldig.';
+        }
+        if (mb_strlen($data['street']) > 120 || mb_strlen($data['postal_code']) > 10 || mb_strlen($data['city']) > 80) {
+            $errors[] = 'Adres is te lang.';
         }
         if (!in_array($data['status'], ['ACTIVE', 'INACTIVE'], true)) {
             $errors[] = 'Status is ongeldig.';
@@ -206,15 +212,15 @@ final class MemberController
         $nullable = fn($v) => $v === '' ? null : $v;
         if ($existing) {
             Database::exec(
-                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, status=? WHERE id=?',
-                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], $id]
+                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, status=? WHERE id=?',
+                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $id]
             );
             audit('UPDATE', 'member', $id);
             flash('success', 'Lid bijgewerkt.');
         } else {
             $id = Database::insert(
-                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, status, created_at) VALUES (?,?,?,?,?,?,?,?)',
-                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], now()]
+                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now()]
             );
             audit('CREATE', 'member', $id);
             flash('success', Guardianship::isMinor($nullable($data['birth_date']))
@@ -228,7 +234,7 @@ final class MemberController
      * Het lidnummer is enkel een interne sleutel (verplicht en uniek in de database) en wordt
      * nergens getoond. Het wordt automatisch aangemaakt en bij wijzigen nooit aangepast.
      */
-    private static function nextMemberNo(): string
+    public static function nextMemberNo(): string
     {
         $n = (int) Database::val('SELECT COALESCE(MAX(id), 0) FROM members') + 1;
         do {

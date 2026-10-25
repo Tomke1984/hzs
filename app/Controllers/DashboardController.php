@@ -26,6 +26,7 @@ final class DashboardController
 
         $guardianMissing = Auth::can('members.contact') ? Guardianship::missingCount() : 0;
 
-        render('dashboard', compact('upcoming', 'stats', 'guardianMissing'), 'Overzicht');
+        $newRegistrations = Auth::can('registrations.manage') ? (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'") : 0;
+        render('dashboard', compact('upcoming', 'stats', 'guardianMissing', 'newRegistrations'), 'Overzicht');
     }
 }

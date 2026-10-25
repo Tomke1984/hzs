@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Inschrijven:** openbare inschrijfpagina (zonder login) voor ouders en zwemmers van 18+; gegevens: kinderen (naam, geboortedatum, voorkeur zwemschool/competitie), ouder (naam, e-mail, telefoon, relatie) en adres, met akkoord voor het reglement. Bevestiging van het e-mailadres per link; beveiligd met verborgen spamveld en limieten per e-mailadres en per uur.
+- **Bestuur beoordeelt:** nieuw scherm *Inschrijvingen* (te beoordelen / afgehandeld) met melding op het overzicht en teller in het menu. Goedkeuren maakt de leden aan (met adres en telefoon), koppelt de ouder, wijst optioneel een groep toe en stuurt de uitnodiging; een bestaand ouderaccount wordt hergebruikt. Afwijzen stuurt een mail met reden. Waarschuwing bij mogelijk al bestaand lid; uitnodiging opnieuw versturen kan vanuit de inschrijving.
+- **Rol Bestuur:** nieuwe rol met clubbrede toegang tot leden (incl. contactgegevens), groepen, activiteiten, aanwezigheid en inschrijvingen, zonder gebruikersbeheer. Bestaande databases krijgen de rol en het nieuwe recht automatisch. Demo-account `bestuur@demo.local`.
+- **Leden:** adres (straat, postcode, gemeente) bij leden: zichtbaar voor wie contactgegevens mag zien en bewerkbaar in het ledenformulier.
+- **Database:** nieuwe tabellen `registrations` en `registration_persons` en adreskolommen bij leden, automatisch toegevoegd aan bestaande databases.
 - **E-mail:** eigen mailfunctie zonder extra bibliotheken (`log` voor lokaal testen, `smtp`, of PHP `mail()`), in te stellen in `config.php`. Bulkverzending gebruikt één SMTP-verbinding.
 - **Uitnodigingen:** ouders/voogden en leden uitnodigen per e-mail vanaf de ledenpagina, of in bulk via *Gebruikers → Leden uitnodigen* (alle actieve leden met een e-mailadres; broers/zussen op hetzelfde adres delen één ouder-account). De ontvanger kiest zelf een wachtwoord via een eenmalige link (7 dagen geldig, opgeslagen als hash). Accounts die nog niet geactiveerd zijn tonen een label en kunnen opnieuw uitgenodigd worden.
 - **Wachtwoord vergeten:** aanvragen via e-mail (link 60 minuten geldig, eenmalig, max. 1 mail per minuut per account, neutrale melding zodat niet te raden is welke adressen bestaan).

@@ -4,7 +4,7 @@
  */
 final class UserController
 {
-    private const ROLE_CODES = ['ADMIN', 'TRAINER', 'SWIMMER', 'PARENT'];
+    private const ROLE_CODES = ['ADMIN', 'BOARD', 'TRAINER', 'SWIMMER', 'PARENT'];
 
     public static function index(): void
     {
@@ -27,8 +27,8 @@ final class UserController
             'user_id'
         );
 
-        // Tab "Beheer en trainers": beheerders en trainers. Tab "Ouders en zwemmers": alle overige accounts.
-        $isStaff = fn(array $u) => (bool) array_intersect(['ADMIN', 'TRAINER'], $rolesByUser[$u['id']] ?? []);
+        // Tab "Beheer en trainers": beheerders, bestuur en trainers. Tab "Ouders en zwemmers": alle overige accounts.
+        $isStaff = fn(array $u) => (bool) array_intersect(['ADMIN', 'BOARD', 'TRAINER'], $rolesByUser[$u['id']] ?? []);
         $counts = ['staff' => 0, 'members' => 0];
         $users = [];
         foreach ($all as $u) {

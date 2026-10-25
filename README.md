@@ -24,6 +24,7 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 | Rol | Account | Wat je ziet |
 |---|---|---|
 | Beheerder | je eigen account | alles, clubbreed |
+| Bestuur | `bestuur@demo.local` | alle leden, groepen, kalender en inschrijvingen (geen gebruikersbeheer) |
 | Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid) |
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
 | Ouder | `ouder@demo.local` | enkel het gekoppelde kind |
@@ -48,6 +49,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Filteren op **zwemschool/competitie** en op groep in de ledenlijst en de kalender (filter blijft behouden bij maand vooruit/terug; clubbrede activiteiten blijven zichtbaar).
 - Gebruikerslijst met twee tabbladen: **Beheer en trainers** en **Ouders en zwemmers** (met zoekbalk). Leden zijn niet automatisch gebruikers: op de ledenpagina maakt de beheerder met één klik een eigen account aan (rol Zwemmer, gegevens vooraf ingevuld). Bij minderjarigen meldt de ouder of voogd aan.
 - **E-mail en uitnodigingen:** beheerders nodigen ouders/voogden en leden per e-mail uit (per lid of in bulk voor alle leden met een e-mailadres). De ontvanger kiest zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen geldig). Ook *Wachtwoord vergeten?* werkt via mail (link 60 minuten geldig). Bij minderjarige leden wordt het e-mailadres van het lid als adres van de ouder gebruikt; broers/zussen op hetzelfde adres delen één account. Zo hoeft er geen wachtwoord uitgedeeld te worden.
+- **Inschrijven en bestuur:** een openbare inschrijfpagina (`?r=register`, zonder login) voor ouders (met één of meerdere kinderen) en zwemmers van 18+: naam, geboortedatum, voorkeur zwemschool/competitie, contactgegevens en adres, met akkoord voor het reglement. De inschrijver bevestigt eerst zijn e-mailadres. Daarna beoordeelt het **bestuur** (nieuwe rol *Bestuur*: alle leden, groepen, kalender en inschrijvingen, maar geen gebruikersbeheer) de aanvraag onder *Inschrijvingen*. Bij **goedkeuring** worden de leden aangemaakt, de ouder gekoppeld en uitgenodigd om een account te activeren (bestaat het account al, dan wordt het kind eraan gekoppeld); bij **afwijzing** gaat er een mail met reden. Er wordt dus pas een gebruiker aangemaakt na goedkeuring. Beveiliging: verborgen spamveld, maximaal 3 aanvragen per e-mailadres per uur, onbevestigde aanvragen worden na 7 dagen opgeruimd.
 - Mobielvriendelijk: compacte header met scrollbaar menu, tabellen worden kaarten op telefoon, grote aanraakdoelen en radioknoppen voor aanwezigheid, formulieren en knoppen over de volledige breedte (getest tot 320 px).
 - Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
 - Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
@@ -101,5 +103,7 @@ In `config.php` (zie `config.sample.php`):
     'smtp' => ['host' => 'smtp.jouwdomein.be', 'port' => 587, 'encryption' => 'tls', 'user' => '...', 'pass' => '...'],
 ],
 ```
+
+Optioneel: `'registration' => ['notify_email' => 'bestuur@jouwdomein.be']` mailt het bestuur bij elke bevestigde inschrijving, en `'privacy_url' => '...'` voegt een link naar de privacyverklaring toe aan het formulier.
 
 Lokaal testen: laat `driver` op `log` staan. Na een uitnodiging staat de activatielink in de melding en in `storage/mail/outbox.log`.

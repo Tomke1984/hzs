@@ -11,11 +11,14 @@ final class Installer
         'activities.write' => 'Activiteiten aanmaken en wijzigen',
         'attendance.read' => 'Aanwezigheden bekijken (binnen scope)',
         'attendance.write' => 'Aanwezigheden registreren',
+        'registrations.manage' => 'Inschrijvingen beoordelen (goedkeuren of afwijzen)',
         'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
     ];
 
     public const ROLES = [
         'ADMIN'   => ['Beheerder', ['*']],
+        'BOARD'   => ['Bestuur', ['members.read', 'members.write', 'members.contact', 'groups.read', 'groups.write',
+                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage']],
         'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write']],
         'SWIMMER' => ['Zwemmer', ['members.read', 'activities.read', 'attendance.read']],
         'PARENT'  => ['Ouder', ['members.read', 'activities.read', 'attendance.read']],
@@ -45,10 +48,20 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
+        foreach (['user_tokens', 'registrations'] as $table) {
+            try {
+                Database::val("SELECT 1 FROM $table LIMIT 1");
+            } catch (Throwable $e) {
+                self::createSchema(); // alle tabellen zijn CREATE TABLE IF NOT EXISTS: enkel wat ontbreekt wordt aangemaakt
+                break;
+            }
+        }
         try {
-            Database::val('SELECT 1 FROM user_tokens LIMIT 1');
+            Database::val('SELECT street FROM members LIMIT 1');
         } catch (Throwable $e) {
-            self::createSchema(); // alle tabellen zijn CREATE TABLE IF NOT EXISTS: enkel wat ontbreekt wordt aangemaakt
+            Database::exec('ALTER TABLE members ADD COLUMN street VARCHAR(120) NULL');
+            Database::exec('ALTER TABLE members ADD COLUMN postal_code VARCHAR(10) NULL');
+            Database::exec('ALTER TABLE members ADD COLUMN city VARCHAR(80) NULL');
         }
         try {
             Database::val('SELECT category FROM `groups` LIMIT 1');
@@ -68,7 +81,8 @@ final class Installer
         foreach (self::ROLES as [, $perms]) {
             $expectedMap += $perms === ['*'] ? count(self::PERMISSIONS) : count($perms);
         }
-        if ($permCount >= count(self::PERMISSIONS) && $mapCount >= $expectedMap) {
+        $roleCount = (int) Database::val('SELECT COUNT(*) FROM roles');
+        if ($roleCount >= count(self::ROLES) && $permCount >= count(self::PERMISSIONS) && $mapCount >= $expectedMap) {
             return; // snelle weg: niets te doen
         }
 
@@ -81,7 +95,7 @@ final class Installer
             foreach (self::ROLES as $roleCode => [, $perms]) {
                 $roleId = Database::val('SELECT id FROM roles WHERE code = ?', [$roleCode]);
                 if (!$roleId) {
-                    continue;
+                    $roleId = Database::insert('INSERT INTO roles (code, name) VALUES (?, ?)', [$roleCode, self::ROLES[$roleCode][0]]);
                 }
                 $list = $perms === ['*'] ? array_keys(self::PERMISSIONS) : $perms;
                 foreach ($list as $p) {
@@ -188,6 +202,7 @@ final class Installer
             );
             Database::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$trainerMember, $groups['Wedstrijdploeg'], '2025-09-01']);
 
+            self::createUser('bestuur@demo.local', 'Demo1234!', 'Bea Bestuur', 'BOARD');
             self::createUser('zwemmer@demo.local', 'Demo1234!', 'Emma Peeters', 'SWIMMER', $memberIds[0]);
             $parent = self::createUser('ouder@demo.local', 'Demo1234!', 'Ouder van Lucas', 'PARENT');
             Database::exec('INSERT INTO guardian_links (user_id, member_id, relationship) VALUES (?,?,?)', [$parent, $memberIds[1], 'ouder']);

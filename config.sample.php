@@ -26,6 +26,11 @@ return [
         ],
     ],
 
+    // Optioneel: link naar de privacyverklaring (getoond op het inschrijfformulier) en een e-mailadres
+    // dat een melding krijgt bij elke bevestigde inschrijving.
+    'privacy_url' => '',
+    'registration' => ['notify_email' => ''],
+
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting
         'driver' => 'sqlite',

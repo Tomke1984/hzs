@@ -13,6 +13,8 @@ $routes = [
     'login'            => ['GET' => ['AuthController', 'showLogin', 'public'], 'POST' => ['AuthController', 'login', 'public']],
     'forgot'           => ['GET' => ['AuthController', 'showForgot', 'public'], 'POST' => ['AuthController', 'forgot', 'public']],
     'activate'         => ['GET' => ['AuthController', 'showActivate', 'public'], 'POST' => ['AuthController', 'activate', 'public']],
+    'register'         => ['GET' => ['RegistrationController', 'showForm', 'public'], 'POST' => ['RegistrationController', 'submit', 'public']],
+    'register_confirm' => ['GET' => ['RegistrationController', 'confirm', 'public']],
     'logout'           => ['POST' => ['AuthController', 'logout', null]],
     'dashboard'        => ['GET' => ['DashboardController', 'index', null]],
 
@@ -40,6 +42,12 @@ $routes = [
     'invite_member'    => ['POST' => ['InviteController', 'member', 'users.manage']],
     'invite_resend'    => ['POST' => ['InviteController', 'resend', 'users.manage']],
     'invite_bulk'      => ['GET' => ['InviteController', 'bulk', 'users.manage'], 'POST' => ['InviteController', 'bulkSend', 'users.manage']],
+
+    'registrations'    => ['GET' => ['RegistrationController', 'index', 'registrations.manage']],
+    'registration'     => ['GET' => ['RegistrationController', 'show', 'registrations.manage']],
+    'registration_approve' => ['POST' => ['RegistrationController', 'approve', 'registrations.manage']],
+    'registration_reject'  => ['POST' => ['RegistrationController', 'reject', 'registrations.manage']],
+    'registration_resend'  => ['POST' => ['RegistrationController', 'resend', 'registrations.manage']],
 
     'calendar'         =>['GET' => ['ActivityController', 'calendar', 'activities.read']],
     'activity'         => ['GET' => ['ActivityController', 'show', 'activities.read']],

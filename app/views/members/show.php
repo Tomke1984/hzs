@@ -19,6 +19,7 @@
     <?php if ($showContact): ?>
       <dt>E-mail</dt><dd><?= e($member['email']) ?: '—' ?></dd>
       <dt>Telefoon</dt><dd><?= e($member['phone']) ?: '—' ?></dd>
+      <dt>Adres</dt><dd><?= e(trim(($member['street'] ?? '') . ', ' . trim(($member['postal_code'] ?? '') . ' ' . ($member['city'] ?? '')), ', ')) ?: '—' ?></dd>
     <?php endif; ?>
   </dl>
 </section>

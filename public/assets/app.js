@@ -9,6 +9,20 @@
     });
   });
 
+  // Inschrijfformulier: velden tonen naargelang "mijn kind" of "mezelf"
+  var typeRadios = document.querySelectorAll('input[name=applicant_type]');
+  if (typeRadios.length) {
+    var syncType = function () {
+      var sel = document.querySelector('input[name=applicant_type]:checked');
+      var v = sel ? sel.value : 'PARENT';
+      document.querySelectorAll('[data-show-for]').forEach(function (el) { el.hidden = el.getAttribute('data-show-for') !== v; });
+      var nm = document.querySelector('input[name=contact_name]');
+      if (nm) nm.required = v === 'PARENT';
+    };
+    typeRadios.forEach(function (r) { r.addEventListener('change', syncType); });
+    syncType();
+  }
+
   // Actieve menu-link markeren en in beeld scrollen
   var path = location.search;
   document.querySelectorAll('.nav a').forEach(function (a) {

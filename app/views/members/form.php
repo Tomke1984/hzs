@@ -27,6 +27,17 @@
       <input name="phone" value="<?= e($member['phone']) ?>" maxlength="40">
     </label>
   </div>
+  <label>Straat en nummer
+    <input name="street" value="<?= e($member['street'] ?? '') ?>" maxlength="120" autocomplete="street-address">
+  </label>
+  <div class="grid2">
+    <label>Postcode
+      <input name="postal_code" value="<?= e($member['postal_code'] ?? '') ?>" maxlength="10" autocomplete="postal-code">
+    </label>
+    <label>Gemeente
+      <input name="city" value="<?= e($member['city'] ?? '') ?>" maxlength="80" autocomplete="address-level2">
+    </label>
+  </div>
   <label>Status
     <select name="status">
       <option value="ACTIVE" <?= $member['status'] === 'ACTIVE' ? 'selected' : '' ?>>Actief</option>

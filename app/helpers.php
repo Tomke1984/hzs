@@ -157,7 +157,7 @@ function members_label(): string
 
 function role_label(string $code): string
 {
-    return ['ADMIN' => 'Beheerder', 'TRAINER' => 'Trainer', 'SWIMMER' => 'Zwemmer', 'PARENT' => 'Ouder'][$code] ?? $code;
+    return ['ADMIN' => 'Beheerder', 'BOARD' => 'Bestuur', 'TRAINER' => 'Trainer', 'SWIMMER' => 'Zwemmer', 'PARENT' => 'Ouder'][$code] ?? $code;
 }
 
 function audit(string $action, string $entity, ?int $entityId = null, ?string $detail = null): void

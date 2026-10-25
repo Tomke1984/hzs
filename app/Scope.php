@@ -3,7 +3,7 @@
  * Centrale gegevensscope (MySQL/SQLite kennen geen Row Level Security).
  * Elke query op leden, groepen, activiteiten of aanwezigheden hoort deze klasse te gebruiken.
  *
- *  - beheerder: clubbreed (null = geen beperking)
+ *  - beheerder en bestuur: clubbreed (null = geen beperking)
  *  - trainer:   leden en groepen van actieve toegewezen groepen
  *  - zwemmer:   zichzelf en de eigen actieve groepen
  *  - ouder:     gekoppelde kinderen en hun actieve groepen
@@ -18,7 +18,7 @@ final class Scope
 
     public static function clubWide(): bool
     {
-        return Auth::hasRole('ADMIN');
+        return Auth::hasRole('ADMIN') || Auth::hasRole('BOARD');
     }
 
     /** Placeholders voor een IN-lijst. */
