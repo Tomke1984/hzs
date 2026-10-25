@@ -33,14 +33,6 @@
           <label>Geboortedatum<?= $i === 0 ? ' *' : '' ?>
             <input type="date" name="persons[<?= $i ?>][birth_date]" value="<?= e($p['birth_date']) ?>" max="<?= e(today()) ?>" <?= $i === 0 ? 'required' : '' ?>>
           </label>
-          <label>Voorkeur
-            <select name="persons[<?= $i ?>][preferred_category]">
-              <option value="">Weet ik nog niet</option>
-              <?php foreach (group_categories() as $code => $label): ?>
-                <option value="<?= e($code) ?>" <?= $p['preferred_category'] === $code ? 'selected' : '' ?>><?= e($label) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </label>
         </div>
       </fieldset>
     <?php endfor; ?>

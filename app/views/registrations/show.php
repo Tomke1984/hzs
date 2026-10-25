@@ -31,7 +31,7 @@
   <h2><?= $reg['applicant_type'] === 'SELF' ? 'Zwemmer' : 'Kinderen' ?></h2>
   <div class="table-wrap">
   <table class="table">
-    <thead><tr><th>Naam</th><th>Geboortedatum</th><th>Voorkeur</th><th><?= $reg['status'] === 'PENDING' ? 'Groep toewijzen' : 'Lid' ?></th></tr></thead>
+    <thead><tr><th>Naam</th><th>Geboortedatum</th><th><?= $reg['status'] === 'PENDING' ? 'Groep toewijzen' : 'Lid' ?></th></tr></thead>
     <tbody>
     <?php foreach ($persons as $p): ?>
       <tr>
@@ -40,7 +40,6 @@
             <br><span class="chip warn">Mogelijk al lid</span> <a class="small" href="<?= e(url('member', ['id' => $d['id']])) ?>">bekijk</a>
           <?php endforeach; ?></td>
         <td><?= e(fmt_date($p['birth_date'])) ?> <?php if (Guardianship::isMinor($p['birth_date'])): ?><span class="chip">&lt; 18</span><?php endif; ?></td>
-        <td><?= $p['preferred_category'] ? e(group_category_label($p['preferred_category'])) : '<span class="muted">—</span>' ?></td>
         <td>
           <?php if ($reg['status'] === 'PENDING'): ?>
             <select name="group[<?= (int) $p['id'] ?>]" aria-label="Groep voor <?= e($p['first_name']) ?>">

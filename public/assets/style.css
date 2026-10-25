@@ -253,5 +253,5 @@ legend { font-weight: 600; padding: 0 6px; }
 
 fieldset.child-extra.is-collapsed { display: none; }
 fieldset.child-extra { position: relative; }
-.remove-child { position: absolute; top: -15px; right: 10px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: var(--muted, #667); font-size: 24px; line-height: 1; cursor: pointer; }
+.remove-child { position: absolute; top: -27px; right: 14px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: var(--muted, #667); font-size: 24px; line-height: 1; cursor: pointer; }
 .remove-child:hover, .remove-child:focus-visible { background: #fdecee; color: #b00020; }
