@@ -7,6 +7,7 @@ $todayStr = today();
   <h1>Kalender</h1>
   <?php if (Auth::can('activities.write')): ?>
     <span class="actions-inline">
+      <a class="btn btn-ghost" href="<?= e(url('series_week')) ?>">Weekoverzicht zwemschool</a>
       <a class="btn btn-ghost" href="<?= e(url('series')) ?>">Trainingsreeksen</a>
       <a class="btn" href="<?= e(url('activity_form')) ?>">+ Nieuwe activiteit</a>
     </span>
