@@ -21,7 +21,15 @@ final class SiteController
              WHERE (a.is_public = 1 OR t.code IN ('COMPETITION', 'CLUB')) AND a.ends_at >= ? ORDER BY a.starts_at LIMIT 6",
             [now()]
         );
-        render_public('site/home', compact('intro', 'posts', 'events', 'page', 'pages'), 'Hasseltse Zwemvereniging Spartacus');
+        $lanes = [];
+        $blurbs = ['zwemschool' => 'Leren zwemmen op je eigen niveau, van startersgroep tot pre-competitie.', 'competitie' => 'Trainen en wedstrijden zwemmen met de club.'];
+        foreach ($blurbs as $slug => $blurb) {
+            $lp = Database::one("SELECT title, slug FROM pages WHERE slug = ? AND status = 'PUBLISHED' AND parent_id IS NULL", [$slug]);
+            if ($lp) {
+                $lanes[] = $lp + ['blurb' => $blurb];
+            }
+        }
+        render_public('site/home', compact('intro', 'posts', 'events', 'page', 'pages', 'lanes'), 'Hasseltse Zwemvereniging Spartacus');
     }
 
     /** Oude adressen van het nieuwsoverzicht en berichten sturen door naar de startpagina. */
@@ -39,7 +47,12 @@ final class SiteController
         }
         $parent = $p['parent_id'] ? Database::one('SELECT title, slug FROM pages WHERE id = ?', [$p['parent_id']]) : null;
         $children = Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' AND in_menu = 1 ORDER BY sort_order, title", [$p['id']]);
-        render_public('site/page', compact('p', 'parent', 'children'), $p['title']);
+        $root = $parent ?: $p;
+        $items = $parent
+            ? Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' AND in_menu = 1 ORDER BY sort_order, title", [$p['parent_id']])
+            : $children;
+        $side = $items ? ['title' => $root['title'], 'slug' => $root['slug'], 'items' => $items] : null;
+        render_public('site/page', compact('p', 'parent', 'side'), $p['title']);
     }
 
     public static function agenda(): void
