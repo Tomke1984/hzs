@@ -44,7 +44,8 @@
         <?php foreach ($roster as $m):
             $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; ?>
           <tr>
-            <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?> <span class="muted small"><?= e($m['member_no']) ?></span></td>
+            <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
+            <?php if (in_array((int) $m['id'], $registrable, true)): ?>
             <?php foreach (['UNKNOWN', 'PRESENT', 'ABSENT'] as $s): ?>
               <td class="center">
                 <label class="radio radio-<?= strtolower($s) ?>">
@@ -53,6 +54,9 @@
                 </label>
               </td>
             <?php endforeach; ?>
+            <?php else: ?>
+              <td colspan="3" class="center"><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span></td>
+            <?php endif; ?>
           </tr>
         <?php endforeach; ?>
         </tbody>

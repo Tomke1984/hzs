@@ -14,7 +14,7 @@
 
 <form class="filters" method="get" action="">
   <input type="hidden" name="r" value="members">
-  <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam of lidnummer">
+  <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam">
   <select name="status" aria-label="Status">
     <option value="ACTIVE" <?= $status === 'ACTIVE' ? 'selected' : '' ?>>Actieve leden</option>
     <option value="INACTIVE" <?= $status === 'INACTIVE' ? 'selected' : '' ?>>Inactieve leden</option>
@@ -30,7 +30,7 @@
 <table class="table">
   <thead>
     <tr>
-      <th>Nr.</th><th>Naam</th><th>Groepen</th>
+      <th>Naam</th><th>Groepen</th>
       <?php if ($showContact): ?><th>Ouders</th><th>E-mail</th><th>Telefoon</th><?php endif; ?>
       <th>Status</th>
     </tr>
@@ -38,7 +38,6 @@
   <tbody>
   <?php foreach ($members as $m): ?>
     <tr>
-      <td><?= e($m['member_no']) ?></td>
       <td><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a>
         <?php if (in_array((int) $m['id'], $missingIds, true)): ?><span class="chip warn">Ouder ontbreekt</span><?php endif; ?></td>
       <td><?= e(implode(', ', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>

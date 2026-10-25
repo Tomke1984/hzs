@@ -8,9 +8,6 @@
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
 
-  <label>Lidnummer *
-    <input name="member_no" value="<?= e($member['member_no']) ?>" maxlength="30" required>
-  </label>
   <div class="grid2">
     <label>Voornaam *
       <input name="first_name" value="<?= e($member['first_name']) ?>" maxlength="80" required>

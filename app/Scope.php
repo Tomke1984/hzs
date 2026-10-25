@@ -13,6 +13,7 @@ final class Scope
 {
     private static ?array $groupIds = null;
     private static ?array $memberIds = null;
+    private static ?array $coachMembers = null;
     private static bool $computed = false;
 
     public static function clubWide(): bool
@@ -111,6 +112,29 @@ final class Scope
         return array_values(array_filter($members, fn($m) => in_array((int) $m['id'], $ids, true)));
     }
 
+    /**
+     * Leden voor wie de gebruiker aanwezigheid mag registreren: enkel via de trainersrol
+     * (leden van de eigen actieve trainersgroepen). Een trainer die zelf ook lid is, registreert dus niet
+     * voor groepen waar hij enkel als lid in zit.
+     * @return int[]|null null = alle leden (beheerder)
+     */
+    public static function coachMemberIds(): ?array
+    {
+        self::compute();
+        return self::$coachMembers;
+    }
+
+    /** Doelgroep van een activiteit ingeperkt tot de leden die de gebruiker mag registreren. */
+    public static function registrableMembers(array $activity): array
+    {
+        $members = self::targetMembers($activity);
+        $ids = self::coachMemberIds();
+        if ($ids === null) {
+            return $members;
+        }
+        return array_values(array_filter($members, fn($m) => in_array((int) $m['id'], $ids, true)));
+    }
+
     private static function compute(): void
     {
         if (self::$computed) {
@@ -119,7 +143,7 @@ final class Scope
         self::$computed = true;
         $u = Auth::user();
         if (!$u || self::clubWide()) {
-            self::$groupIds = self::$memberIds = $u ? null : [];
+            self::$groupIds = self::$memberIds = self::$coachMembers = $u ? null : [];
             return;
         }
 
@@ -134,12 +158,14 @@ final class Scope
                 [$u['id'], $today, $today]
             ), 'group_id');
             $groups = array_merge($groups, $tg);
+            self::$coachMembers = [];
             if ($tg) {
                 $members = array_merge($members, array_column(Database::all(
                     'SELECT DISTINCT member_id FROM group_memberships
                      WHERE group_id IN (' . self::in($tg) . ') AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)',
                     array_merge($tg, [$today, $today])
                 ), 'member_id'));
+                self::$coachMembers = array_map('intval', $members);
             }
         }
 

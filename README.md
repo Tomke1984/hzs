@@ -44,6 +44,8 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 
 - Aanmelden met e-mail en wachtwoord; rollen beheerder, trainer, zwemmer, ouder; permissies in de database.
 - Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder = clubbreed.
+- Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
+- Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
 - Leden zoeken, toevoegen, wijzigen (nooit verwijderen; wel inactief zetten).
 - Groepen aanmaken en wijzigen; leden historisch koppelen met start- en einddatum.
 - Activiteiten voor groep(en) of hele club; kalender met trainingen, wedstrijden en clubactiviteiten.

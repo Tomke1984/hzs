@@ -31,8 +31,11 @@ final class MemberController
             $params[] = Guardianship::cutoff();
         }
         if ($q !== '') {
-            $where[] = '(m.first_name LIKE ? OR m.last_name LIKE ? OR m.member_no LIKE ?)';
-            array_push($params, "%$q%", "%$q%", "%$q%");
+            // Elk ingetypt woord moet in de voor- of achternaam voorkomen ("emma pee" vindt Emma Peeters).
+            foreach (preg_split('/\s+/', $q) as $word) {
+                $where[] = '(m.first_name LIKE ? OR m.last_name LIKE ?)';
+                array_push($params, "%$word%", "%$word%");
+            }
         }
 
         $members = Database::all(
@@ -139,7 +142,7 @@ final class MemberController
     {
         $id = (int) ($_GET['id'] ?? 0);
         $member = $id ? self::loadVisible($id) : [
-            'id' => 0, 'member_no' => '', 'first_name' => '', 'last_name' => '',
+            'id' => 0, 'first_name' => '', 'last_name' => '',
             'birth_date' => '', 'email' => '', 'phone' => '', 'status' => 'ACTIVE',
         ];
         render('members/form', ['member' => $member, 'errors' => []], $id ? 'Lid wijzigen' : 'Nieuw lid');
@@ -151,7 +154,6 @@ final class MemberController
         $existing = $id ? self::loadVisible($id) : null;
 
         $data = [
-            'member_no'  => input('member_no'),
             'first_name' => input('first_name'),
             'last_name'  => input('last_name'),
             'birth_date' => input('birth_date'),
@@ -161,13 +163,6 @@ final class MemberController
         ];
 
         $errors = [];
-        if ($data['member_no'] === '') {
-            $errors[] = 'Lidnummer is verplicht.';
-        } elseif (mb_strlen($data['member_no']) > 30) {
-            $errors[] = 'Lidnummer is te lang (max. 30 tekens).';
-        } elseif (Database::val('SELECT COUNT(*) FROM members WHERE member_no = ? AND id <> ?', [$data['member_no'], $id]) > 0) {
-            $errors[] = 'Dit lidnummer bestaat al.';
-        }
         if ($data['first_name'] === '' || $data['last_name'] === '') {
             $errors[] = 'Voornaam en achternaam zijn verplicht.';
         }
@@ -191,15 +186,15 @@ final class MemberController
         $nullable = fn($v) => $v === '' ? null : $v;
         if ($existing) {
             Database::exec(
-                'UPDATE members SET member_no=?, first_name=?, last_name=?, birth_date=?, email=?, phone=?, status=? WHERE id=?',
-                [$data['member_no'], $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], $id]
+                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, status=? WHERE id=?',
+                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], $id]
             );
             audit('UPDATE', 'member', $id);
             flash('success', 'Lid bijgewerkt.');
         } else {
             $id = Database::insert(
                 'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, status, created_at) VALUES (?,?,?,?,?,?,?,?)',
-                [$data['member_no'], $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], now()]
+                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $data['status'], now()]
             );
             audit('CREATE', 'member', $id);
             flash('success', Guardianship::isMinor($nullable($data['birth_date']))
@@ -207,6 +202,19 @@ final class MemberController
                 : 'Lid toegevoegd. Koppel het lid hieronder aan een groep.');
         }
         redirect(url('member', ['id' => $id]));
+    }
+
+    /**
+     * Het lidnummer is enkel een interne sleutel (verplicht en uniek in de database) en wordt
+     * nergens getoond. Het wordt automatisch aangemaakt en bij wijzigen nooit aangepast.
+     */
+    private static function nextMemberNo(): string
+    {
+        $n = (int) Database::val('SELECT COALESCE(MAX(id), 0) FROM members') + 1;
+        do {
+            $no = sprintf('HZS-%04d', $n++);
+        } while (Database::val('SELECT COUNT(*) FROM members WHERE member_no = ?', [$no]) > 0);
+        return $no;
     }
 
     private static function loadVisible(int $id): array

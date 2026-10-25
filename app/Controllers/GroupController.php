@@ -34,7 +34,7 @@ final class GroupController
         }
 
         $memberships = Database::all(
-            "SELECT gm.id AS membership_id, gm.start_date, gm.end_date, m.id, m.member_no, m.first_name, m.last_name, m.status
+            "SELECT gm.id AS membership_id, gm.start_date, gm.end_date, m.id, m.birth_date, m.first_name, m.last_name, m.status
              FROM group_memberships gm JOIN members m ON m.id = gm.member_id
              WHERE $where ORDER BY (gm.end_date IS NOT NULL), m.last_name, m.first_name",
             $params
@@ -49,7 +49,7 @@ final class GroupController
         $candidates = [];
         if (Auth::can('groups.write')) {
             $candidates = Database::all(
-                "SELECT m.id, m.member_no, m.first_name, m.last_name FROM members m
+                "SELECT m.id, m.birth_date, m.first_name, m.last_name FROM members m
                  WHERE m.status = 'ACTIVE' AND NOT EXISTS (
                     SELECT 1 FROM group_memberships gm WHERE gm.member_id = m.id AND gm.group_id = ?
                       AND (gm.end_date IS NULL OR gm.end_date >= ?))

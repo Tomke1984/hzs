@@ -281,14 +281,14 @@ final class UserController
         $storedRoles = $id ? self::rolesOf($id) : [];
 
         $children = $id ? Database::all(
-            'SELECT gl.id, gl.relationship, m.id AS member_id, m.member_no, m.first_name, m.last_name, m.status
+            'SELECT gl.id, gl.relationship, m.id AS member_id, m.birth_date, m.first_name, m.last_name, m.status
              FROM guardian_links gl JOIN members m ON m.id = gl.member_id
              WHERE gl.user_id = ? ORDER BY m.last_name, m.first_name',
             [$id]
         ) : [];
 
         $linkableMembers = $id ? Database::all(
-            "SELECT id, member_no, first_name, last_name FROM members
+            "SELECT id, birth_date, first_name, last_name FROM members
              WHERE status = 'ACTIVE' AND id NOT IN (SELECT member_id FROM guardian_links WHERE user_id = ?)
              ORDER BY last_name, first_name",
             [$id]
@@ -306,7 +306,7 @@ final class UserController
             'selectedRoles' => $selectedRoles,
             'storedRoles' => $storedRoles,
             'errors' => $errors,
-            'members' => Database::all("SELECT id, member_no, first_name, last_name FROM members WHERE status = 'ACTIVE' ORDER BY last_name, first_name"),
+            'members' => Database::all("SELECT id, birth_date, first_name, last_name FROM members WHERE status = 'ACTIVE' ORDER BY last_name, first_name"),
             'groups' => Database::all('SELECT id, name FROM `groups` WHERE is_active = 1 ORDER BY name'),
             'children' => $children,
             'linkableMembers' => $linkableMembers,

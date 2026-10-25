@@ -14,7 +14,6 @@
 
 <section class="card">
   <dl class="facts">
-    <dt>Lidnummer</dt><dd><?= e($member['member_no']) ?></dd>
     <dt>Status</dt><dd><span class="chip <?= $member['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $member['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span></dd>
     <?php if ($member['birth_date']): ?><dt>Geboortedatum</dt><dd><?= e(fmt_date($member['birth_date'])) ?></dd><?php endif; ?>
     <?php if ($showContact): ?>

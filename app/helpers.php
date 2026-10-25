@@ -140,6 +140,12 @@ function attendance_label(string $s): string
     return ['UNKNOWN' => 'Onbekend', 'PRESENT' => 'Aanwezig', 'ABSENT' => 'Afwezig'][$s] ?? $s;
 }
 
+/** Korte aanvulling bij een lidnaam in keuzelijsten, om gelijknamige leden te onderscheiden: " (geb. 2010)". */
+function member_hint(array $m): string
+{
+    return !empty($m['birth_date']) ? ' (geb. ' . substr($m['birth_date'], 0, 4) . ')' : '';
+}
+
 /** Titel voor de ledenpagina, afhankelijk van wie kijkt. */
 function members_label(): string
 {

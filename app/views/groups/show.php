@@ -22,11 +22,10 @@
   <?php else: ?>
   <div class="table-wrap">
   <table class="table">
-    <thead><tr><th>Nr.</th><th>Naam</th><th>Van</th><th>Tot</th><?php if (Auth::can('groups.write')): ?><th></th><?php endif; ?></tr></thead>
+    <thead><tr><th>Naam</th><th>Van</th><th>Tot</th><?php if (Auth::can('groups.write')): ?><th></th><?php endif; ?></tr></thead>
     <tbody>
     <?php foreach ($memberships as $ms): ?>
       <tr class="<?= $ms['end_date'] !== null ? 'is-off' : '' ?>">
-        <td><?= e($ms['member_no']) ?></td>
         <td><a href="<?= e(url('member', ['id' => $ms['id']])) ?>"><?= e($ms['last_name']) ?> <?= e($ms['first_name']) ?></a>
           <?php if ($ms['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></td>
         <td><?= e(fmt_date($ms['start_date'])) ?></td>
@@ -60,7 +59,7 @@
         <option value="">— kies een lid —</option>
         <?php foreach ($candidates as $c): ?>
           <?php $blocked = in_array((int) $c['id'], $blockedIds, true); ?>
-          <option value="<?= (int) $c['id'] ?>" <?= $blocked ? 'disabled' : '' ?>><?= e($c['last_name']) ?> <?= e($c['first_name']) ?> (<?= e($c['member_no']) ?>)<?= $blocked ? ' — ouder of voogd ontbreekt' : '' ?></option>
+          <option value="<?= (int) $c['id'] ?>" <?= $blocked ? 'disabled' : '' ?>><?= e($c['last_name']) ?> <?= e($c['first_name']) ?><?= e(member_hint($c)) ?><?= $blocked ? ' — ouder of voogd ontbreekt' : '' ?></option>
         <?php endforeach; ?>
       </select>
     </label>

@@ -30,20 +30,20 @@
         <?= e(role_label($code)) ?>
         <span class="muted small">
           <?= ['PARENT' => '— ziet de kalender en aanwezigheid van de gekoppelde kinderen',
-               'SWIMMER' => '— ziet enkel de eigen gegevens en groepen',
-               'TRAINER' => '— ziet de leden en activiteiten van de toegewezen groepen en registreert aanwezigheid',
+               'SWIMMER' => '— is zelf lid en ziet de eigen gegevens en groepen (ook voor trainers die zelf lid zijn)',
+               'TRAINER' => '— ziet de leden en activiteiten van de toegewezen groepen en registreert aanwezigheid. Is de trainer ook lid? Vink dan ook Zwemmer aan.',
                'ADMIN' => '— heeft clubbrede toegang, inclusief gebruikersbeheer'][$code] ?>
         </span>
       </label>
     <?php endforeach; ?>
   </fieldset>
 
-  <label id="swimmer-member" hidden>Verbonden met lid * (voor de rol Zwemmer)
+  <label id="swimmer-member" hidden>Verbonden met lid * (het eigen lidprofiel van deze gebruiker)
     <select name="member_id">
       <option value="">— kies een lid —</option>
       <?php foreach ($members as $m): ?>
         <option value="<?= (int) $m['id'] ?>" <?= (int) $user['member_id'] === (int) $m['id'] ? 'selected' : '' ?>>
-          <?= e($m['last_name']) ?> <?= e($m['first_name']) ?> (<?= e($m['member_no']) ?>)
+          <?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?= e(member_hint($m)) ?>
         </option>
       <?php endforeach; ?>
     </select>
@@ -76,11 +76,10 @@
     <?php else: ?>
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Nr.</th><th>Naam</th><th>Relatie</th><th></th></tr></thead>
+      <thead><tr><th>Naam</th><th>Relatie</th><th></th></tr></thead>
       <tbody>
       <?php foreach ($children as $c): ?>
         <tr>
-          <td><?= e($c['member_no']) ?></td>
           <td><a href="<?= e(url('member', ['id' => $c['member_id']])) ?>"><?= e($c['last_name']) ?> <?= e($c['first_name']) ?></a>
             <?php if ($c['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></td>
           <td><?= e($c['relationship']) ?: '<span class="muted">—</span>' ?></td>
@@ -106,7 +105,7 @@
         <select name="member_id" required>
           <option value="">— kies een lid —</option>
           <?php foreach ($linkableMembers as $m): ?>
-            <option value="<?= (int) $m['id'] ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?> (<?= e($m['member_no']) ?>)</option>
+            <option value="<?= (int) $m['id'] ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?= e(member_hint($m)) ?></option>
           <?php endforeach; ?>
         </select>
       </label>
