@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `main` en `dev` zijn gelijk._
+- **Werkwijze:** changelog toegevoegd (`CHANGELOG.md`); elke push naar `dev` en elke merge naar `main` wordt hier bijgehouden. (`23862b6`)
 
 ## Op main
 
