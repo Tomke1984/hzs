@@ -5,3 +5,4 @@ storage/mail/*
 !storage/mail/.gitkeep
 public/uploads/*
 !public/uploads/.gitkeep
+storage/stats.salt
