@@ -152,8 +152,8 @@ final class Scope
         if (Auth::hasRole('TRAINER')) {
             $tg = array_column(Database::all(
                 'SELECT gt.group_id FROM group_trainers gt JOIN `groups` g ON g.id = gt.group_id
-                 WHERE gt.user_id = ? AND g.is_active = 1 AND gt.start_date <= ? AND (gt.end_date IS NULL OR gt.end_date >= ?)',
-                [$u['id'], $today, $today]
+                 WHERE gt.user_id = ? AND g.is_active = 1',
+                [$u['id']]
             ), 'group_id');
             $groups = array_merge($groups, $tg);
             self::$coachMembers = [];

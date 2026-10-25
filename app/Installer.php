@@ -71,6 +71,11 @@ final class Installer
         if (Database::one('SELECT member_id FROM group_memberships GROUP BY member_id HAVING COUNT(*) > 1 LIMIT 1')) {
             Database::exec('DELETE FROM group_memberships WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_memberships GROUP BY member_id) k)');
         }
+        // Trainertoewijzing = enkel de huidige groepen: beëindigde en dubbele rijen opruimen.
+        Database::exec('DELETE FROM group_trainers WHERE end_date IS NOT NULL');
+        if (Database::one('SELECT user_id FROM group_trainers GROUP BY user_id, group_id HAVING COUNT(*) > 1 LIMIT 1')) {
+            Database::exec('DELETE FROM group_trainers WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_trainers GROUP BY user_id, group_id) k)');
+        }
         try {
             Database::val('SELECT is_public FROM activities LIMIT 1');
         } catch (Throwable $e) {

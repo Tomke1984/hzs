@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Geen Van/Tot meer bij trainers:** een trainer is gewoon aan groepen gekoppeld, zonder begin- en einddatum of historiek. Op de gebruikerspagina kies je een groep en klik je *Toewijzen*; *Verwijderen* haalt de trainer uit de groep. Bestaande databases worden opgeruimd (afgesloten en dubbele koppelingen verdwijnen).
 - **Publieke website (start):** wie niet is aangemeld ziet nu een publieke startpagina in plaats van het inlogscherm (aanmelden staat in het menu). Bevat: nieuws (enkel op de startpagina, volledige berichten met paginering; geen aparte nieuwspagina; het bestuur ziet concepten er gemarkeerd), vrije pagina's met menu en subpagina's, publieke kalender, trainingsuren per groep en een link naar inschrijven. Een pagina met adres `home` verschijnt als introtekst.
 - **Groepen verwijderen:** knop *Verwijderen* op de groepspagina (Admin en Bestuur). Kan enkel voor een groep zonder leden, activiteiten of trainingsreeksen; anders volgt een uitleg en kun je de groep op inactief zetten. Trainer-koppelingen verdwijnen mee.
 - **Leden verplaatsen:** op de groepspagina leden selecteren (of alles) en in één keer naar een andere groep verplaatsen. Op de ledenpagina kies je de groep van één lid (of *geen groep*).

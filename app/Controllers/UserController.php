@@ -271,7 +271,6 @@ final class UserController
     {
         $userId = (int) input('user_id', '0');
         $groupId = (int) input('group_id', '0');
-        $start = input('start_date', today());
         $back = url('user_form', ['id' => $userId]);
         self::load($userId);
 
@@ -283,41 +282,28 @@ final class UserController
             flash('error', 'Kies een actieve groep.');
             redirect($back);
         }
-        if (!valid_date($start)) {
-            flash('error', 'Startdatum is ongeldig.');
-            redirect($back);
-        }
-        if (Database::val(
-            'SELECT COUNT(*) FROM group_trainers WHERE user_id = ? AND group_id = ? AND (end_date IS NULL OR end_date >= ?)',
-            [$userId, $groupId, $start]
-        ) > 0) {
+        if (Database::val('SELECT COUNT(*) FROM group_trainers WHERE user_id = ? AND group_id = ?', [$userId, $groupId]) > 0) {
             flash('error', 'Deze trainer is al aan deze groep toegewezen.');
             redirect($back);
         }
 
-        $id = Database::insert('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$userId, $groupId, $start]);
+        $id = Database::insert('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$userId, $groupId, today()]);
         audit('CREATE', 'group_trainer', $id);
         flash('success', 'Trainer toegewezen aan groep.');
         redirect($back);
     }
 
-    public static function endTrainerGroup(): void
+    public static function removeTrainerGroup(): void
     {
         $id = (int) input('trainer_group_id', '0');
         $row = Database::one('SELECT * FROM group_trainers WHERE id = ?', [$id]);
         if (!$row) {
             abort(404, 'Deze toewijzing bestaat niet.');
         }
-        $back = url('user_form', ['id' => $row['user_id']]);
-        if ($row['end_date'] !== null && $row['end_date'] < today()) {
-            flash('error', 'Deze toewijzing is al beëindigd.');
-            redirect($back);
-        }
-        $end = max(today(), $row['start_date']);
-        Database::exec('UPDATE group_trainers SET end_date = ? WHERE id = ?', [$end, $id]);
-        audit('END', 'group_trainer', $id);
-        flash('success', 'Toewijzing beëindigd per ' . fmt_date($end) . '.');
-        redirect($back);
+        Database::exec('DELETE FROM group_trainers WHERE id = ?', [$id]);
+        audit('DELETE', 'group_trainer', $id);
+        flash('success', 'Trainer uit de groep gehaald.');
+        redirect(url('user_form', ['id' => $row['user_id']]));
     }
 
     private static function load(int $id): array
@@ -358,9 +344,9 @@ final class UserController
         ) : [];
 
         $trainerGroups = $id ? Database::all(
-            'SELECT gt.id, gt.start_date, gt.end_date, g.id AS group_id, g.name
+            'SELECT gt.id, g.id AS group_id, g.name
              FROM group_trainers gt JOIN `groups` g ON g.id = gt.group_id
-             WHERE gt.user_id = ? ORDER BY (gt.end_date IS NOT NULL), g.name',
+             WHERE gt.user_id = ? ORDER BY g.name',
             [$id]
         ) : [];
 

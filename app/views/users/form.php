@@ -153,21 +153,16 @@
     <?php else: ?>
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Groep</th><th>Van</th><th>Tot</th><th></th></tr></thead>
       <tbody>
       <?php foreach ($trainerGroups as $tg): ?>
-        <tr class="<?= $tg['end_date'] !== null ? 'is-off' : '' ?>">
+        <tr>
           <td><a href="<?= e(url('group', ['id' => $tg['group_id']])) ?>"><?= e($tg['name']) ?></a></td>
-          <td><?= e(fmt_date($tg['start_date'])) ?></td>
-          <td><?= $tg['end_date'] ? e(fmt_date($tg['end_date'])) : '<span class="chip ok">lopend</span>' ?></td>
           <td class="right">
-            <?php if ($tg['end_date'] === null): ?>
-            <form method="post" action="<?= e(url('user_trainer_end')) ?>" data-confirm="Toewijzing beëindigen per vandaag?">
+            <form method="post" action="<?= e(url('user_trainer_remove')) ?>" data-confirm="Trainer uit deze groep halen?">
               <?= csrf_field() ?>
               <input type="hidden" name="trainer_group_id" value="<?= (int) $tg['id'] ?>">
-              <button class="btn btn-small btn-ghost" type="submit">Beëindigen</button>
+              <button class="btn btn-small btn-ghost" type="submit">Verwijderen</button>
             </form>
-            <?php endif; ?>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -187,9 +182,6 @@
             <option value="<?= (int) $g['id'] ?>"><?= e($g['name']) ?></option>
           <?php endforeach; ?>
         </select>
-      </label>
-      <label>Vanaf
-        <input type="date" name="start_date" value="<?= e(today()) ?>" required>
       </label>
       <button class="btn" type="submit">Toewijzen</button>
     </form>

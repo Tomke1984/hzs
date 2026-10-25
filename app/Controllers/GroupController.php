@@ -65,9 +65,9 @@ final class GroupController
         );
 
         $trainers = Database::all(
-            'SELECT u.display_name, gt.start_date, gt.end_date FROM group_trainers gt JOIN users u ON u.id = gt.user_id
-             WHERE gt.group_id = ? AND gt.start_date <= ? AND (gt.end_date IS NULL OR gt.end_date >= ?) ORDER BY u.display_name',
-            [$group['id'], $today, $today]
+            'SELECT u.display_name FROM group_trainers gt JOIN users u ON u.id = gt.user_id
+             WHERE gt.group_id = ? ORDER BY u.display_name',
+            [$group['id']]
         );
 
         $candidates = [];
