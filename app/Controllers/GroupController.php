@@ -197,6 +197,34 @@ final class GroupController
         redirect($back);
     }
 
+    /** Groep verwijderen: enkel als er geen ledenhistoriek, activiteiten of reeksen aan hangen. */
+    public static function delete(): void
+    {
+        $id = (int) input('id', '0');
+        $group = Database::one('SELECT id, name FROM `groups` WHERE id = ?', [$id]);
+        if (!$group) {
+            abort(404, 'Groep niet gevonden.');
+        }
+        $members = (int) Database::val('SELECT COUNT(*) FROM group_memberships WHERE group_id = ?', [$id]);
+        $acts = (int) Database::val('SELECT COUNT(*) FROM activity_groups WHERE group_id = ?', [$id]);
+        $series = (int) Database::val('SELECT COUNT(*) FROM activity_series_groups WHERE group_id = ?', [$id]);
+        if ($members || $acts || $series) {
+            $why = [];
+            if ($members) { $why[] = 'er hangt ledenhistoriek aan'; }
+            if ($acts) { $why[] = 'er zijn activiteiten aan gekoppeld'; }
+            if ($series) { $why[] = 'ze zit in een trainingsreeks'; }
+            flash('error', 'Deze groep kan niet verwijderd worden: ' . implode(', ', $why) . '. Zet de groep op inactief om ze te bewaren zonder dat ze nog gebruikt wordt.');
+            redirect(url('group', ['id' => $id]));
+        }
+        Database::tx(function () use ($id) {
+            Database::exec('DELETE FROM group_trainers WHERE group_id = ?', [$id]);
+            Database::exec('DELETE FROM `groups` WHERE id = ?', [$id]);
+        });
+        audit('DELETE', 'group', $id, $group['name']);
+        flash('success', 'Groep "' . $group['name'] . '" verwijderd.');
+        redirect(url('groups'));
+    }
+
     /** Meerdere leden van de ene groep naar de andere verplaatsen. */
     public static function moveMembers(): void
     {

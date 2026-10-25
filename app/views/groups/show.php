@@ -1,7 +1,14 @@
 <div class="row-between">
   <h1><?= e($group['name']) ?> <?php if (!(int) $group['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h1>
   <?php if (Auth::can('groups.write')): ?>
-    <a class="btn btn-ghost" href="<?= e(url('group_form', ['id' => $group['id']])) ?>">Wijzigen</a>
+    <span class="actions-inline">
+      <a class="btn btn-ghost" href="<?= e(url('group_form', ['id' => $group['id']])) ?>">Wijzigen</a>
+      <form method="post" action="<?= e(url('group_delete')) ?>" data-confirm="Groep &quot;<?= e($group['name']) ?>&quot; definitief verwijderen? Dit kan enkel als er geen leden, activiteiten of reeksen aan gekoppeld zijn.">
+        <?= csrf_field() ?>
+        <input type="hidden" name="id" value="<?= (int) $group['id'] ?>">
+        <button class="btn btn-ghost" type="submit">Verwijderen</button>
+      </form>
+    </span>
   <?php endif; ?>
 </div>
 <p><span class="chip cat-<?= e(strtolower($group['category'] ?? 'SWIM_SCHOOL')) ?>"><?= e(group_category_label($group['category'] ?? null)) ?></span></p>
