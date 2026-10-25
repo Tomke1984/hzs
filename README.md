@@ -88,7 +88,7 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 ### Mobiel en techniek
 Responsive (getest tot 320 px): tabellen worden kaarten, grote aanraakdoelen. Zie de analyse voor architectuur, datamodel en beveiliging.
 
-Nog niet aanwezig: MFA, login-throttling, betalingen, exports, documentenbeheer, CSV-import van bestaande leden, volledige audit-triggers.
+Nog niet aanwezig: MFA, betalingen, exports, documentenbeheer, CSV-import van bestaande leden, volledige audit-triggers.
 
 ## Structuur
 
@@ -109,7 +109,7 @@ tools/                  seed-demo.php, sync-scripts
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
-Nog te doen voor productie: login-throttling, MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
+Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur, HSTS bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Nog te doen voor productie: MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
 
 ## Werkwijze met GitHub
 

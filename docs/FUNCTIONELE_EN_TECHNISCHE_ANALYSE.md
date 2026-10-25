@@ -1,6 +1,6 @@
 # HZS Clubapp – Functionele en technische analyse
 
-Versie v0.7.0 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
+Versie v0.8.0 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
 
 ## 1. Doel
 HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
@@ -15,7 +15,7 @@ HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwe
 - Inschrijvingen (lidmaatschap) met goedkeuring door het bestuur; zwemtestwachtlijst met statussen; contactberichten.
 
 ### Niet in scope / vervolgwerk
-MFA, login-throttling, betalingen, exports, documentenbeheer (upload van reglementen e.d.), CSV-import van bestaande leden (bewust uitgesteld), clubrecords als tabel, volledige audit-triggers, herhalende activiteiten buiten reeksen, restyling van login/app in de stijl van de site.
+MFA, betalingen, exports, documentenbeheer (upload van reglementen e.d.), CSV-import van bestaande leden (bewust uitgesteld), clubrecords als tabel, volledige audit-triggers, herhalende activiteiten buiten reeksen, restyling van login/app in de stijl van de site.
 
 ## 3. Actoren en rechten
 | Rol | Rechten (permissies) | Zichtbaarheid |
@@ -70,11 +70,16 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - CSRF op alle POST-acties; prepared statements; uitvoer-escaping via `e()`; CSP zonder inline scripts.
 - Permissiecheck per route en gegevensscope in elke query (`Scope`); geen fysieke deletes van leden.
 - Publieke formulieren: verborgen spamveld, limieten per e-mailadres en uur, e-mailbevestiging met eenmalig token, onbevestigde aanvragen worden na 7 dagen opgeruimd.
+- **Login-throttling:** tabel `login_attempts`; na 5 mislukte pogingen per e-mailadres of 20 per IP-adres binnen 15 minuten volgt een blokkade van 15 minuten (HTTP 429); een geslaagde login wist de teller. Constante responstijd bij onbekende accounts.
+- **Sessie:** verloopt na 12 uur zonder activiteit; sessie-ID wordt vernieuwd bij login.
+- **Headers:** CSP zonder inline stijl of script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes met `Cache-Control: no-store` en `X-Robots-Tag: noindex`.
+- **Foutafhandeling:** globale exception handler (logt, toont een neutrale foutpagina, in de stijl van de site voor bezoekers); `debug` toont details enkel lokaal.
+- **Uploads:** enkel jpg/png/gif/webp op basis van de echte afbeeldingsgegevens, willekeurige bestandsnamen, `.htaccess` die scriptuitvoering in `public/uploads/` blokkeert.
 - Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en worden gehasht bewaard.
 - Publieke site toont nooit persoonsgegevens: enkel wedstrijden/clubactiviteiten en de uren per groep met de naam van de trainers.
 - Installer vergrendelt zichzelf; laatste actieve beheerder kan niet uitgeschakeld worden.
 ### Voor productie nog te doen
-Login-throttling, MFA voor beheerders, HSTS en headers op serverniveau, back-ups van database en `public/uploads/`, minimale databaserechten, privacyverklaring en AVG-proces (retentie, inzage, verwijdering), logging en alerting.
+MFA voor beheerders, headers/HSTS ook op serverniveau, back-ups van database en `public/uploads/`, minimale databaserechten, privacyverklaring en AVG-proces (retentie, inzage, verwijdering), logging en alerting.
 ### MySQL-beperking
 Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe query op leden, groepen, activiteiten of aanwezigheid moet `Scope` gebruiken en getest worden met autorisatietests.
 
@@ -90,18 +95,21 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 ## 10. Testaanpak
 Er is geen PHPUnit-suite; de levering werd getest met end-to-end shellscripts tegen `php -S` (installatie met demodata, aanmelden met de demo-accounts, formulieren posten en resultaten controleren in HTML en database). Dekking: authenticatie en CSRF, autorisatie per rol, ledenregels (minderjarigen, één groep), groepsbeheer en verwijderen, trainingsreeksen (aanmaken, schrappen, verplaatsen, verwijderen, tonen/verbergen), uitnodigingen en mails, inschrijven en goedkeuren, zwemtestwachtlijst, contactformulier, publieke site en kalender (wat bezoekers wel/niet zien), websitebeheer, paginacontrole, automatische pagina's, terugknop en migraties van bestaande databases. Aanbeveling: deze scripts omzetten naar een bewaarde suite in de repository (bv. `tests/`).
 
+## 10b. Responsive
+Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 768, 820, 1024, 1180, 1366 en 1920 px (geen horizontale scroll). Menu klapt in onder 1180 px; onder 820 px blijft in de header enkel het logo; tabellen worden kaarten op telefoon (elke tabel heeft een `thead` voor de labels); formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
+
 ## 11. Deployment en exploitatie
 - Apart subdomein of de hoofddomeinnaam met HTTPS; webroot naar `public/`.
 - `config.php` buiten versiebeheer; `debug` uit; `cookie_secure` aan; `app_url` instellen.
 - `public/install.php` na installatie verwijderen.
 - Mail instellen (smtp aanbevolen) en `contact`-adressen per onderwerp.
 - Dagelijkse back-up van de database en `public/uploads/`; restore testen.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.7.0 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.8.0 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).
-- **Middel:** geen login-throttling of MFA; audit enkel op de belangrijkste mutaties; end-to-end-scripts staan niet in de repository; migraties draaien bij elke start (bij grote databases extra aandacht).
+- **Middel:** geen MFA; audit enkel op de belangrijkste mutaties; end-to-end-scripts staan niet in de repository; migraties draaien bij elke start (nu ±6 ms; een schemaversie in de database zou netter zijn).
 - **Laag:** routering via queryparameter; geen offline modus of pushmeldingen.
 
 ## 13. Aanbevolen volgende stappen
-Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; login-throttling en MFA; testsuite in de repository; geautomatiseerde back-up.
+Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; MFA voor beheerders; schemaversie in plaats van migraties bij elke start; testsuite in de repository; geautomatiseerde back-up.
