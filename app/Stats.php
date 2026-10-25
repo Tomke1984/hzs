@@ -26,7 +26,7 @@ final class Stats
             if (!$site && !$user) {
                 return;
             }
-            if ($site && $user && Auth::can('content.manage')) {
+            if ($site && $user && Auth::can('content.manage') && !config('stats.count_staff', false)) {
                 return; // eigen bezoek van beheerders telt niet mee
             }
             $day = today();
@@ -49,11 +49,29 @@ final class Stats
                         Database::exec('DELETE FROM page_views WHERE day < ?', [date('Y-m-d', strtotime('-' . self::RETENTION_DAYS . ' days'))]);
                     }
                 } catch (Throwable $e) {
-                    // statistieken mogen de site nooit breken
+                    // statistieken mogen de site nooit breken, maar de fout hoort wel in het serverlog
+                    error_log('Stats: ' . $e->getMessage());
                 }
             });
         } catch (Throwable $e) {
         }
+    }
+
+    /** Redenen waarom het huidige bezoek NIET zou meetellen (voor de uitleg op het dashboard). */
+    public static function whyNotCounted(): array
+    {
+        $why = [];
+        if (self::optedOut()) {
+            $why[] = 'Je browser stuurt "Do Not Track" of "Global Privacy Control" mee (Brave en sommige Firefox- of privacy-instellingen doen dat standaard).';
+        }
+        $user = Auth::user();
+        if ($user && Auth::can('content.manage') && !config('stats.count_staff', false)) {
+            $why[] = 'Je bent ingelogd als beheerder of bestuurslid: je bezoek aan de website telt niet mee.';
+        }
+        if (self::isBot((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''))) {
+            $why[] = 'Je browser lijkt een bot of automatisch programma.';
+        }
+        return $why;
     }
 
     private static function optedOut(): bool
@@ -140,6 +158,7 @@ final class Stats
             ];
         }
         $out['first'] = (string) Database::val('SELECT MIN(day) FROM page_views');
+        $out['last'] = (string) Database::val('SELECT MAX(viewed_at) FROM page_views');
         return $out;
     }
 

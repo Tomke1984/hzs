@@ -15,6 +15,12 @@ $dagnaam = fn($d) => date('j/n', strtotime($d));
   <strong>Paginaweergaves</strong> = alle bekeken pagina's.
   Er worden geen cookies gebruikt en geen IP-adressen of namen bewaard; bots, beheerders op de website en bezoekers met "Do Not Track" tellen niet mee.</p>
 
+<?php if ($why): ?>
+<div class="alert alert-warning" role="status"><strong>Let op bij het testen:</strong>
+  <ul><?php foreach ($why as $w): ?><li><?= e($w) ?></li><?php endforeach; ?></ul>
+  Test door de website te openen in een <strong>privévenster zonder aan te melden</strong> (of op je gsm), en vernieuw daarna dit scherm.</div>
+<?php endif; ?>
+<p class="muted small"><?= $r['last'] !== '' ? 'Laatste meting: ' . e(fmt_dt($r['last'])) . '.' : 'Er is nog niets geteld sinds de teller actief is.' ?></p>
 <?php foreach ($r['areas'] as $area => $a):
     $max = max(1, max(array_column($a['series'], 'views')));
     $totalDev = max(1, array_sum(array_column($a['devices'], 'views')));

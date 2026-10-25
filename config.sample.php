@@ -29,6 +29,8 @@ return [
     // Optioneel: link naar de privacyverklaring (getoond op het inschrijfformulier) en een e-mailadres
     // dat een melding krijgt bij elke bevestigde inschrijving.
     'privacy_url' => '',
+    // Statistieken: bezoek van ingelogde beheerders/bestuur op de website telt standaard niet mee. Zet op true om te testen.
+    'stats' => ['count_staff' => false],
     'registration' => ['notify_email' => ''],
     // Naar welk adres gaan berichten van het contactformulier? Leeg = het adres bij 'registration' hierboven.
     'contact' => ['swimschool_email' => '', 'competition_email' => '', 'other_email' => ''],

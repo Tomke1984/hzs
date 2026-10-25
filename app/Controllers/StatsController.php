@@ -8,6 +8,6 @@ final class StatsController
         if (!in_array($days, [7, 30, 90, 365], true)) {
             $days = 30;
         }
-        render('stats/index', ['r' => Stats::report($days), 'days' => $days], 'Statistieken');
+        render('stats/index', ['r' => Stats::report($days), 'days' => $days, 'why' => Stats::whyNotCounted()], 'Statistieken');
     }
 }
