@@ -44,7 +44,8 @@ body.site { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--deep) !important; flex: none; }
 .brand img { display: block; width: 58px; height: auto; }
 .brand b { font: 800 1.5rem/1 var(--display); font-style: italic; letter-spacing: .01em; }
-.brand small { display: block; font: 600 .75rem/1.2 var(--text); color: var(--muted); }
+.brand small { display: block; font: 600 .75rem/1.2 var(--text); color: var(--muted); margin-bottom: 2px; }
+.brand b { display: block; }
 .menu-btn { margin-left: auto; background: var(--deep); color: #fff; border: 0; border-radius: 999px; padding: 10px 20px; font: 700 1rem var(--text); cursor: pointer; }
 .site-nav { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 .site-nav a { white-space: nowrap; padding: 10px 10px; text-decoration: none; color: var(--deep); font-weight: 600; font-size: 1rem; border-radius: 8px; }

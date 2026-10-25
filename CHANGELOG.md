@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+- **Header:** boven het logo-naamblok staat nu *Hasseltse Zwemvereniging* en eronder *Spartacus*.
 
 ## Op main
 

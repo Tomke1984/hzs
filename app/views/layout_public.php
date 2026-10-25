@@ -30,7 +30,7 @@ $curSlug = (string) ($_GET['slug'] ?? '');
 <a class="skip" href="#inhoud">Naar de inhoud</a>
 <header class="site-head">
   <div class="wrap bar">
-    <a class="brand" href="<?= e(url('home')) ?>"><img src="assets/logo.png" alt="" width="58" height="51"><span><b>Spartacus</b><small>Hasseltse Zwemvereniging</small></span></a>
+    <a class="brand" href="<?= e(url('home')) ?>"><img src="assets/logo.png" alt="" width="58" height="51"><span><small>Hasseltse Zwemvereniging</small><b>Spartacus</b></span></a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
     <nav class="site-nav" id="site-nav" aria-label="Hoofdmenu">
       <?php foreach ($top as $t): ?>
