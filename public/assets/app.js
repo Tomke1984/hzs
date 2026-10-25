@@ -17,6 +17,15 @@
     });
   });
 
+  // Lid-keuze enkel tonen als de rol Zwemmer is aangevinkt (gebruikersformulier)
+  var swimmerBox = document.querySelector('input[name="roles[]"][value="SWIMMER"]');
+  var swimmerMember = document.getElementById('swimmer-member');
+  if (swimmerBox && swimmerMember) {
+    var syncSwimmer = function () { swimmerMember.hidden = !swimmerBox.checked; };
+    swimmerBox.addEventListener('change', syncSwimmer);
+    syncSwimmer();
+  }
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

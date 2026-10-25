@@ -46,9 +46,10 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Groepen aanmaken en wijzigen; leden historisch koppelen met start- en einddatum.
 - Activiteiten voor groep(en) of hele club; kalender met trainingen, wedstrijden en clubactiviteiten.
 - Presentielijst met Onbekend / Aanwezig / Afwezig.
+- Gebruikersbeheer (enkel beheerders, menu *Gebruikers*): accounts aanmaken, rollen toekennen, wachtwoord resetten, accounts deactiveren, **ouders aan kinderen koppelen** en trainers aan groepen toewijzen. Je kunt jezelf niet buitensluiten en de laatste actieve beheerder kan niet uitgeschakeld worden.
 
-Bewust nog niet in V1: UI voor accounts/rollen/trainers/ouder-kindkoppelingen, wachtwoord vergeten, MFA, herhalende activiteiten, inschrijvingen, betalingen, exports, volledige audit-triggers.
-Accounts en koppelingen buiten de demo-data maak je voorlopig rechtstreeks in de database aan (tabellen `users`, `user_roles`, `group_trainers`, `guardian_links`).
+Bewust nog niet in V1: zelfregistratie van ouders, wachtwoord vergeten, MFA, herhalende activiteiten, inschrijvingen, betalingen, exports, volledige audit-triggers.
+Ouders kijk mee (kalender, aanwezigheid van hun kind/kinderen); ze kunnen zelf niets wijzigen. Een ouder maak je aan onder *Gebruikers* met de rol Ouder, en koppel je daarna aan een of meer kinderen.
 
 ## Structuur
 
@@ -57,7 +58,7 @@ public/index.php        front controller + routetabel (route, methode, vereiste 
 public/install.php      eenmalige installer (vergrendelt zichzelf)
 app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
-app/Controllers/        Auth, Dashboard, Member, Group, Activity
+app/Controllers/        Auth, Dashboard, Member, Group, Activity, User
 app/views/              PHP-templates met escaping via e()
 db/schema.sql           schema voor SQLite en MySQL
 ```

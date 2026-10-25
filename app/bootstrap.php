@@ -38,4 +38,9 @@ session_start();
 
 if (config('db') !== null) {
     Database::connect(config('db'));
+    try {
+        Installer::syncReferenceData(); // nieuwe permissies na een update automatisch bijvullen
+    } catch (Throwable $e) {
+        // tabellen bestaan nog niet (voor de installatie): negeren
+    }
 }

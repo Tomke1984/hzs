@@ -26,7 +26,15 @@ $routes = [
     'membership_add'   => ['POST' => ['GroupController', 'addMember', 'groups.write']],
     'membership_end'   => ['POST' => ['GroupController', 'endMembership', 'groups.write']],
 
-    'calendar'         => ['GET' => ['ActivityController', 'calendar', 'activities.read']],
+    'users'            => ['GET' => ['UserController', 'index', 'users.manage']],
+    'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
+    'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
+    'user_child_add'   => ['POST' => ['UserController', 'addChild', 'users.manage']],
+    'user_child_remove' => ['POST' => ['UserController', 'removeChild', 'users.manage']],
+    'user_trainer_add' => ['POST' => ['UserController', 'addTrainerGroup', 'users.manage']],
+    'user_trainer_end' => ['POST' => ['UserController', 'endTrainerGroup', 'users.manage']],
+
+    'calendar'         =>['GET' => ['ActivityController', 'calendar', 'activities.read']],
     'activity'         => ['GET' => ['ActivityController', 'show', 'activities.read']],
     'activity_form'    => ['GET' => ['ActivityController', 'form', 'activities.write']],
     'activity_save'    => ['POST' => ['ActivityController', 'save', 'activities.write']],

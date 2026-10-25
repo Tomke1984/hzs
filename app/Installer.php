@@ -11,6 +11,7 @@ final class Installer
         'activities.write' => 'Activiteiten aanmaken en wijzigen',
         'attendance.read' => 'Aanwezigheden bekijken (binnen scope)',
         'attendance.write' => 'Aanwezigheden registreren',
+        'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
     ];
 
     public const ROLES = [
@@ -35,6 +36,47 @@ final class Installer
         foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $stmt) {
             Database::pdo()->exec($stmt);
         }
+    }
+
+    /**
+     * Vult ontbrekende permissies en rol-koppelingen aan in een bestaande database
+     * (bv. na een update die een nieuwe permissie toevoegt). Doet niets als alles er al is.
+     */
+    public static function syncReferenceData(): void
+    {
+        if ((int) Database::val('SELECT COUNT(*) FROM roles') === 0) {
+            return; // nog niet geïnstalleerd
+        }
+        $permCount = (int) Database::val('SELECT COUNT(*) FROM permissions');
+        $mapCount = (int) Database::val('SELECT COUNT(*) FROM role_permissions');
+        $expectedMap = 0;
+        foreach (self::ROLES as [, $perms]) {
+            $expectedMap += $perms === ['*'] ? count(self::PERMISSIONS) : count($perms);
+        }
+        if ($permCount >= count(self::PERMISSIONS) && $mapCount >= $expectedMap) {
+            return; // snelle weg: niets te doen
+        }
+
+        Database::tx(function () {
+            foreach (self::PERMISSIONS as $code => $name) {
+                if (!Database::val('SELECT id FROM permissions WHERE code = ?', [$code])) {
+                    Database::exec('INSERT INTO permissions (code, name) VALUES (?, ?)', [$code, $name]);
+                }
+            }
+            foreach (self::ROLES as $roleCode => [, $perms]) {
+                $roleId = Database::val('SELECT id FROM roles WHERE code = ?', [$roleCode]);
+                if (!$roleId) {
+                    continue;
+                }
+                $list = $perms === ['*'] ? array_keys(self::PERMISSIONS) : $perms;
+                foreach ($list as $p) {
+                    $permId = Database::val('SELECT id FROM permissions WHERE code = ?', [$p]);
+                    if ($permId && !Database::val('SELECT 1 FROM role_permissions WHERE role_id = ? AND permission_id = ?', [$roleId, $permId])) {
+                        Database::exec('INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)', [$roleId, $permId]);
+                    }
+                }
+            }
+        });
     }
 
     public static function seedReferenceData(): void

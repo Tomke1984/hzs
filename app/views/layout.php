@@ -16,8 +16,9 @@
     <nav class="nav">
       <a href="<?= e(url('dashboard')) ?>">Overzicht</a>
       <?php if (Auth::can('activities.read')): ?><a href="<?= e(url('calendar')) ?>">Kalender</a><?php endif; ?>
-      <?php if (Auth::can('members.read')): ?><a href="<?= e(url('members')) ?>"><?= Scope::clubWide() || Auth::hasRole('TRAINER') ? 'Leden' : 'Mijn gegevens' ?></a><?php endif; ?>
+      <?php if (Auth::can('members.read')): ?><a href="<?= e(url('members')) ?>"><?= e(members_label()) ?></a><?php endif; ?>
       <?php if (Auth::can('groups.read')): ?><a href="<?= e(url('groups')) ?>">Groepen</a><?php endif; ?>
+      <?php if (Auth::can('users.manage')): ?><a href="<?= e(url('users')) ?>">Gebruikers</a><?php endif; ?>
     </nav>
     <form class="userbox" method="post" action="<?= e(url('logout')) ?>">
       <?= csrf_field() ?>

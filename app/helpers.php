@@ -140,6 +140,20 @@ function attendance_label(string $s): string
     return ['UNKNOWN' => 'Onbekend', 'PRESENT' => 'Aanwezig', 'ABSENT' => 'Afwezig'][$s] ?? $s;
 }
 
+/** Titel voor de ledenpagina, afhankelijk van wie kijkt. */
+function members_label(): string
+{
+    if (Scope::clubWide() || Auth::hasRole('TRAINER')) {
+        return 'Leden';
+    }
+    return Auth::hasRole('PARENT') ? 'Mijn kinderen' : 'Mijn gegevens';
+}
+
+function role_label(string $code): string
+{
+    return ['ADMIN' => 'Beheerder', 'TRAINER' => 'Trainer', 'SWIMMER' => 'Zwemmer', 'PARENT' => 'Ouder'][$code] ?? $code;
+}
+
 function audit(string $action, string $entity, ?int $entityId = null, ?string $detail = null): void
 {
     $u = Auth::user();

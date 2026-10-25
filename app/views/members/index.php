@@ -1,5 +1,5 @@
 <div class="row-between">
-  <h1><?= Scope::clubWide() || Auth::hasRole('TRAINER') ? 'Leden' : 'Mijn gegevens' ?></h1>
+  <h1><?= e(members_label()) ?></h1>
   <?php if (Auth::can('members.write')): ?>
     <a class="btn" href="<?= e(url('member_form')) ?>">+ Nieuw lid</a>
   <?php endif; ?>
