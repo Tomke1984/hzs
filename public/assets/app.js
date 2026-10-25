@@ -120,7 +120,7 @@
   // Publiek menu: op smalle schermen inklapbaar achter een knop
   var menuBtn = document.querySelector('.menu-btn'), siteNav = document.getElementById('site-nav');
   if (menuBtn && siteNav && window.matchMedia) {
-    var mq = window.matchMedia('(max-width: 820px)');
+    var mq = window.matchMedia('(max-width: 1180px)');
     var apply = function () {
       menuBtn.hidden = !mq.matches;
       if (mq.matches) { siteNav.classList.add('is-collapsed'); menuBtn.setAttribute('aria-expanded', 'false'); }

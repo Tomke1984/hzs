@@ -22,6 +22,7 @@
       <?php if (Auth::can('groups.read')): ?><a href="<?= e(url('groups')) ?>">Groepen</a><?php endif; ?>
       <?php if (Auth::can('registrations.manage')): $nReg = (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'"); ?><a href="<?= e(url('registrations')) ?>">Inschrijvingen<?= $nReg ? ' <span class="badge">' . $nReg . '</span>' : '' ?></a><?php endif; ?>
       <?php if (Auth::can('registrations.manage')): $nWait = (int) Database::val("SELECT COUNT(*) FROM swimtest_requests WHERE status = 'WAITING'"); ?><a href="<?= e(url('swimtests')) ?>">Zwemtest<?= $nWait ? ' <span class="badge">' . $nWait . '</span>' : '' ?></a><?php endif; ?>
+      <?php if (Auth::can('registrations.manage')): $nMsg = (int) Database::val('SELECT COUNT(*) FROM contact_messages WHERE handled_at IS NULL'); ?><a href="<?= e(url('messages')) ?>">Berichten<?= $nMsg ? ' <span class="badge">' . $nMsg . '</span>' : '' ?></a><?php endif; ?>
       <?php if (Auth::can('content.manage')): ?><a href="<?= e(url('content')) ?>">Website</a><?php endif; ?>
       <?php if (Auth::can('users.manage')): ?><a href="<?= e(url('users')) ?>">Gebruikers</a><?php endif; ?>
     </nav>

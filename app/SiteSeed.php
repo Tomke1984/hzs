@@ -283,15 +283,7 @@ Hasseltse Zwemvereniging Spartacus, Koning Boudewijnlaan 22, 3500 Hasselt. Zie o
 T],
 
             // ---------- Contact ----------
-            ['contact', 'Contact', null, 4, 1, <<<'T'
-Hasseltse Zwemvereniging Spartacus
-Koning Boudewijnlaan 22
-3500 Hasselt
-
-Vragen over de **zwemschool** gaan naar de secretaris of de coördinator van de zwemschool (Bart Bielen, Jolien Vanhentenrijk). Vragen over de **competitie** gaan naar de coördinator competitie (Lander Mulkers). Alle bestuursleden vind je op de pagina [Bestuur](?r=page&slug=bestuur).
-
-Voor problemen of klachten kun je ook terecht bij het [aanspreekpunt integriteit](?r=page&slug=ombudsman).
-T],
+            ['contact', 'Contact', null, 4, 1, self::contactBody()],
             ['ombudsman', 'API – aanspreekpunt integriteit', 'contact', 1, 1, <<<'T'
 ## Wat doet de API?
 
@@ -310,6 +302,37 @@ T],
     }
 
     /** Voegt ontbrekende pagina's toe (bestaande adressen blijven ongemoeid). @return array{added:int,skipped:int} */
+    /** Tekst van de contactpagina (boven het contactformulier). */
+    public static function contactBody(): string
+    {
+        return <<<'T'
+Hasseltse Zwemvereniging Spartacus
+Koning Boudewijnlaan 22
+3500 Hasselt
+
+## Zwemschool
+
+Heb je een vraag over de zwemschool? Gebruik het formulier hieronder of mail naar [zwemschool@khzs.be](mailto:zwemschool@khzs.be). Wil je je kind aanmelden? Vraag dan de [zwemtest](?r=swimtest) aan.
+
+- **Jolien Vanhentenrijk**, jeugdcoördinator zwemschool: +32 474 60 22 52
+- **Bart Bielen**, secretaris zwemschool: +32 496 32 92 52
+
+## Competitie
+
+Vragen over de competitie gaan naar de contactpersoon van de groep:
+
+- **Kern en competitie 1:** Lander Mulkers, +32 470 57 13 06, [lander.mulkers@khzs.be](mailto:lander.mulkers@khzs.be); Antoinette Konings, +31 610 37 25 14, [antoinette.konings@khzs.be](mailto:antoinette.konings@khzs.be)
+- **Competitie 2 en belofte:** Mirte Bielen, +32 499 08 01 07, [mirte.bielen@khzs.be](mailto:mirte.bielen@khzs.be)
+- **Competitie 3:** Jolien Vanhentenrijk, +32 474 60 22 52, [jolien.vanhentenrijk@khzs.be](mailto:jolien.vanhentenrijk@khzs.be); Jorien Bielen, +32 471 76 02 59, [jorien.bielen@khzs.be](mailto:jorien.bielen@khzs.be)
+- **Pre-competitie 1:** Jorien Bielen, +32 471 76 02 59, [jorien.bielen@khzs.be](mailto:jorien.bielen@khzs.be)
+- **Pre-competitie 2:** Ine Bijnens, +32 471 89 15 62, [ine@bijnens.com](mailto:ine@bijnens.com)
+
+## Andere vragen
+
+Alle bestuursleden vind je op de pagina [Bestuur](?r=page&slug=bestuur). Voor problemen of klachten kun je ook terecht bij het [aanspreekpunt integriteit](?r=page&slug=ombudsman).
+T;
+    }
+
     /** Doelstellingen per groep (naam => tekst); worden enkel ingevuld bij groepen waar nog niets staat. */
     public static function goals(): array
     {

@@ -45,6 +45,77 @@ final class SiteController
         if (!$p || ($p['status'] !== 'PUBLISHED' && !Auth::can('content.manage'))) {
             abort(404, 'Deze pagina bestaat niet.');
         }
+        self::renderPage($p, ['old' => self::blankContact((string) ($_GET['topic'] ?? '')), 'errors' => []]);
+    }
+
+    private static function blankContact(string $topic = ''): array
+    {
+        return ['topic' => isset(self::TOPICS[$topic]) ? $topic : 'SWIM_SCHOOL', 'first_name' => '', 'last_name' => '', 'email' => '', 'message' => ''];
+    }
+
+    public const TOPICS = ['SWIM_SCHOOL' => 'De zwemschool', 'COMPETITION' => 'De competitie', 'OTHER' => 'Iets anders'];
+
+    /** Contactformulier op de contactpagina. */
+    public static function contactSend(): void
+    {
+        $p = Database::one("SELECT * FROM pages WHERE slug = 'contact'");
+        if (!$p) {
+            abort(404, 'Deze pagina bestaat niet.');
+        }
+        if (input('website') !== '') { // robot: doe alsof het gelukt is
+            flash('success', 'Bedankt, je bericht is verstuurd.');
+            redirect(url('page', ['slug' => 'contact']));
+        }
+        $old = self::blankContact(input('topic'));
+        foreach (['first_name', 'last_name', 'email'] as $k) {
+            $old[$k] = input($k);
+        }
+        $old['email'] = strtolower($old['email']);
+        $old['message'] = trim((string) (is_array($_POST['message'] ?? null) ? '' : ($_POST['message'] ?? '')));
+        $errors = [];
+        if ($old['first_name'] === '' || $old['last_name'] === '' || mb_strlen($old['first_name']) > 80 || mb_strlen($old['last_name']) > 80) {
+            $errors[] = 'Voornaam en achternaam zijn verplicht (max. 80 tekens).';
+        }
+        if (!filter_var($old['email'], FILTER_VALIDATE_EMAIL) || mb_strlen($old['email']) > 190) {
+            $errors[] = 'Vul een geldig e-mailadres in.';
+        }
+        if ($old['message'] === '' || mb_strlen($old['message']) > 3000) {
+            $errors[] = 'Schrijf een bericht (max. 3000 tekens).';
+        }
+        if (!$errors) {
+            $since = date('Y-m-d H:i:s', time() - 3600);
+            if ((int) Database::val('SELECT COUNT(*) FROM contact_messages WHERE email = ? AND created_at > ?', [$old['email'], $since]) >= 5
+                || (int) Database::val('SELECT COUNT(*) FROM contact_messages WHERE created_at > ?', [$since]) >= 100) {
+                $errors[] = 'Er zijn te veel berichten verstuurd. Probeer het over een uur opnieuw.';
+            }
+        }
+        if ($errors) {
+            http_response_code(422);
+            self::renderPage($p, ['old' => $old, 'errors' => $errors]);
+            return;
+        }
+        $id = Database::insert(
+            'INSERT INTO contact_messages (topic, first_name, last_name, email, message, created_at) VALUES (?,?,?,?,?,?)',
+            [$old['topic'], $old['first_name'], $old['last_name'], $old['email'], $old['message'], now()]
+        );
+        $key = ['SWIM_SCHOOL' => 'swimschool_email', 'COMPETITION' => 'competition_email', 'OTHER' => 'other_email'][$old['topic']];
+        $to = trim((string) config('contact.' . $key, '')) ?: trim((string) config('registration.notify_email', ''));
+        $sent = false;
+        if ($to !== '') {
+            $sent = Mailer::send(
+                $to,
+                'Bericht via de website: ' . self::TOPICS[$old['topic']],
+                "Van: {$old['first_name']} {$old['last_name']} <{$old['email']}>\nOnderwerp: " . self::TOPICS[$old['topic']] . "\n\n{$old['message']}\n\n"
+                . "Antwoord rechtstreeks op dit adres: {$old['email']}\nIn de app: " . Invites::baseUrl() . '/?r=messages'
+            );
+            Database::exec('UPDATE contact_messages SET mail_sent = ? WHERE id = ?', [$sent ? 1 : 0, $id]);
+        }
+        flash('success', 'Bedankt, je bericht is verstuurd. We antwoorden zo snel mogelijk op ' . $old['email'] . '.');
+        redirect(url('page', ['slug' => 'contact']));
+    }
+
+    private static function renderPage(array $p, array $extra = []): void
+    {
         $parent = $p['parent_id'] ? Database::one('SELECT title, slug FROM pages WHERE id = ?', [$p['parent_id']]) : null;
         $children = Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' AND in_menu = 1 ORDER BY sort_order, title", [$p['id']]);
         $root = $parent ?: $p;
@@ -56,7 +127,7 @@ final class SiteController
             ? Database::all("SELECT id, name, goals FROM `groups` WHERE is_active = 1 AND category = 'SWIM_SCHOOL' AND goals IS NOT NULL AND goals <> '' ORDER BY id")
             : [];
         $timetable = $p['slug'] === 'trainingsuren-competitie' ? (self::timetable()['COMPETITION'] ?? []) : [];
-        render_public('site/page', compact('p', 'parent', 'side', 'goalGroups', 'timetable'), $p['title']);
+        render_public('site/page', array_merge(compact('p', 'parent', 'side', 'goalGroups', 'timetable'), ['contact' => $p['slug'] === 'contact' ? $extra : null]), $p['title']);
     }
 
     public static function agenda(): void

@@ -226,6 +226,20 @@ CREATE TABLE IF NOT EXISTS swimtest_requests (
   CHECK (status IN ('UNCONFIRMED','WAITING','INVITED','TESTED','ENROLLED','DECLINED'))
 ){{ENGINE}};
 
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id {{PK}},
+  topic VARCHAR(12) NOT NULL DEFAULT 'OTHER',
+  first_name VARCHAR(80) NOT NULL,
+  last_name VARCHAR(80) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  message TEXT NOT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  handled_at VARCHAR(19) NULL,
+  handled_by INT NULL,
+  mail_sent TINYINT NOT NULL DEFAULT 0,
+  CHECK (topic IN ('SWIM_SCHOOL','COMPETITION','OTHER'))
+){{ENGINE}};
+
 CREATE TABLE IF NOT EXISTS activity_series (
   id {{PK}},
   type_id INT NOT NULL,

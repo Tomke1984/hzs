@@ -30,6 +30,8 @@ return [
     // dat een melding krijgt bij elke bevestigde inschrijving.
     'privacy_url' => '',
     'registration' => ['notify_email' => ''],
+    // Naar welk adres gaan berichten van het contactformulier? Leeg = het adres bij 'registration' hierboven.
+    'contact' => ['swimschool_email' => '', 'competition_email' => '', 'other_email' => ''],
 
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting

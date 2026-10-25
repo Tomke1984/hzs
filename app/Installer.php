@@ -49,7 +49,7 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests'] as $table) {
+        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {
@@ -87,6 +87,11 @@ final class Installer
         // De uitleg over de zwemtest verwijst naar het aparte zwemtestformulier.
         Database::exec(
             "UPDATE pages SET body = REPLACE(body, '[inschrijfformulier](?r=register)', '[formulier voor de zwemtest](?r=swimtest)') WHERE slug = 'inschrijven-zwemtest' AND body LIKE '%(?r=register)%'"
+        );
+        // De oorspronkelijke contactpagina (nog onaangepast) krijgt de contactgegevens van zwemschool en competitie.
+        Database::exec(
+            "UPDATE pages SET body = ? WHERE slug = 'contact' AND body LIKE '%Vragen over de **zwemschool** gaan naar de secretaris%'",
+            [trim(SiteSeed::contactBody())]
         );
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
         if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
