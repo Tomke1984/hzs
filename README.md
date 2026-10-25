@@ -81,3 +81,7 @@ Nog te doen voor productie: login-throttling, wachtwoordreset, MFA voor beheerde
 - Lokaal testen: `git clone https://github.com/Tomke1984/hzs.git`, daarna `./tools/sync.sh` (Windows: `.\tools\sync.ps1`). Het script zet je op `dev` en haalt elke 60 seconden nieuwe aanpassingen binnen.
 - Is `dev` goedgekeurd, dan wordt het samengevoegd met `main`.
 - Je lokale database (`storage/data/`) en `config.php` staan niet in git en blijven dus behouden.
+
+## Changelog
+
+Alle wijzigingen staan in [`CHANGELOG.md`](CHANGELOG.md). Elke push naar `dev` voegt er een regel aan toe; bij een merge naar `main` verhuizen die regels naar de sectie *Op main* met datum en commit.
