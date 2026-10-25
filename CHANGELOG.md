@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Niets: `main` en `dev` zijn gelijk._
+
+## Op main
+
+### v0.4.0 – 2026-10-25 – `2f306ea`
 - **Inschrijven:** openbare inschrijfpagina (zonder login) voor ouders en zwemmers van 18+; gegevens: kinderen (naam, geboortedatum, voorkeur zwemschool/competitie), ouder (naam, e-mail, telefoon, relatie) en adres, met akkoord voor het reglement. Bevestiging van het e-mailadres per link; beveiligd met verborgen spamveld en limieten per e-mailadres en per uur.
 - **Bestuur beoordeelt:** nieuw scherm *Inschrijvingen* (te beoordelen / afgehandeld) met melding op het overzicht en teller in het menu. Goedkeuren maakt de leden aan (met adres en telefoon), koppelt de ouder, wijst optioneel een groep toe en stuurt de uitnodiging; een bestaand ouderaccount wordt hergebruikt. Afwijzen stuurt een mail met reden. Waarschuwing bij mogelijk al bestaand lid; uitnodiging opnieuw versturen kan vanuit de inschrijving.
 - **Rol Bestuur:** nieuwe rol met clubbrede toegang tot leden (incl. contactgegevens), groepen, activiteiten, aanwezigheid en inschrijvingen, zonder gebruikersbeheer. Bestaande databases krijgen de rol en het nieuwe recht automatisch. Demo-account `bestuur@demo.local`.
@@ -15,8 +20,6 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 - **Wachtwoord vergeten:** aanvragen via e-mail (link 60 minuten geldig, eenmalig, max. 1 mail per minuut per account, neutrale melding zodat niet te raden is welke adressen bestaan).
 - **Database:** nieuwe tabel `user_tokens`, automatisch aangemaakt bij bestaande databases.
 - **Werkwijze:** changelog toegevoegd (`CHANGELOG.md`) met versienummers per merge naar `main`. (`23862b6`, `2702b6a`)
-
-## Op main
 
 ### v0.3.0 – 2026-10-25 – `3437ffb`
 - **Gebruikers:** gebruikerslijst met tabbladen *Beheer en trainers* en *Ouders en zwemmers* (aantallen + zoeken). Op de ledenpagina maakt de beheerder met één klik een eigen account voor een lid (rol Zwemmer, gegevens vooraf ingevuld). (`ad8cef8`)
