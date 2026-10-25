@@ -33,7 +33,13 @@
   <?php endif; ?>
 
 <?php elseif ($tab === 'pages'): ?>
-  <p><a class="btn" href="<?= e(url('page_form')) ?>">+ Nieuwe pagina</a></p>
+  <div class="actions-inline">
+    <a class="btn" href="<?= e(url('page_form')) ?>">+ Nieuwe pagina</a>
+    <form method="post" action="<?= e(url('content_seed')) ?>" data-confirm="Pagina's van de vorige website (khzs.be) toevoegen? Bestaande pagina's blijven ongemoeid.">
+      <?= csrf_field() ?>
+      <button class="btn btn-ghost" type="submit">Inhoud van khzs.be importeren</button>
+    </form>
+  </div>
   <p class="muted small">Pagina's met het menu aangevinkt staan in de bovenste balk van de website; subpagina's verschijnen onder hun hoofdpagina. Een pagina met adres <code>home</code> wordt als introtekst op de startpagina getoond.</p>
   <?php if (!$pages): ?><p class="card muted">Nog geen pagina's.</p><?php else: ?>
   <div class="table-wrap"><table class="table">

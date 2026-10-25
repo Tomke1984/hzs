@@ -45,7 +45,7 @@ final class SiteController
             abort(404, 'Deze pagina bestaat niet.');
         }
         $parent = $p['parent_id'] ? Database::one('SELECT title, slug FROM pages WHERE id = ?', [$p['parent_id']]) : null;
-        $children = Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' ORDER BY sort_order, title", [$p['id']]);
+        $children = Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' AND in_menu = 1 ORDER BY sort_order, title", [$p['id']]);
         render_public('site/page', compact('p', 'parent', 'children'), $p['title']);
     }
 
