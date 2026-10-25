@@ -53,6 +53,12 @@ $routes = [
     'activity'         => ['GET' => ['ActivityController', 'show', 'activities.read']],
     'activity_form'    => ['GET' => ['ActivityController', 'form', 'activities.write']],
     'activity_save'    => ['POST' => ['ActivityController', 'save', 'activities.write']],
+    'series'           => ['GET' => ['SeriesController', 'index', 'activities.write']],
+    'series_show'      => ['GET' => ['SeriesController', 'show', 'activities.write']],
+    'series_form'      => ['GET' => ['SeriesController', 'form', 'activities.write']],
+    'series_save'      => ['POST' => ['SeriesController', 'save', 'activities.write']],
+    'series_bulk'      => ['GET' => ['SeriesController', 'bulkForm', 'activities.write'], 'POST' => ['SeriesController', 'bulk', 'activities.write']],
+    'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
 ];
 

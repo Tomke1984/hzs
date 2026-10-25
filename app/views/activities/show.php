@@ -8,7 +8,8 @@
 <section class="card">
   <p>
     <span class="chip type-<?= e(strtolower($activity['type_code'])) ?>"><?= e($activity['type_name']) ?></span>
-    <?php if ($activity['status'] === 'CANCELLED'): ?><span class="chip off">Geannuleerd</span><?php endif; ?>
+    <?php if ($activity['status'] === 'CANCELLED'): ?><span class="chip off">Geschrapt</span><?php if (!empty($activity['status_note'])): ?> <span class="muted"><?= e($activity['status_note']) ?></span><?php endif; ?><?php endif; ?>
+    <?php if (!empty($activity['series_id']) && Auth::can('activities.write')): ?> <a class="small" href="<?= e(url('series_show', ['id' => $activity['series_id']])) ?>">Deel van een reeks<?= !empty($activity['is_custom']) ? ' (individueel aangepast)' : '' ?></a><?php endif; ?>
   </p>
   <dl class="facts">
     <dt>Wanneer</dt>
@@ -24,6 +25,20 @@
     </dd>
   </dl>
   <?php if ($activity['description']): ?><p><?= nl2br(e($activity['description'])) ?></p><?php endif; ?>
+  <?php if (Auth::can('activities.write')): ?>
+  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form">
+    <?= csrf_field() ?>
+    <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
+    <?php if ($activity['status'] === 'CANCELLED'): ?>
+      <input type="hidden" name="do" value="restore">
+      <button class="btn btn-small btn-ghost" type="submit">Herstellen</button>
+    <?php else: ?>
+      <input type="hidden" name="do" value="cancel">
+      <input name="reason" placeholder="Reden (bv. vakantie)" maxlength="200">
+      <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
+    <?php endif; ?>
+  </form>
+  <?php endif; ?>
 </section>
 
 <?php if ($canSeeAttendance): ?>

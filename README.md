@@ -63,6 +63,9 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 Bewust nog niet in V1: zelfregistratie van ouders, wachtwoord vergeten, MFA, herhalende activiteiten, inschrijvingen, betalingen, exports, volledige audit-triggers.
 Ouders kijk mee (kalender, aanwezigheid van hun kind/kinderen); ze kunnen zelf niets wijzigen. Een ouder maak je aan onder *Gebruikers* met de rol Ouder, en koppel je daarna aan een of meer kinderen.
 
+### Trainingsreeksen
+*Kalender → Trainingsreeksen* (Admin/Bestuur): kies groepen, periode en per weekdag begin/einde (en eventueel een andere locatie). De app maakt de trainingen aan; schrappen kan per training of per periode (*Schrappen / verplaatsen*). Een tweede training op dezelfde dag (droogtraining) is een aparte reeks.
+
 ## Structuur
 
 ```

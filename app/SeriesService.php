@@ -1,0 +1,110 @@
+<?php
+/**
+ * Trainingsreeksen: een reeks (groepen + weekschema + periode) wordt omgezet in losse activiteiten.
+ * Elke activiteit blijft een gewone activiteit (kalender, aanwezigheid, schrappen, wijzigen).
+ * Individueel gewijzigde trainingen (is_custom = 1) worden door de reeks niet meer overschreven.
+ */
+final class SeriesService
+{
+    public const MAX_DAYS = 550;
+    public const DAYS = [1 => 'maandag', 2 => 'dinsdag', 3 => 'woensdag', 4 => 'donderdag', 5 => 'vrijdag', 6 => 'zaterdag', 7 => 'zondag'];
+
+    /** Beschrijving van het weekschema, bv. "di 18:30–20:00, wo 16:30–18:30". */
+    public static function summary(array $slots): string
+    {
+        usort($slots, fn($a, $b) => $a['weekday'] <=> $b['weekday']);
+        return implode(', ', array_map(
+            fn($s) => substr(self::DAYS[(int) $s['weekday']], 0, 2) . ' ' . $s['start_time'] . '–' . $s['end_time'],
+            $slots
+        ));
+    }
+
+    /**
+     * Brengt de toekomstige trainingen (vanaf vandaag) in lijn met de reeks.
+     * @return array{created:int,updated:int,removed:int,kept:int}
+     */
+    public static function sync(int $seriesId): array
+    {
+        $s = Database::one('SELECT * FROM activity_series WHERE id = ?', [$seriesId]);
+        $out = ['created' => 0, 'updated' => 0, 'removed' => 0, 'kept' => 0];
+        if (!$s) {
+            return $out;
+        }
+        $slots = [];
+        foreach (Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$seriesId]) as $sl) {
+            $slots[(int) $sl['weekday']] = $sl;
+        }
+        $groupIds = array_map('intval', array_column(Database::all('SELECT group_id FROM activity_series_groups WHERE series_id = ?', [$seriesId]), 'group_id'));
+        $today = today();
+
+        // Gewenste trainingen: elke datum vanaf vandaag waarop een weekdag-slot past.
+        $desired = [];
+        if ((int) $s['is_active'] === 1 && $slots && $groupIds) {
+            $d = new DateTimeImmutable(max($s['start_date'], $today));
+            $end = new DateTimeImmutable($s['end_date']);
+            $guard = 0;
+            for (; $d <= $end && $guard < self::MAX_DAYS + 1; $d = $d->modify('+1 day'), $guard++) {
+                $n = (int) $d->format('N');
+                if (isset($slots[$n])) {
+                    $desired[$d->format('Y-m-d')] = $slots[$n];
+                }
+            }
+        }
+
+        $existing = [];
+        foreach (Database::all(
+            'SELECT id, starts_at, is_custom FROM activities WHERE series_id = ? AND starts_at >= ?',
+            [$seriesId, $today . ' 00:00:00']
+        ) as $a) {
+            $existing[substr($a['starts_at'], 0, 10)] = $a;
+        }
+
+        Database::tx(function () use ($s, $desired, $existing, $groupIds, &$out, $seriesId) {
+            foreach ($existing as $date => $a) {
+                if (!isset($desired[$date])) {
+                    $hasAtt = (int) Database::val('SELECT COUNT(*) FROM attendance WHERE activity_id = ?', [$a['id']]) > 0;
+                    if ((int) $a['is_custom'] === 0 && !$hasAtt) {
+                        Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+                        Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
+                        $out['removed']++;
+                    } else {
+                        $out['kept']++;
+                    }
+                    continue;
+                }
+                if ((int) $a['is_custom'] === 1) {
+                    $out['kept']++;
+                    continue;
+                }
+                $sl = $desired[$date];
+                Database::exec(
+                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=? WHERE id=?',
+                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', $a['id']]
+                );
+                self::setGroups((int) $a['id'], $groupIds);
+                $out['updated']++;
+            }
+            foreach ($desired as $date => $sl) {
+                if (isset($existing[$date])) {
+                    continue;
+                }
+                $id = Database::insert(
+                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, series_id, is_custom)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,0)',
+                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', 'PLANNED', $s['created_by'], now(), $seriesId]
+                );
+                self::setGroups($id, $groupIds);
+                $out['created']++;
+            }
+        });
+        return $out;
+    }
+
+    private static function setGroups(int $activityId, array $groupIds): void
+    {
+        Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$activityId]);
+        foreach ($groupIds as $gid) {
+            Database::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?,?)', [$activityId, $gid]);
+        }
+    }
+}

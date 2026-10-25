@@ -26,7 +26,7 @@ final class ActivityController
             $sql .= '))';
         }
         $rows = Database::all(
-            "SELECT a.id, a.title, a.starts_at, a.ends_at, a.status, a.location, t.code AS type_code, t.name AS type_name
+            "SELECT a.id, a.title, a.starts_at, a.ends_at, a.status, a.status_note, a.location, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
              WHERE a.starts_at >= ? AND a.starts_at < ? AND $sql
              ORDER BY a.starts_at",
@@ -167,6 +167,11 @@ final class ActivityController
                     [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], $activity['status'], $id]
                 );
                 Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$id]);
+                // Individueel gewijzigd: de reeks overschrijft deze training niet meer.
+                Database::exec('UPDATE activities SET is_custom = 1 WHERE id = ? AND series_id IS NOT NULL', [$id]);
+                if ($activity['status'] === 'PLANNED') {
+                    Database::exec('UPDATE activities SET status_note = NULL WHERE id = ?', [$id]);
+                }
             } else {
                 $id = Database::insert(
                     'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at)

@@ -48,13 +48,20 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations'] as $table) {
+        foreach (['user_tokens', 'registrations', 'activity_series'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {
                 self::createSchema(); // alle tabellen zijn CREATE TABLE IF NOT EXISTS: enkel wat ontbreekt wordt aangemaakt
                 break;
             }
+        }
+        try {
+            Database::val('SELECT series_id FROM activities LIMIT 1');
+        } catch (Throwable $e) {
+            Database::exec('ALTER TABLE activities ADD COLUMN series_id INT NULL');
+            Database::exec('ALTER TABLE activities ADD COLUMN is_custom TINYINT NOT NULL DEFAULT 0');
+            Database::exec('ALTER TABLE activities ADD COLUMN status_note VARCHAR(200) NULL');
         }
         try {
             Database::val('SELECT street FROM members LIMIT 1');

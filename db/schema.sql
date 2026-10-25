@@ -121,6 +121,9 @@ CREATE TABLE IF NOT EXISTS activities (
   status VARCHAR(10) NOT NULL DEFAULT 'PLANNED' CHECK (status IN ('PLANNED','CANCELLED')),
   created_by INT NULL,
   created_at VARCHAR(19) NOT NULL,
+  series_id INT NULL,
+  is_custom TINYINT NOT NULL DEFAULT 0,
+  status_note VARCHAR(200) NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 ){{ENGINE}};
@@ -189,4 +192,38 @@ CREATE TABLE IF NOT EXISTS registration_persons (
   member_id INT NULL,
   FOREIGN KEY (registration_id) REFERENCES registrations(id),
   FOREIGN KEY (member_id) REFERENCES members(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS activity_series (
+  id {{PK}},
+  type_id INT NOT NULL,
+  title VARCHAR(150) NOT NULL,
+  description TEXT NULL,
+  location VARCHAR(150) NULL,
+  start_date VARCHAR(10) NOT NULL,
+  end_date VARCHAR(10) NOT NULL,
+  is_active TINYINT NOT NULL DEFAULT 1,
+  created_by INT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  FOREIGN KEY (type_id) REFERENCES activity_types(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS activity_series_slots (
+  id {{PK}},
+  series_id INT NOT NULL,
+  weekday INT NOT NULL,
+  start_time VARCHAR(5) NOT NULL,
+  end_time VARCHAR(5) NOT NULL,
+  location VARCHAR(150) NULL,
+  UNIQUE (series_id, weekday),
+  FOREIGN KEY (series_id) REFERENCES activity_series(id),
+  CHECK (weekday BETWEEN 1 AND 7)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS activity_series_groups (
+  series_id INT NOT NULL,
+  group_id INT NOT NULL,
+  PRIMARY KEY (series_id, group_id),
+  FOREIGN KEY (series_id) REFERENCES activity_series(id),
+  FOREIGN KEY (group_id) REFERENCES `groups`(id)
 ){{ENGINE}};

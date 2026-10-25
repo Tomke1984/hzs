@@ -6,7 +6,10 @@ $todayStr = today();
 <div class="row-between">
   <h1>Kalender</h1>
   <?php if (Auth::can('activities.write')): ?>
-    <a class="btn" href="<?= e(url('activity_form')) ?>">+ Nieuwe activiteit</a>
+    <span class="actions-inline">
+      <a class="btn btn-ghost" href="<?= e(url('series')) ?>">Trainingsreeksen</a>
+      <a class="btn" href="<?= e(url('activity_form')) ?>">+ Nieuwe activiteit</a>
+    </span>
   <?php endif; ?>
 </div>
 
@@ -55,6 +58,7 @@ $todayStr = today();
       </div>
       <?php foreach ($events as $ev): ?>
         <a class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
+           title="<?= e($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? '')) ?>"
            href="<?= e(url('activity', ['id' => $ev['id']])) ?>">
           <span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?>
         </a>
