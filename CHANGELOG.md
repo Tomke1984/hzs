@@ -5,13 +5,16 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Niets: `main` en `dev` zijn gelijk._
+
+## Op main
+
+### v0.6.0 – 2026-10-25 – `b182e3b`
 - **Terug-link:** bovenaan elke pagina (behalve het overzicht) staat *← Terug* om naar de vorige pagina terug te keren.
 - **Filter trainingsreeksen:** de lijst met reeksen is te filteren op soort (zwemschool/competitie) of op één groep.
 - **Trainingsreeksen met verleden:** een reeks met een startdatum in het verleden maakt ook de trainingen van het verleden aan, zodat ze in de kalender (en voor aanwezigheden) staan. Een vroegere startdatum bij een bestaande reeks vult het verleden aan; bestaande trainingen uit het verleden blijven altijd ongemoeid.
 - **Relatie bewerken:** de relatie tussen ouder en kind (moeder, vader, voogd, …) is nu aanpasbaar (knop *Bewerken*) of leeg te maken, zowel op de ledenpagina als op de gebruikerspagina van de ouder (enkel met gebruikersbeheer).
 - **Inschrijfformulier:** keuze zwemschool/competitie weggehaald (het bestuur deelt het kind in een groep in).  standaard enkel velden voor 1 kind; met de knop *+ Nog een kind inschrijven* verschijnt telkens een extra kind (zonder JavaScript blijven alle velden zichtbaar). Een per vergissing toegevoegd kind kan met het kruisje weer weg.
-
-## Op main
 
 ### v0.5.0 – 2026-10-25 – `c95670a`
 - **Trainingsreeksen:** per groep (of meerdere groepen) een wekelijkse reeks aanmaken met per weekdag een eigen uur en eventueel eigen locatie (bv. zwemtraining di 18:30–20:00, wo 16:30–18:30, za 7:30–9:00; droogtraining als tweede reeks). De trainingen verschijnen automatisch in de kalender voor de gekozen periode (max. ±18 maanden).
