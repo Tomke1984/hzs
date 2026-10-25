@@ -76,16 +76,19 @@ final class GroupController
             $candidates = Database::all(
                 "SELECT m.id, m.birth_date, m.first_name, m.last_name FROM members m
                  WHERE m.status = 'ACTIVE' AND NOT EXISTS (
-                    SELECT 1 FROM group_memberships gm WHERE gm.member_id = m.id AND gm.group_id = ?
+                    SELECT 1 FROM group_memberships gm WHERE gm.member_id = m.id
                       AND (gm.end_date IS NULL OR gm.end_date >= ?))
                  ORDER BY m.last_name, m.first_name",
-                [$group['id'], $today]
+                [$today]
             );
         }
+        $targets = Auth::can('groups.write')
+            ? Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 AND id != ? ORDER BY category, name', [$group['id']])
+            : [];
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds'), $group['name']);
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets'), $group['name']);
     }
 
     public static function form(): void
@@ -172,12 +175,16 @@ final class GroupController
             flash('error', 'Dit lid is jonger dan 18 en heeft nog geen ouder of voogd. Koppel eerst een ouder of voogd.');
             redirect(url('member', ['id' => $memberId]));
         }
-        $overlap = Database::val(
-            'SELECT COUNT(*) FROM group_memberships WHERE member_id = ? AND group_id = ? AND (end_date IS NULL OR end_date >= ?)',
-            [$memberId, $groupId, $start]
+        // Een lid zit op elk moment in maximaal één groep.
+        $current = Database::one(
+            'SELECT gm.group_id, g.name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
+             WHERE gm.member_id = ? AND (gm.end_date IS NULL OR gm.end_date >= ?) ORDER BY gm.id LIMIT 1',
+            [$memberId, $start]
         );
-        if ($overlap > 0) {
-            flash('error', 'Dit lid zit al in deze groep (of de vorige koppeling loopt nog).');
+        if ($current) {
+            flash('error', (int) $current['group_id'] === $groupId
+                ? 'Dit lid zit al in deze groep (of de vorige koppeling loopt nog).'
+                : 'Dit lid zit al in de groep "' . $current['name'] . '". Een lid kan maar in één groep zitten: verplaats het lid naar de nieuwe groep of beëindig eerst de huidige koppeling.');
             redirect($back);
         }
 
@@ -188,6 +195,72 @@ final class GroupController
         audit('CREATE', 'group_membership', $id);
         flash('success', 'Lid gekoppeld aan groep.');
         redirect($back);
+    }
+
+    /** Meerdere leden van de ene groep naar de andere verplaatsen. */
+    public static function moveMembers(): void
+    {
+        $from = (int) input('from_group_id', '0');
+        $to = (int) input('to_group_id', '0');
+        $date = input('start_date', today());
+        $back = url('group', ['id' => $from]);
+        $raw = $_POST['membership_ids'] ?? [];
+        $ids = is_array($raw) ? array_values(array_unique(array_filter(array_map('intval', $raw)))) : [];
+
+        $target = Database::one('SELECT id, name, is_active FROM `groups` WHERE id = ?', [$to]);
+        if (!Database::val('SELECT COUNT(*) FROM `groups` WHERE id = ?', [$from])) {
+            abort(404, 'Groep niet gevonden.');
+        }
+        if (!$ids) {
+            flash('error', 'Selecteer eerst de leden die je wilt verplaatsen.');
+            redirect($back);
+        }
+        if (!$target || (int) $target['is_active'] !== 1 || $to === $from) {
+            flash('error', 'Kies een andere, actieve groep als bestemming.');
+            redirect($back);
+        }
+        if (!valid_date($date)) {
+            flash('error', 'De datum is ongeldig.');
+            redirect($back);
+        }
+
+        $moved = 0;
+        $skipped = 0;
+        $dayBefore = date('Y-m-d', strtotime($date . ' -1 day'));
+        Database::tx(function () use ($ids, $from, $to, $date, $dayBefore, &$moved, &$skipped) {
+            foreach ($ids as $mid) {
+                $ms = Database::one(
+                    "SELECT gm.* FROM group_memberships gm JOIN members m ON m.id = gm.member_id
+                     WHERE gm.id = ? AND gm.group_id = ? AND m.status = 'ACTIVE' AND (gm.end_date IS NULL OR gm.end_date >= ?)",
+                    [$mid, $from, today()]
+                );
+                if (!$ms) {
+                    $skipped++;
+                    continue;
+                }
+                // Heeft het lid al een andere lopende koppeling (oude data)? Beëindig die ook.
+                $others = Database::all(
+                    'SELECT id, start_date FROM group_memberships WHERE member_id = ? AND id != ? AND (end_date IS NULL OR end_date >= ?)',
+                    [$ms['member_id'], $ms['id'], $date]
+                );
+                foreach ($others as $o) {
+                    Database::exec('UPDATE group_memberships SET end_date = ? WHERE id = ?', [max($dayBefore, $o['start_date']), $o['id']]);
+                }
+                if ($ms['start_date'] >= $date) {
+                    // Koppeling begint pas op of na de verplaatsdatum: gewoon naar de nieuwe groep zetten.
+                    Database::exec('UPDATE group_memberships SET group_id = ? WHERE id = ?', [$to, $ms['id']]);
+                } else {
+                    Database::exec('UPDATE group_memberships SET end_date = ? WHERE id = ?', [$dayBefore, $ms['id']]);
+                    Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$ms['member_id'], $to, $date]);
+                }
+                audit('MOVE', 'group_membership', (int) $ms['id'], json_encode(['from' => $from, 'to' => $to, 'date' => $date]));
+                $moved++;
+            }
+        });
+        flash($moved ? 'success' : 'error', $moved
+            ? $moved . ($moved === 1 ? ' lid' : ' leden') . ' verplaatst naar "' . $target['name'] . '"' . ($skipped ? ", $skipped overgeslagen" : '') . '.'
+            : 'Geen enkel lid kon worden verplaatst.');
+        redirect($moved ? url('group', ['id' => $to]) : $back);
     }
 
     /** Koppeling beëindigen via einddatum; er wordt niets verwijderd. */

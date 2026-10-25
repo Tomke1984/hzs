@@ -134,6 +134,14 @@
     apply();
   }
 
+  // Leden verplaatsen: alles selecteren
+  var selAll = document.getElementById('select-all-members');
+  if (selAll) {
+    selAll.addEventListener('change', function () {
+      document.querySelectorAll('.member-pick').forEach(function (c) { c.checked = selAll.checked; });
+    });
+  }
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

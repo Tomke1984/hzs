@@ -295,3 +295,6 @@ ul.plain li { margin-bottom: 10px; }
 .thumb-grid code { display: block; font-size: .75rem; word-break: break-all; background: #f1f4f7; padding: 4px 6px; border-radius: 6px; margin: 6px 0; user-select: all; }
 .md-help { font-size: .85rem; }
 textarea.editor { min-height: 320px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+.check-col { width: 36px; text-align: center; }
+.check-col input { width: 20px; height: 20px; }
+.move-form { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }

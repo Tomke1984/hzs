@@ -46,6 +46,7 @@ $routes = [
     'group_form'       => ['GET' => ['GroupController', 'form', 'groups.write']],
     'group_save'       => ['POST' => ['GroupController', 'save', 'groups.write']],
     'membership_add'   => ['POST' => ['GroupController', 'addMember', 'groups.write']],
+    'membership_move'  => ['POST' => ['GroupController', 'moveMembers', 'groups.write']],
     'membership_end'   => ['POST' => ['GroupController', 'endMembership', 'groups.write']],
 
     'users'            => ['GET' => ['UserController', 'index', 'users.manage']],
