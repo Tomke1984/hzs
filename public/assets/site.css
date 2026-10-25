@@ -188,8 +188,8 @@ body.site { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
 @media (max-width: 560px) {
   .lanes { grid-template-columns: 1fr; }
   .lane + .lane { border-left: 0; border-top: 6px solid var(--float); }
-  .brand small { display: none; }
 }
+@media (max-width: 820px) { .brand span { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
 /* Formulieren */

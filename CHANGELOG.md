@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-- **Header:** boven het logo-naamblok staat nu *Hasseltse Zwemvereniging* en eronder *Spartacus*.
+- **Header:** boven de naam staat nu *Hasseltse Zwemvereniging* en eronder *Spartacus*; op smalle schermen (tot 820 px) blijft enkel het logo staan.
 
 ## Op main
 
