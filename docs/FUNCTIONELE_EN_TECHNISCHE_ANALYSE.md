@@ -1,6 +1,6 @@
 # HZS Clubapp – Functionele en technische analyse
 
-Versie v0.10.1 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
+Versie v0.10.2 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
 
 ## 1. Doel
 HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
@@ -110,7 +110,7 @@ Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 7
 - `public/install.php` na installatie verwijderen.
 - Mail instellen (smtp aanbevolen) en `contact`-adressen per onderwerp.
 - Dagelijkse back-up van de database en `public/uploads/`; restore testen.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.10.1 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.10.2 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).

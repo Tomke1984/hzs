@@ -5,11 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-- **Trainingsmoment per lid:** *Trainingsdag per lid* heet nu *Trainingsmoment per lid*. Een trainingsmoment is een dag mét uur (bv. *Dinsdag 17:00–18:00*); de kolommen staan op dag en uur gesorteerd, met de naam van de reeks eronder. Op de ledenpagina staat *Trainingsmoment: dinsdag 17:00–18:00 (Duo)*.
-- **Terugknop opnieuw nagekeken:** *Terug* gaat altijd naar de bovenliggende pagina én onthoudt waar je was: terug naar *Leden* behoudt je zoekterm en filters, terug naar de kalender opent de maand van de activiteit (niet de huidige maand), en ook *Schrappen / verplaatsen* en *Uitnodigen* hadden geen eigen bovenliggende pagina meer (gingen naar het overzicht). Op de hoofdpagina's uit het menu (Leden, Groepen, Kalender, …) staat geen *Terug* meer: daar is het menu.
 
 ## Op main
 
+### v0.10.2 – 2026-10-25 – `6020d3b`
+- **Trainingsmoment per lid:** *Trainingsdag per lid* heet nu *Trainingsmoment per lid*. Een trainingsmoment is een dag mét uur (bv. *Dinsdag 17:00–18:00*); de kolommen staan op dag en uur gesorteerd, met de naam van de reeks eronder. Op de ledenpagina staat *Trainingsmoment: dinsdag 17:00–18:00 (Duo)*.
+- **Terugknop opnieuw nagekeken:** *Terug* gaat altijd naar de bovenliggende pagina én onthoudt waar je was: terug naar *Leden* behoudt je zoekterm en filters, terug naar de kalender opent de maand van de activiteit (niet de huidige maand), en ook *Schrappen / verplaatsen* en *Uitnodigen* hadden geen eigen bovenliggende pagina meer (gingen naar het overzicht). Op de hoofdpagina's uit het menu (Leden, Groepen, Kalender, …) staat geen *Terug* meer: daar is het menu.
 ### v0.10.1 – 2026-10-25 – `bd58daf`
 - **Trainingsreeksen: zwemschool en competitie apart:** op het overzicht staan de reeksen onder een kleurbanner *Zwemschool* (blauw) en *Competitie* (oranje). Bij de competitie is de verdeling per groep; bij de zwemschool per weekdag (maandag tot zondag, op uur gesorteerd), met op de kaart de betrokken groepen. Een reeks met meerdere weekdagen staat onder elke dag waarop ze loopt.
 - **Trainingsdag per lid: nu per weekdag en altijd zichtbaar:** het blok *Trainingsdag per lid* staat altijd op de groepspagina (voor wie reeksen mag beheren) en toont per kolom elk trainingsmoment: dus ook de verschillende weekdagen binnen één reeks (bv. Zwemmen – dinsdag en Zwemmen – donderdag), niet enkel losse reeksen. Heeft de groep minder dan twee trainingsmomenten, dan staat er een uitleg in plaats van het rooster. Eerder opgeslagen keuzes uit v0.10.0 worden bij de update gewist (de functie was nog nergens te vinden); opnieuw invullen.
