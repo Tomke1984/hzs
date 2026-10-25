@@ -1,3 +1,5 @@
 config.php
 storage/data/*
 !storage/data/.gitkeep
+storage/mail/*
+!storage/mail/.gitkeep
