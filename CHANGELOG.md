@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Duidelijkere indeling:** in *Nog niet ingedeeld* heeft de blokkeuze een duidelijk keuzeveld met pijltje en een volwaardige knop *Indelen* ernaast (op smalle schermen onder elkaar, volle breedte).
 - **Nog niet ingedeeld:** de blokkeuze toont enkel dag en uur (bv. *Ma 18:00–19:00*), zonder reeksnaam.
 - **Weekoverzicht zwemschool:** nieuwe pagina (knop op *Trainingsreeksen*): dagen als kolommen, uurblokken als rijen, per blok de groepen (met kleur) en het aantal ingedeelde leden (link naar de blokpagina), plus een melding hoeveel leden nog niet ingedeeld zijn.
 - **Trainingsmoment zonder reeksnaam:** op de ledenpagina en in het rooster op de groepspagina staat enkel nog dag en uur (bv. *Ma 18:00–19:00*), niet meer de naam van de reeks.
