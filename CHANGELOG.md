@@ -5,13 +5,16 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Niets: `main` en `dev` zijn gelijk._
+
+## Op main
+
+### v0.5.0 – 2026-10-25 – `c95670a`
 - **Trainingsreeksen:** per groep (of meerdere groepen) een wekelijkse reeks aanmaken met per weekdag een eigen uur en eventueel eigen locatie (bv. zwemtraining di 18:30–20:00, wo 16:30–18:30, za 7:30–9:00; droogtraining als tweede reeks). De trainingen verschijnen automatisch in de kalender voor de gekozen periode (max. ±18 maanden).
 - **Schrappen:** één training schrappen met reden (zichtbaar in kalender en op de activiteit) en herstellen; of een hele periode in één keer (vakantie, wedstrijd) voor alle of geselecteerde groepen, met herstelknop.
 - **Locatie wijzigen:** voor de hele reeks, per weekdag, per training, of voor een periode/groep tijdelijk.
 - **Reeks wijzigen of stoppen:** komende trainingen worden aangepast; individueel gewijzigde trainingen en trainingen met ingevulde aanwezigheid blijven ongemoeid, het verleden blijft bewaard.
 - **Database:** nieuwe tabellen `activity_series*` en kolommen `series_id`, `is_custom`, `status_note` bij activiteiten; automatisch toegevoegd aan bestaande databases. Enkel Admin en Bestuur beheren reeksen.
-
-## Op main
 
 ### v0.4.0 – 2026-10-25 – `2f306ea`
 - **Inschrijven:** openbare inschrijfpagina (zonder login) voor ouders en zwemmers van 18+; gegevens: kinderen (naam, geboortedatum, voorkeur zwemschool/competitie), ouder (naam, e-mail, telefoon, relatie) en adres, met akkoord voor het reglement. Bevestiging van het e-mailadres per link; beveiligd met verborgen spamveld en limieten per e-mailadres en per uur.
