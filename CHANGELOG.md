@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.7.0 – 2026-10-25 – `64cfebd`
 - **Website = wedstrijden en clubactiviteiten, app = persoonlijke kalender:** de publieke kalender en *Komende activiteiten* op de startpagina tonen voor iedereen (ook aangemelden) enkel wedstrijden en clubactiviteiten, nooit trainingen (de uren staan op de pagina *Trainingsuren*). De kalender in de app is de persoonlijke kalender: leden, ouders en trainers zien de trainingen en activiteiten van hun eigen groepen, plus alle clubactiviteiten en wedstrijden. Wedstrijden voor andere groepen staan er in grijs (niet aanklikbaar, tooltip *Niet voor jouw groep*; beheerders kunnen ze wel openen). Het vinkje *Tonen op de website* is uit het activiteitenformulier gehaald (geen effect meer); bij reeksen bepaalt het enkel de pagina *Trainingsuren*.
 - **Reeksen sneller op de website tonen of verbergen:** elke reeks in het overzicht heeft nu een knop *Tonen* / *Verbergen* met een duidelijk label (*Op website* / *Niet op website*), zonder de reeks te openen en te bewerken. Bovenaan staan *Alles op de website zetten* en *Alles van de website halen* voor de reeksen in de huidige lijst (dus met het gekozen groepsfilter). Ook op de detailpagina van een reeks staat de knop. De trainingen in de kalender volgen automatisch.
 - **Terugknop:** *← Terug* bovenaan gaat nu altijd naar de bovenliggende pagina en niet meer gewoon naar de vorige in de browser. Een lid, groep, bericht of reeks gaat terug naar zijn overzicht; een wijzigscherm gaat terug naar het item zelf (nieuw: naar het overzicht); overzichten gaan terug naar het dashboard. Zo blijft de knop kloppen na opslaan, filteren of bladeren.
@@ -36,9 +41,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 - **Website beheren:** nieuw menu *Website* (Admin en Bestuur, recht `content.manage`): nieuwsberichten en pagina's als concept of gepubliceerd, hoofdafbeelding bij nieuws, afbeeldingenbibliotheek met kopieerbare code. Eenvoudige, veilige opmaak (koppen, lijsten, vet, links, afbeeldingen); alle tekst wordt ge-escaped.
 - **Wat is publiek:** alle wedstrijden en clubactiviteiten staan automatisch in de publieke kalender en op de startpagina (enkel titel, tijd, plaats en omschrijving, geen groepen of leden). Trainingen en trainingsreeksen hebben een vakje *Tonen op de website*; enkel die komen in de publieke kalender en trainingsuren (geschrapte trainingen met reden). Alles anders blijft binnen de login.
 - **Database:** nieuwe tabellen `posts`, `pages`, `media` en kolom `is_public` bij activiteiten en reeksen; automatisch toegevoegd aan bestaande databases. Geüploade afbeeldingen staan in `public/uploads/` (niet in git).
-
-## Op main
-
+- **Documentatie:** README en de functionele en technische analyse zijn volledig herschreven voor de huidige app (publieke site, zwemtest, contact, reeksen, persoonlijke kalender). De analyse staat nu in de repository: `docs/FUNCTIONELE_EN_TECHNISCHE_ANALYSE.md`.
 ### v0.6.0 – 2026-10-25 – `b182e3b`
 - **Terug-link:** bovenaan elke pagina (behalve het overzicht) staat *← Terug* om naar de vorige pagina terug te keren.
 - **Filter trainingsreeksen:** de lijst met reeksen is te filteren op soort (zwemschool/competitie) of op één groep.

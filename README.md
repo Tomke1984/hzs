@@ -1,6 +1,6 @@
-# HZS Clubapp V1
+# HZS Clubapp
 
-Ledenbeheer, groepsindeling, activiteitenplanning en aanwezigheidsregistratie voor Hasseltse Zwemvereniging Spartacus.
+Publieke clubwebsite en ledenapp (ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen en zwemtestwachtlijst) voor Hasseltse Zwemvereniging Spartacus.
 PHP 8.1+ (zonder externe pakketten), server-rendered, responsive.
 
 ## Lokaal starten (2 minuten)
@@ -25,7 +25,7 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 |---|---|---|
 | Beheerder | je eigen account | alles, clubbreed |
 | Bestuur | `bestuur@demo.local` | alle leden, groepen, kalender en inschrijvingen (geen gebruikersbeheer) |
-| Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid) |
+| Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid); persoonlijke kalender met die groepen |
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
 | Ouder | `ouder@demo.local` | enkel het gekoppelde kind |
 
@@ -41,33 +41,54 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 4. Verwijder daarna `public/install.php`.
 5. Zet in `config.php` `cookie_secure` op `true` zodra de site via HTTPS draait, en `debug` op `false`.
 
-## Wat zit erin (V1-scope)
+## Wat zit erin
 
-- Aanmelden met e-mail en wachtwoord; rollen beheerder, trainer, zwemmer, ouder; permissies in de database.
-- Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder = clubbreed.
-- Groepen zijn opgesplitst in **Zwemschool** en **Competitie** (keuze per groep; overzicht, groepspagina en activiteitenformulier tonen de indeling). Bestaande databases krijgen de kolom automatisch, alle bestaande groepen starten als Zwemschool.
-- Filteren op **zwemschool/competitie** en op groep in de ledenlijst en de kalender (filter blijft behouden bij maand vooruit/terug; clubbrede activiteiten blijven zichtbaar).
-- Gebruikerslijst met twee tabbladen: **Beheer en trainers** en **Ouders en zwemmers** (met zoekbalk). Leden zijn niet automatisch gebruikers: op de ledenpagina maakt de beheerder met één klik een eigen account aan (rol Zwemmer, gegevens vooraf ingevuld). Bij minderjarigen meldt de ouder of voogd aan.
-- **E-mail en uitnodigingen:** beheerders nodigen ouders/voogden en leden per e-mail uit (per lid of in bulk voor alle leden met een e-mailadres). De ontvanger kiest zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen geldig). Ook *Wachtwoord vergeten?* werkt via mail (link 60 minuten geldig). Bij minderjarige leden wordt het e-mailadres van het lid als adres van de ouder gebruikt; broers/zussen op hetzelfde adres delen één account. Zo hoeft er geen wachtwoord uitgedeeld te worden.
-- **Inschrijven en bestuur:** een openbare inschrijfpagina (`?r=register`, zonder login) voor ouders (met één of meerdere kinderen) en zwemmers van 18+: naam, geboortedatum, voorkeur zwemschool/competitie, contactgegevens en adres, met akkoord voor het reglement. De inschrijver bevestigt eerst zijn e-mailadres. Daarna beoordeelt het **bestuur** (nieuwe rol *Bestuur*: alle leden, groepen, kalender en inschrijvingen, maar geen gebruikersbeheer) de aanvraag onder *Inschrijvingen*. Bij **goedkeuring** worden de leden aangemaakt, de ouder gekoppeld en uitgenodigd om een account te activeren (bestaat het account al, dan wordt het kind eraan gekoppeld); bij **afwijzing** gaat er een mail met reden. Er wordt dus pas een gebruiker aangemaakt na goedkeuring. Beveiliging: verborgen spamveld, maximaal 3 aanvragen per e-mailadres per uur, onbevestigde aanvragen worden na 7 dagen opgeruimd.
-- Mobielvriendelijk: compacte header met scrollbaar menu, tabellen worden kaarten op telefoon, grote aanraakdoelen en radioknoppen voor aanwezigheid, formulieren en knoppen over de volledige breedte (getest tot 320 px).
-- Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
-- Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
-- Leden zoeken, toevoegen, wijzigen (nooit verwijderen; wel inactief zetten).
-- Groepen aanmaken en wijzigen; elk lid zit in maximaal één groep (zonder historiek); leden in bulk naar een andere groep verplaatsen.
-- Activiteiten voor groep(en) of hele club; kalender met trainingen, wedstrijden en clubactiviteiten.
-- Presentielijst met Onbekend / Aanwezig / Afwezig.
-- Regel voor minderjarigen: een actief lid jonger dan 18 heeft minstens één ouder of voogd. Zonder ouder verschijnt een waarschuwing (ledenlijst, ledenpagina, overzicht), kan het lid niet aan een groep gekoppeld worden en kan de laatste ouder niet ontkoppeld worden. Leden zonder geboortedatum vallen buiten de regel.
-- Gebruikersbeheer (enkel beheerders, menu *Gebruikers*): accounts aanmaken, rollen toekennen, wachtwoord resetten, accounts deactiveren, **ouders aan kinderen koppelen** en trainers aan groepen toewijzen. Je kunt jezelf niet buitensluiten en de laatste actieve beheerder kan niet uitgeschakeld worden.
+HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van khzs.be) en de **ledenapp** voor het beheer. Eén PHP-monoliet, één database.
 
-Bewust nog niet in V1: zelfregistratie van ouders, wachtwoord vergeten, MFA, herhalende activiteiten, inschrijvingen, betalingen, exports, volledige audit-triggers.
-Ouders kijk mee (kalender, aanwezigheid van hun kind/kinderen); ze kunnen zelf niets wijzigen. Een ouder maak je aan onder *Gebruikers* met de rol Ouder, en koppel je daarna aan een of meer kinderen.
+### Publieke website (zonder login)
+- Startpagina met introtekst, de vakken Zwemschool en Competitie, nieuws en *Komende activiteiten*.
+- Pagina's in een menu (hoofd- en subpagina's), nieuws, kalender en trainingsuren. Eigen vormgeving (`public/assets/site.css`, zelf gehoste lettertypen, geen externe verbindingen).
+- **Kalender en komende activiteiten: voor iedereen enkel wedstrijden en clubactiviteiten**, nooit trainingen of groepen. De persoonlijke kalender zit in de app.
+- **Trainingsuren** (zwemschool en competitie) komen automatisch uit de trainingsreeksen die op de website staan, per groep met de trainers.
+- **Doelstellingen** van de zwemschool komen uit de groepen (veld *Doelstellingen* bij Groep wijzigen): een nieuwe groep verschijnt vanzelf.
+- **Zwemtest aanvragen** (`?r=swimtest`): formulier voor kind en ouder, e-mailbevestiging, wachtlijst die het bestuur opvolgt (zie hieronder).
+- **Lid worden** (`?r=register`): inschrijfformulier voor ouders (één of meer kinderen) en zwemmers van 18+.
+- **Contact**: pagina met de contactpersonen van zwemschool en competitie en een contactformulier; berichten komen in de app en per mail bij het juiste adres.
+- Beveiliging van de formulieren: verborgen spamveld, limiet per e-mailadres/uur, CSRF, bevestiging per e-mail.
 
-### Trainingsreeksen
-*Kalender → Trainingsreeksen* (Admin/Bestuur): kies groepen, periode en per weekdag begin/einde (en eventueel een andere locatie). De app maakt de trainingen aan; schrappen kan per training of per periode (*Schrappen / verplaatsen*). Een tweede training op dezelfde dag (droogtraining) is een aparte reeks.
+### Website beheren (menu *Website*, recht `content.manage`: beheerder en bestuur)
+- **Nieuws**: berichten als concept of gepubliceerd, met hoofdafbeelding.
+- **Pagina's**: tekst met eenvoudige opmaak (`## kop`, lijsten, **vet**, links), hoofd- en subpagina's, menu aan/uit, concept/gepubliceerd. Knop *Inhoud van khzs.be importeren* zet de startinhoud van de oude site in de app (voegt enkel ontbrekende pagina's toe).
+- **Automatische pagina's** (Trainingsuren competitie, Doelstellingen, Contact, startpagina) staan in het overzicht met het label *Automatisch*: adres, plaats en status liggen vast, ze kunnen niet verwijderd worden en bij de eerste twee pas je enkel de inleiding aan; de rest komt uit Reeksen/Groepen.
+- **Paginacontrole**: meldt verouderde `doelstellingen-…`-pagina's, lege pagina's, concepten, kapotte links en onbereikbare pagina's; de knop *Overbodige pagina's opruimen* verwijdert enkel de verouderde en lege.
+- **Afbeeldingen**: bibliotheek met kopieerbare code voor in teksten.
 
-### Website
-De app bevat ook de publieke clubwebsite (nieuws, pagina's, kalender, trainingsuren). Het bestuur beheert die via *Website* in het menu. Geüploade afbeeldingen komen in `public/uploads/`: zorg dat die map schrijfbaar is voor de webserver en meegenomen wordt in back-ups.
+### Leden, groepen en gebruikers
+- Aanmelden met e-mail en wachtwoord; rollen **Beheerder, Bestuur, Trainer, Zwemmer, Ouder** (combineerbaar, een trainer die ook lid is krijgt Trainer + Zwemmer); permissies in de database.
+- Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder/bestuur = clubbreed.
+- **Leden**: zoeken, toevoegen, wijzigen (nooit verwijderen, wel inactief), adres en contactgegevens (enkel met recht `members.contact`). Het lidnummer is intern en wordt nergens getoond.
+- **Minderjarigen** hebben minstens één ouder of voogd (waarschuwingen; zonder ouder geen groep).
+- **Groepen** zijn **Zwemschool** of **Competitie**. Een lid zit in **maximaal één groep, zonder historiek** (geen van/tot). Leden in bulk verplaatsen (je blijft op de brongroep), groep verwijderen kan altijd (leden blijven bestaan zonder groep). Op de groepspagina: leden, trainers, gekoppelde reeksen, komende activiteiten.
+- **Trainers** zijn aan groepen gekoppeld zonder datums; meerdere trainers per groep, in te stellen bij Groep wijzigen of bij de gebruiker.
+- **Gebruikers** (enkel beheerders): accounts, rollen, wachtwoord resetten, deactiveren, ouders aan kinderen koppelen (met relatie), trainers aan groepen. Twee tabbladen (beheer/trainers en ouders/zwemmers).
+- **Uitnodigingen per e-mail**: ouders en leden kiezen zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen); *Wachtwoord vergeten?* via mail (60 minuten).
+
+### Inschrijvingen, zwemtest en berichten (bestuur)
+- **Inschrijvingen** (`registrations.manage`): bevestigde aanvragen beoordelen. Goedkeuren maakt de leden aan, koppelt de ouder en nodigt uit; afwijzen stuurt een mail met reden.
+- **Zwemtest** (menu *Zwemtest*, met teller): wachtlijst in volgorde van bevestiging met de statussen Wachtlijst, Uitgenodigd, Test gedaan, Ingeschreven en Geweigerd; per aanvraag een notitie, optionele mails en *Als lid inschrijven* (maakt een inschrijving die de gewone goedkeuring volgt).
+- **Berichten** (menu *Berichten*, met teller): berichten van het contactformulier afhandelen of verwijderen.
+
+### Kalender, trainingsreeksen en aanwezigheid
+- **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op zwemschool/competitie en groep.
+- **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen met reden, herstellen.
+- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per reeks en in bulk **op de website tonen of verbergen**. Knop *Competitie-uren overnemen* maakt de competitiegroepen en -reeksen van khzs.be aan.
+- **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
+- *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
+
+### Mobiel en techniek
+Responsive (getest tot 320 px): tabellen worden kaarten, grote aanraakdoelen. Zie de analyse voor architectuur, datamodel en beveiliging.
+
+Nog niet aanwezig: MFA, login-throttling, betalingen, exports, documentenbeheer, CSV-import van bestaande leden, volledige audit-triggers.
 
 ## Structuur
 
@@ -76,13 +97,19 @@ public/index.php        front controller + routetabel (route, methode, vereiste 
 public/install.php      eenmalige installer (vergrendelt zichzelf)
 app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
-app/Controllers/        Auth, Dashboard, Member, Group, Activity, User
-app/views/              PHP-templates met escaping via e()
-db/schema.sql           schema voor SQLite en MySQL
+app/Controllers/        Auth, Dashboard, Member, Group, Activity, Series, User, Invite, Registration,
+                        SwimTest, Contact, Content (website-beheer), Site (publieke site)
+app/Installer.php       installatie, migraties bij elke start, referentiedata (rollen/permissies)
+app/Markup.php          veilige opmaak voor paginateksten; app/PageCheck.php = paginacontrole
+app/SiteSeed.php        startinhoud khzs.be; app/CompetitionSeed.php = competitie-uren
+app/views/              PHP-templates met escaping via e() (site/ = publieke site)
+db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
+docs/                   functionele en technische analyse
+tools/                  seed-demo.php, sync-scripts
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
-Nog te doen voor productie: login-throttling, wachtwoordreset, MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
+Nog te doen voor productie: login-throttling, MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
 
 ## Werkwijze met GitHub
 
@@ -111,5 +138,7 @@ In `config.php` (zie `config.sample.php`):
 ```
 
 Optioneel: `'registration' => ['notify_email' => 'bestuur@jouwdomein.be']` mailt het bestuur bij elke bevestigde inschrijving, en `'privacy_url' => '...'` voegt een link naar de privacyverklaring toe aan het formulier.
+
+Berichten van het contactformulier gaan naar `'contact' => ['swimschool_email' => '…', 'competition_email' => '…', 'other_email' => '…']` (leeg = het meldadres van de inschrijvingen); ze staan altijd ook in de app onder *Berichten*. Geüploade afbeeldingen komen in `public/uploads/`: die map moet schrijfbaar zijn en in de back-up zitten.
 
 Lokaal testen: laat `driver` op `log` staan. Na een uitnodiging staat de activatielink in de melding en in `storage/mail/outbox.log`.
