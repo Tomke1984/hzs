@@ -1,4 +1,23 @@
 (function () {
+  // Tabellen (behalve presentielijst) krijgen op mobiel een kaartweergave: kolomtitel als label per cel
+  document.querySelectorAll('table.table:not(.attendance)').forEach(function (t) {
+    var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
+    if (!heads.length) return;
+    t.classList.add('stack');
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+      Array.prototype.forEach.call(tr.children, function (td, i) { td.setAttribute('data-label', heads[i] || ''); });
+    });
+  });
+
+  // Actieve menu-link markeren en in beeld scrollen
+  var path = location.search;
+  document.querySelectorAll('.nav a').forEach(function (a) {
+    var r = (a.getAttribute('href').match(/r=([a-z_]+)/) || [])[1];
+    var cur = (path.match(/r=([a-z_]+)/) || [])[1] || 'dashboard';
+    var map = { member: 'members', member_form: 'members', group: 'groups', group_form: 'groups', activity: 'calendar', activity_form: 'calendar', user_form: 'users' };
+    if (r && (r === cur || r === map[cur])) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+  });
+
   // Bevestiging voor formulieren met data-confirm
   document.addEventListener('submit', function (ev) {
     var msg = ev.target.getAttribute && ev.target.getAttribute('data-confirm');
