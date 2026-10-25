@@ -165,6 +165,17 @@ final class Installer
             $parent = self::createUser('ouder@demo.local', 'Demo1234!', 'Ouder van Lucas', 'PARENT');
             Database::exec('INSERT INTO guardian_links (user_id, member_id, relationship) VALUES (?,?,?)', [$parent, $memberIds[1], 'ouder']);
 
+            // Elk ander minderjarig demo-lid krijgt ook een ouderaccount (regel: jonger dan 18 = minstens één ouder of voogd).
+            foreach ($memberIds as $mid) {
+                $m = Database::one('SELECT first_name, last_name, birth_date FROM members WHERE id = ?', [$mid]);
+                if (!Guardianship::isMinor($m['birth_date']) || Database::val('SELECT COUNT(*) FROM guardian_links WHERE member_id = ?', [$mid])) {
+                    continue;
+                }
+                $slug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($m['last_name'])), '-');
+                $p = self::createUser('ouder.' . $slug . '@demo.local', 'Demo1234!', 'Ouder ' . $m['last_name'], 'PARENT');
+                Database::exec('INSERT INTO guardian_links (user_id, member_id, relationship) VALUES (?,?,?)', [$p, $mid, 'ouder']);
+            }
+
             $types = array_column(Database::all('SELECT id, code FROM activity_types'), 'id', 'code');
             $mk = function (string $type, string $title, string $loc, string $start, int $minutes, string $audience, array $gids) use ($types, $ts) {
                 $end = (new DateTime($start))->modify("+$minutes minutes")->format('Y-m-d H:i:00');

@@ -58,7 +58,9 @@ final class GroupController
             );
         }
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates'), $group['name']);
+        $blockedIds = $candidates ? Guardianship::missingIds() : [];
+
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds'), $group['name']);
     }
 
     public static function form(): void
@@ -119,7 +121,7 @@ final class GroupController
         $start = input('start_date', today());
         $back = input('return') === 'group' ? url('group', ['id' => $groupId]) : url('member', ['id' => $memberId]);
 
-        $member = Database::one('SELECT id, status FROM members WHERE id = ?', [$memberId]);
+        $member = Database::one('SELECT id, status, birth_date FROM members WHERE id = ?', [$memberId]);
         $group = Database::one('SELECT id, is_active FROM `groups` WHERE id = ?', [$groupId]);
 
         if (!$member || !$group) {
@@ -133,6 +135,10 @@ final class GroupController
         if (!valid_date($start)) {
             flash('error', 'Startdatum is ongeldig.');
             redirect($back);
+        }
+        if (Guardianship::isMinor($member['birth_date']) && Guardianship::count($memberId) === 0) {
+            flash('error', 'Dit lid is jonger dan 18 en heeft nog geen ouder of voogd. Koppel eerst een ouder of voogd.');
+            redirect(url('member', ['id' => $memberId]));
         }
         $overlap = Database::val(
             'SELECT COUNT(*) FROM group_memberships WHERE member_id = ? AND group_id = ? AND (end_date IS NULL OR end_date >= ?)',

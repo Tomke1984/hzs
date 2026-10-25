@@ -48,6 +48,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Groepen aanmaken en wijzigen; leden historisch koppelen met start- en einddatum.
 - Activiteiten voor groep(en) of hele club; kalender met trainingen, wedstrijden en clubactiviteiten.
 - Presentielijst met Onbekend / Aanwezig / Afwezig.
+- Regel voor minderjarigen: een actief lid jonger dan 18 heeft minstens één ouder of voogd. Zonder ouder verschijnt een waarschuwing (ledenlijst, ledenpagina, overzicht), kan het lid niet aan een groep gekoppeld worden en kan de laatste ouder niet ontkoppeld worden. Leden zonder geboortedatum vallen buiten de regel.
 - Gebruikersbeheer (enkel beheerders, menu *Gebruikers*): accounts aanmaken, rollen toekennen, wachtwoord resetten, accounts deactiveren, **ouders aan kinderen koppelen** en trainers aan groepen toewijzen. Je kunt jezelf niet buitensluiten en de laatste actieve beheerder kan niet uitgeschakeld worden.
 
 Bewust nog niet in V1: zelfregistratie van ouders, wachtwoord vergeten, MFA, herhalende activiteiten, inschrijvingen, betalingen, exports, volledige audit-triggers.

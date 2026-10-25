@@ -75,6 +75,7 @@ pre { white-space: pre-wrap; word-break: break-all; background: #f0f3f6; padding
 /* chips */
 .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--aqua); color: var(--blue-dark); }
 .chip.ok { background: #e3f4ea; color: var(--ok); }
+.chip.warn { background: #fff4d6; color: #8a5a00; }
 .chip.off { background: #eceff2; color: var(--muted); }
 .chip.type-training { background: #dbe8f7; color: var(--training); }
 .chip.type-competition { background: #fde6d8; color: var(--competition); }
@@ -87,6 +88,7 @@ pre { white-space: pre-wrap; word-break: break-all; background: #f0f3f6; padding
 .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid; }
 .alert ul { margin: 0; padding-left: 20px; }
 .alert-success { background: #e3f4ea; border-color: #b7e0c8; color: #14532d; }
+.alert-warning { background: #fff4d6; border-color: #f0d58a; color: #6b4a00; }
 .alert-error { background: #fbe4e2; border-color: #f2b8b3; color: #7a1c15; }
 
 /* tabellen */

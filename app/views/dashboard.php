@@ -1,5 +1,12 @@
 <h1>Welkom, <?= e(Auth::user()['display_name']) ?></h1>
 
+<?php if ($guardianMissing > 0): ?>
+<div class="alert alert-warning">
+  <strong><?= (int) $guardianMissing ?> <?= $guardianMissing === 1 ? 'lid' : 'leden' ?> jonger dan 18</strong> zonder ouder of voogd.
+  <a href="<?= e(url('members', ['missing' => 1])) ?>">Bekijk de lijst →</a>
+</div>
+<?php endif; ?>
+
 <?php if ($stats): ?>
 <div class="stats">
   <div class="stat"><strong><?= $stats['members'] ?></strong><span>actieve leden</span></div>

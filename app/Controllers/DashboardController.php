@@ -24,6 +24,8 @@ final class DashboardController
             ];
         }
 
-        render('dashboard', compact('upcoming', 'stats'), 'Overzicht');
+        $guardianMissing = Auth::can('members.contact') ? Guardianship::missingCount() : 0;
+
+        render('dashboard', compact('upcoming', 'stats', 'guardianMissing'), 'Overzicht');
     }
 }

@@ -84,6 +84,11 @@ final class UserController
             $user['member_id'] = null;
         }
 
+        if ($existing && in_array('PARENT', self::rolesOf($id), true) && !in_array('PARENT', $roles, true)
+            && Database::val('SELECT COUNT(*) FROM guardian_links WHERE user_id = ?', [$id]) > 0) {
+            $errors[] = 'Ontkoppel eerst alle kinderen voordat je de rol Ouder intrekt.';
+        }
+
         // Voorkom dat er geen beheerder meer overblijft of dat je jezelf buitensluit.
         $willBeAdmin = in_array('ADMIN', $roles, true) && $user['is_active'] === 1;
         if ($existing) {
@@ -148,7 +153,9 @@ final class UserController
         $userId = (int) input('user_id', '0');
         $memberId = (int) input('member_id', '0');
         $relationship = input('relationship');
-        $back = url('user_form', ['id' => $userId]);
+        $back = input('return') === 'member' && $memberId
+            ? url('member', ['id' => $memberId])
+            : url('user_form', ['id' => $userId]);
         self::load($userId);
 
         if (!in_array('PARENT', self::rolesOf($userId), true)) {
@@ -184,6 +191,12 @@ final class UserController
         $link = Database::one('SELECT * FROM guardian_links WHERE id = ?', [$linkId]);
         if (!$link) {
             abort(404, 'Deze koppeling bestaat niet.');
+        }
+        $member = Database::one('SELECT id, status, birth_date FROM members WHERE id = ?', [$link['member_id']]);
+        if ($member && $member['status'] === 'ACTIVE' && Guardianship::isMinor($member['birth_date'])
+            && Guardianship::count((int) $member['id']) <= 1) {
+            flash('error', 'Dit is de enige ouder of voogd van een lid jonger dan 18. Koppel eerst een andere ouder of voogd.');
+            redirect(url('user_form', ['id' => $link['user_id']]));
         }
         Database::exec('DELETE FROM guardian_links WHERE id = ?', [$linkId]);
         audit('DELETE', 'guardian_link', $linkId);

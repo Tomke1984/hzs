@@ -59,7 +59,8 @@
       <select name="member_id" required>
         <option value="">— kies een lid —</option>
         <?php foreach ($candidates as $c): ?>
-          <option value="<?= (int) $c['id'] ?>"><?= e($c['last_name']) ?> <?= e($c['first_name']) ?> (<?= e($c['member_no']) ?>)</option>
+          <?php $blocked = in_array((int) $c['id'], $blockedIds, true); ?>
+          <option value="<?= (int) $c['id'] ?>" <?= $blocked ? 'disabled' : '' ?>><?= e($c['last_name']) ?> <?= e($c['first_name']) ?> (<?= e($c['member_no']) ?>)<?= $blocked ? ' — ouder of voogd ontbreekt' : '' ?></option>
         <?php endforeach; ?>
       </select>
     </label>

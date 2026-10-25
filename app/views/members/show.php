@@ -5,6 +5,13 @@
   <?php endif; ?>
 </div>
 
+<?php if ($guardianMissing): ?>
+  <div class="alert alert-warning">
+    <strong>Ouder of voogd ontbreekt.</strong> Dit lid is jonger dan 18 en moet minstens één ouder of voogd hebben.
+    Zolang die ontbreekt, kan het lid niet aan een groep gekoppeld worden.
+  </div>
+<?php endif; ?>
+
 <section class="card">
   <dl class="facts">
     <dt>Lidnummer</dt><dd><?= e($member['member_no']) ?></dd>
@@ -45,6 +52,29 @@
     </tbody>
   </table>
   </div>
+  <?php endif; ?>
+
+  <?php if (Auth::can('users.manage')): ?>
+    <?php if ($parentAccounts): ?>
+    <form class="inline-form" method="post" action="<?= e(url('user_child_add')) ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+      <input type="hidden" name="return" value="member">
+      <label>Ouder of voogd koppelen
+        <select name="user_id" required>
+          <option value="">— kies een ouderaccount —</option>
+          <?php foreach ($parentAccounts as $pa): ?>
+            <option value="<?= (int) $pa['id'] ?>"><?= e($pa['display_name']) ?> (<?= e($pa['email']) ?>)</option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <label>Relatie (optioneel)
+        <input name="relationship" maxlength="40" placeholder="bv. moeder, vader, voogd">
+      </label>
+      <button class="btn" type="submit">Koppelen</button>
+    </form>
+    <?php endif; ?>
+    <p class="muted small">Bestaat de ouder nog niet? <a href="<?= e(url('user_form')) ?>">Maak eerst een ouderaccount aan</a> (rol Ouder) en koppel het daarna aan dit lid.</p>
   <?php endif; ?>
 </section>
 <?php endif; ?>
