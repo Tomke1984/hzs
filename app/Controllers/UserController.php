@@ -8,7 +8,10 @@ final class UserController
 
     public static function index(): void
     {
-        $users = Database::all(
+        $tab = (string) ($_GET['tab'] ?? 'staff') === 'members' ? 'members' : 'staff';
+        $q = trim((string) ($_GET['q'] ?? ''));
+
+        $all = Database::all(
             'SELECT u.*, m.first_name AS m_first, m.last_name AS m_last
              FROM users u LEFT JOIN members m ON m.id = u.member_id
              ORDER BY u.display_name'
@@ -24,7 +27,32 @@ final class UserController
             'user_id'
         );
 
-        render('users/index', compact('users', 'rolesByUser', 'childCount'), 'Gebruikers');
+        // Tab "Beheer en trainers": beheerders en trainers. Tab "Ouders en zwemmers": alle overige accounts.
+        $isStaff = fn(array $u) => (bool) array_intersect(['ADMIN', 'TRAINER'], $rolesByUser[$u['id']] ?? []);
+        $counts = ['staff' => 0, 'members' => 0];
+        $users = [];
+        foreach ($all as $u) {
+            $t = $isStaff($u) ? 'staff' : 'members';
+            $counts[$t]++;
+            if ($t !== $tab) {
+                continue;
+            }
+            if ($q !== '') {
+                $hay = mb_strtolower($u['display_name'] . ' ' . $u['email']);
+                $ok = true;
+                foreach (preg_split('/\s+/', mb_strtolower($q)) as $w) {
+                    if (mb_strpos($hay, $w) === false) {
+                        $ok = false;
+                    }
+                }
+                if (!$ok) {
+                    continue;
+                }
+            }
+            $users[] = $u;
+        }
+
+        render('users/index', compact('users', 'rolesByUser', 'childCount', 'tab', 'q', 'counts'), 'Gebruikers');
     }
 
     public static function form(): void
@@ -36,6 +64,20 @@ final class UserController
         } else {
             $user = ['id' => 0, 'display_name' => '', 'email' => '', 'member_id' => null, 'is_active' => 1];
             $roles = [];
+            // Vanaf de ledenpagina: eigen account voor een lid (rol Zwemmer, gegevens vooraf ingevuld).
+            $mid = (int) ($_GET['member_id'] ?? 0);
+            $m = $mid ? Database::one('SELECT id, first_name, last_name, email FROM members WHERE id = ?', [$mid]) : null;
+            if ($m) {
+                $taken = Database::val('SELECT id FROM users WHERE member_id = ?', [$m['id']]);
+                if ($taken) {
+                    flash('error', 'Dit lid heeft al een account.');
+                    redirect(url('user_form', ['id' => $taken]));
+                }
+                $user['member_id'] = (int) $m['id'];
+                $user['display_name'] = $m['first_name'] . ' ' . $m['last_name'];
+                $user['email'] = (string) $m['email'];
+                $roles = ['SWIMMER'];
+            }
         }
         self::renderForm($user, $roles, []);
     }

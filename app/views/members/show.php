@@ -78,6 +78,22 @@
 </section>
 <?php endif; ?>
 
+<?php if (Auth::can('users.manage') && !Guardianship::isMinor($member['birth_date'] ?? null) || (Auth::can('users.manage') && $account)): ?>
+<section class="card">
+  <h2>Eigen account</h2>
+  <?php if ($account): ?>
+    <p>Dit lid kan aanmelden met <strong><?= e($account['email']) ?></strong>
+      <span class="chip <?= (int) $account['is_active'] ? 'ok' : 'off' ?>"><?= (int) $account['is_active'] ? 'Actief' : 'Inactief' ?></span></p>
+    <p><a class="btn btn-small btn-ghost" href="<?= e(url('user_form', ['id' => $account['id']])) ?>">Account beheren</a></p>
+  <?php else: ?>
+    <p class="muted">Dit lid heeft geen eigen login. Maak een account aan als het lid zelf wil aanmelden om de eigen kalender en groepen te zien.</p>
+    <p><a class="btn btn-small" href="<?= e(url('user_form', ['member_id' => $member['id']])) ?>">Account aanmaken</a></p>
+  <?php endif; ?>
+</section>
+<?php elseif (Auth::can('users.manage')): ?>
+<p class="muted small">Dit lid is jonger dan 18: de ouder of voogd meldt aan. Een eigen account kan later, via de ouder.</p>
+<?php endif; ?>
+
 <section class="card">
   <h2>Groepen</h2>
   <?php if (!$memberships): ?>

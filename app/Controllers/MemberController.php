@@ -150,6 +150,7 @@ final class MemberController
             'isMinor' => Guardianship::isMinor($member['birth_date']),
             'guardianMissing' => $guardianMissing,
             'parentAccounts' => $parentAccounts,
+            'account' => Auth::can('users.manage') ? Database::one('SELECT id, email, is_active FROM users WHERE member_id = ?', [$member['id']]) : null,
             'parents' => $parents,
             'memberships' => $memberships,
             'availableGroups' => $availableGroups,

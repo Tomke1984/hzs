@@ -2,8 +2,24 @@
   <h1>Gebruikers</h1>
   <a class="btn" href="<?= e(url('user_form')) ?>">+ Nieuwe gebruiker</a>
 </div>
-<p class="muted">Beheer hier wie kan aanmelden, welke rol iemand heeft en welke kinderen of groepen bij een account horen.</p>
+<p class="muted">Een account is enkel nodig om aan te melden. Leden zijn niet automatisch gebruikers: kinderen loggen meestal niet zelf in, hun ouder doet dat. Maak een account voor een lid aan via de ledenpagina.</p>
 
+<nav class="tabs" aria-label="Soort gebruikers">
+  <a href="<?= e(url('users', ['tab' => 'staff'])) ?>" <?= $tab === 'staff' ? 'aria-current="page"' : '' ?>>Beheer en trainers <span class="chip"><?= (int) $counts['staff'] ?></span></a>
+  <a href="<?= e(url('users', ['tab' => 'members'])) ?>" <?= $tab === 'members' ? 'aria-current="page"' : '' ?>>Ouders en zwemmers <span class="chip"><?= (int) $counts['members'] ?></span></a>
+</nav>
+
+<form class="filters" method="get" action="">
+  <input type="hidden" name="r" value="users">
+  <input type="hidden" name="tab" value="<?= e($tab) ?>">
+  <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam of e-mail">
+  <button class="btn btn-small" type="submit">Zoeken</button>
+  <?php if ($q !== ''): ?><a href="<?= e(url('users', ['tab' => $tab])) ?>">Wis zoekopdracht</a><?php endif; ?>
+</form>
+
+<?php if (!$users): ?>
+  <p class="card muted">Geen gebruikers gevonden.</p>
+<?php else: ?>
 <div class="table-wrap">
 <table class="table">
   <thead><tr><th>Naam</th><th>E-mail</th><th>Rollen</th><th>Gekoppeld</th><th>Status</th></tr></thead>
@@ -28,3 +44,4 @@
   </tbody>
 </table>
 </div>
+<?php endif; ?>

@@ -46,6 +46,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder = clubbreed.
 - Groepen zijn opgesplitst in **Zwemschool** en **Competitie** (keuze per groep; overzicht, groepspagina en activiteitenformulier tonen de indeling). Bestaande databases krijgen de kolom automatisch, alle bestaande groepen starten als Zwemschool.
 - Filteren op **zwemschool/competitie** en op groep in de ledenlijst en de kalender (filter blijft behouden bij maand vooruit/terug; clubbrede activiteiten blijven zichtbaar).
+- Gebruikerslijst met twee tabbladen: **Beheer en trainers** en **Ouders en zwemmers** (met zoekbalk). Leden zijn niet automatisch gebruikers: op de ledenpagina maakt de beheerder met één klik een eigen account aan (rol Zwemmer, gegevens vooraf ingevuld). Bij minderjarigen meldt de ouder of voogd aan.
 - Mobielvriendelijk: compacte header met scrollbaar menu, tabellen worden kaarten op telefoon, grote aanraakdoelen en radioknoppen voor aanwezigheid, formulieren en knoppen over de volledige breedte (getest tot 320 px).
 - Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
 - Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
