@@ -330,3 +330,31 @@ body.has-sidebar { background: var(--bg); }
   .sidebar { padding-top: 56px; }
 }
 @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
+
+/* ===== Filters en knoppenrijen (opgeruimd) ===== */
+.filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 16px; }
+form.filters input:not([type=radio]):not([type=checkbox]), form.filters select { margin: 0; width: auto; min-width: 180px; flex: 1 1 180px; }
+form.filters input[type=search] { flex: 2 1 260px; }
+form.filters .btn { align-self: center; flex: 0 0 auto; padding: 9px 20px; }
+form.filters > a { align-self: center; font-size: .9rem; }
+.row-between > div, .row-between .actions-inline { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.actions-inline, .actions { gap: 10px; align-items: center; }
+.actions-inline form { display: block; margin: 0; }
+.card .actions, .card .actions-inline { margin-top: 14px; }
+@media (max-width: 640px) {
+  form.filters input:not([type=radio]):not([type=checkbox]), form.filters select { flex-basis: 100%; }
+  form.filters .btn { width: 100%; }
+  .actions-inline form, .actions-inline .btn { flex: 1 1 100%; }
+  .actions-inline form .btn { width: 100%; }
+}
+form.filters select { min-width: 220px; flex-basis: 220px; }
+form.filters input[type=search] { flex: 1 1 200px; min-width: 200px; }
+.actions-inline { margin-bottom: 16px; }
+.card .actions-inline { margin-bottom: 0; }
+form.filters select { min-width: 200px; flex-basis: 200px; }
+form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
+@media (max-width: 640px) {
+  form.filters { flex-direction: column; flex-wrap: nowrap; }
+  form.filters input:not([type=radio]):not([type=checkbox]), form.filters select, form.filters input[type=search] { flex: 0 0 auto; width: 100%; min-width: 0; }
+}
+@media (min-width: 641px) { form.filters input[type=search] { min-width: 140px; flex: 1 1 140px; } form.filters select { flex: 1 1 220px; } }
