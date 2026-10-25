@@ -6,7 +6,8 @@ final class ContentController
     public const DYNAMIC = [
         'trainingsuren-competitie' => ['de trainingsuren komen uit Reeksen', 'series', true],
         'doelstellingen' => ['de groepen en hun doelstellingen komen uit Groepen', 'groups', true],
-        'contact' => ['het contactformulier en de berichten komen uit de app (menu Berichten)', 'messages', false],
+        'contact' => ['het contactformulier en de berichten komen uit de app (menu Berichten)', 'messages', false, 'De tekst met de contactgegevens kun je aanpassen; het formulier komt automatisch onderaan.'],
+        'home' => ['het nieuws op de startpagina komt uit Nieuws', 'content', false, 'Hier pas je enkel de introtekst bovenaan de startpagina aan; het nieuws staat eronder.'],
     ];
 
     public static function index(): void

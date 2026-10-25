@@ -2,7 +2,7 @@
 <?php if ($errors): ?><div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 <?php $dyn = $p['id'] ? (ContentController::DYNAMIC[$p['slug']] ?? null) : null; ?>
 <?php if ($dyn): ?><div class="alert alert-info"><strong>Automatische pagina:</strong> <?= e($dyn[0]) ?>. <a href="<?= e(url($dyn[1])) ?>">Naar het beheer ↗</a><br>
-  <?= $dyn[2] ? 'Hier pas je enkel de inleiding aan (de tekst vóór de eerste kop); al de rest wordt weggelaten bij het opslaan.' : 'De tekst met de contactgegevens kun je aanpassen; het formulier komt automatisch onderaan.' ?> Adres, plaats en status liggen vast en de pagina kan niet verwijderd worden.</div><?php endif; ?>
+  <?= $dyn[2] ? 'Hier pas je enkel de inleiding aan (de tekst vóór de eerste kop); al de rest wordt weggelaten bij het opslaan.' : $dyn[3] ?> Adres, plaats en status liggen vast en de pagina kan niet verwijderd worden.</div><?php endif; ?>
 <form class="card form" method="post" action="<?= e(url('page_save')) ?>">
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
