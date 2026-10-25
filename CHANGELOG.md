@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Website: balk onder het menu en boven de footer** is geen blauw-geel baantouw meer maar een golvend water in drie blauwtinten (donker, midden, licht), zonder geel.
 - **Kalender:** knop *Weekoverzicht zwemschool* naast *Trainingsreeksen* (voor wie activiteiten mag beheren).
 - **Uniforme keuzelijsten en knoppen:** overal (ledenpagina's, filters, formulieren, publieke zwemtestaanvraag) hebben keuzelijsten nu het duidelijke veld met pijltje, invulvelden dezelfde duidelijke rand, en knoppen een stevigere vorm (vet, ruimere padding, duidelijke rand bij de lichte knoppen). Op smalle schermen zijn de kleine knoppen groter om aan te raken.
 - **Duidelijkere indeling:** in *Nog niet ingedeeld* heeft de blokkeuze een duidelijk keuzeveld met pijltje en een volwaardige knop *Indelen* ernaast (op smalle schermen onder elkaar, volle breedte).
