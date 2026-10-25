@@ -3,19 +3,35 @@ final class SeriesController
 {
     public static function index(): void
     {
+        [$cat, $gid] = GroupController::readFilter();
+        $where = '1=1';
+        $fp = [];
+        if ($cat !== '' || $gid) {
+            $where = 'EXISTS (SELECT 1 FROM activity_series_groups fsg JOIN `groups` fg ON fg.id = fsg.group_id WHERE fsg.series_id = s.id';
+            if ($cat !== '') {
+                $where .= ' AND fg.category = ?';
+                $fp[] = $cat;
+            }
+            if ($gid) {
+                $where .= ' AND fg.id = ?';
+                $fp[] = $gid;
+            }
+            $where .= ')';
+        }
         $series = Database::all(
             "SELECT s.*, t.name AS type_name,
                (SELECT COUNT(*) FROM activities a WHERE a.series_id = s.id AND a.starts_at >= ? AND a.status = 'PLANNED') AS upcoming
              FROM activity_series s JOIN activity_types t ON t.id = s.type_id
+             WHERE $where
              ORDER BY s.is_active DESC, s.title",
-            [today() . ' 00:00:00']
+            array_merge([today() . ' 00:00:00'], $fp)
         );
         foreach ($series as &$s) {
             $s['groups'] = array_column(Database::all('SELECT g.name FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]), 'name');
             $s['slots'] = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
         }
         unset($s);
-        render('series/index', compact('series'), 'Trainingsreeksen');
+        render('series/index', ['series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
     public static function show(): void

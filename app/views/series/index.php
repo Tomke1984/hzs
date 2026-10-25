@@ -5,8 +5,16 @@
     <a class="btn" href="<?= e(url('series_form')) ?>">+ Nieuwe reeks</a>
   </span>
 </div>
+<form class="filters" method="get" action="">
+  <input type="hidden" name="r" value="series">
+  <?= group_filter_fields($cat, $gid, $groupOptions) ?>
+  <button class="btn btn-small" type="submit">Filteren</button>
+  <?php if ($cat !== '' || $gid): ?><a href="<?= e(url('series')) ?>">Wis filter</a><?php endif; ?>
+</form>
 <p class="muted">Een reeks maakt automatisch wekelijkse trainingen aan in de kalender voor één of meer groepen.</p>
-<?php if (!$series): ?>
+<?php if (!$series && ($cat !== '' || $gid)): ?>
+  <p class="card muted">Geen reeksen voor deze groep.</p>
+<?php elseif (!$series): ?>
   <p class="card muted">Nog geen reeksen. Maak er één aan, bv. “Zwemtraining” voor een groep op di, wo en za.</p>
 <?php endif; ?>
 <div class="cards">
