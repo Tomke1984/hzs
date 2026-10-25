@@ -85,6 +85,7 @@ $routes = [
     'series'           => ['GET' => ['SeriesController', 'index', 'activities.write']],
     'series_show'      => ['GET' => ['SeriesController', 'show', 'activities.write']],
     'series_form'      => ['GET' => ['SeriesController', 'form', 'activities.write']],
+    'series_import_competition' => ['POST' => ['SeriesController', 'importCompetition', 'activities.write']],
     'series_save'      => ['POST' => ['SeriesController', 'save', 'activities.write']],
     'series_bulk'      => ['GET' => ['SeriesController', 'bulkForm', 'activities.write'], 'POST' => ['SeriesController', 'bulk', 'activities.write']],
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
