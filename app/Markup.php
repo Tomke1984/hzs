@@ -48,7 +48,7 @@ final class Markup
                 return $m[0];
             }
             $ext = str_starts_with($href, 'http') ? ' target="_blank" rel="noopener"' : '';
-            return '<a href="' . e($href) . '"' . $ext . '>' . $m[1] . '</a>';
+            return '<a href="' . e(pretty_internal($href)) . '"' . $ext . '>' . $m[1] . '</a>';
         }, $s);
         $s = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $s);
         $s = preg_replace('/(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])/s', '<em>$1</em>', $s);
@@ -68,6 +68,9 @@ final class Markup
     public static function uniqueSlug(string $table, string $base, int $ignoreId = 0): string
     {
         $slug = $base;
+        if ($table === 'pages' && in_array($slug, RESERVED_SLUGS, true)) {
+            $slug = $base . '-2';
+        }
         for ($i = 2; Database::val("SELECT COUNT(*) FROM $table WHERE slug = ? AND id != ?", [$slug, $ignoreId]) > 0; $i++) {
             $slug = $base . '-' . $i;
         }

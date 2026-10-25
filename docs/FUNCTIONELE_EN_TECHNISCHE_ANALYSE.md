@@ -1,6 +1,6 @@
 # HZS Clubapp – Functionele en technische analyse
 
-Versie v0.8.0 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
+Versie v0.8.0 + leesbare adressen (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
 
 ## 1. Doel
 HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
@@ -56,6 +56,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 
 ## 7. Architectuur
 - Server-rendered PHP-monoliet zonder externe pakketten; PDO met prepared statements (SQLite lokaal, MySQL in productie).
+- **Adressen:** publieke pagina's hebben leesbare permalinks (`/<paginanaam>`, `/kalender`, `/trainingsuren`, `/zwemtest`, `/inschrijven`, `/aanmelden`, `/nieuws/<berichtnaam>`). `public/.htaccess` stuurt alles wat geen bestand is naar `index.php`; de router vertaalt het pad naar een route, `url()` bouwt de adressen (relatief aan `<base href>`, met `base_path()` voor submappen). `?r=route` blijft werken (beheer-app, mails, oude links). Gereserveerde namen (`RESERVED_SLUGS`) kunnen niet als paginanaam dienen. Links in paginateksten worden bij het renderen omgezet (`pretty_internal`).
 - `public/index.php`: front controller met routetabel `route → methode → [Controller, actie, permissie|'public'|null]`; centrale CSRF-controle op elke POST (fout = 419).
 - `app/Controllers/*`: use-cases per domein; `app/Scope.php`: centrale gegevensscope; `app/Auth.php`: sessie en permissies; `app/Markup.php`: veilige opmaak voor teksten (eerst escapen, dan een beperkte set opmaak en een whitelist voor links); `app/SeriesService.php`, `app/PageCheck.php`, `app/Mailer.php`, `app/Invites.php`, `app/Guardianship.php`.
 - **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}` (portable SQL, datums als tekst). `Installer::migrate()` draait bij elke start: ontbrekende tabellen aanmaken (nieuwe tabellen moeten in de probe-lijst staan), kolommen toevoegen, opruimmigraties (groepshistoriek, doelstellingen naar de groep, inhoudscorrecties) en referentiedata (rollen/permissies) synchroniseren. Bestaande databases worden dus automatisch bijgewerkt.

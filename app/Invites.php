@@ -19,8 +19,7 @@ final class Invites
             $host = 'localhost';
         }
         $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (bool) config('cookie_secure', false);
-        $dir = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
-        return ($https ? 'https' : 'http') . '://' . $host . $dir;
+        return ($https ? 'https' : 'http') . '://' . $host . base_path();
     }
 
     public static function link(string $token): string

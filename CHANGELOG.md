@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+- **Leesbare adressen (permalinks) voor de publieke site:** geen `?r=` meer in de URL. Pagina's staan op `/<naam>` (bv. `/zwemschool`, `/lidgeld`, `/contact`, dezelfde namen als op khzs.be), de kalender op `/kalender`, de trainingsuren op `/trainingsuren`, de zwemtest op `/zwemtest`, inschrijven op `/inschrijven`, aanmelden op `/aanmelden` en elk nieuwsbericht op een eigen pagina `/nieuws/<naam>` (de titel op de startpagina linkt ernaartoe). Dat adres volgt de titel van de pagina of het bericht. Links in paginateksten (`?r=page&slug=…`) worden bij het tonen automatisch omgezet. De oude adressen met `?r=` blijven werken en het beheer (app) behoudt ze. Technisch: een rewrite-regel in `public/.htaccess`, een `<base href>` in de layouts, een router in `public/index.php`. Pagina's mogen de namen `kalender`, `trainingsuren`, `zwemtest`, `inschrijven`, `aanmelden`, `nieuws` en enkele systeemnamen niet gebruiken (die krijgen vanzelf `-2`). Werkt ook als de site in een submap staat. De startpagina `/` toont voortaan altijd de publieke startpagina (ook voor wie is aangemeld; het overzicht staat onder *Mijn Clubapp*). Vereist `mod_rewrite` (Apache) of, lokaal, `php -S` zoals voorheen.
 
 ## Op main
 

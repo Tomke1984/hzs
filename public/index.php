@@ -22,8 +22,8 @@ $routes = [
     'dashboard'        => ['GET' => ['DashboardController', 'index', null]],
 
     'home'             => ['GET' => ['SiteController', 'home', 'public']],
-    'news'             => ['GET' => ['SiteController', 'news', 'public']],
-    'post'             => ['GET' => ['SiteController', 'news', 'public']],
+    'news'             => ['GET' => ['SiteController', 'post', 'public']],
+    'post'             => ['GET' => ['SiteController', 'post', 'public']],
     'page'             => ['GET' => ['SiteController', 'page', 'public']],
     'agenda'           => ['GET' => ['SiteController', 'agenda', 'public']],
     'trainingstimes'   => ['GET' => ['SiteController', 'trainingTimes', 'public']],
@@ -99,7 +99,35 @@ $routes = [
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
 ];
 
-$route  = (string) ($_GET['r'] ?? (Auth::user() ? 'dashboard' : 'home'));
+// Leesbare adressen: /zwemschool, /kalender, /nieuws/<bericht>, ... (zonder ?r= in de URL)
+if (!isset($_GET['r'])) {
+    $path = trim(rawurldecode((string) parse_url((string) $_SERVER['REQUEST_URI'], PHP_URL_PATH)), '/');
+    $b = trim(base_path(), '/');
+    if ($b !== '' && str_starts_with($path . '/', $b . '/')) {
+        $path = trim(substr($path, strlen($b)), '/');
+    }
+    if ($path === 'index.php') {
+        $path = '';
+    }
+    if ($path !== '') {
+        $byPath = array_flip(PRETTY_ROUTES);
+        if (isset($byPath[$path])) {
+            $_GET['r'] = $byPath[$path];
+        } elseif ($path === 'nieuws') {
+            $_GET['r'] = 'home';
+        } elseif (preg_match('#^nieuws/([a-z0-9-]+)$#', $path, $m)) {
+            $_GET['r'] = 'post';
+            $_GET['slug'] = $m[1];
+        } elseif (preg_match('#^[a-z0-9-]+$#', $path)) {
+            $_GET['r'] = 'page';
+            $_GET['slug'] = $path;
+        } else {
+            abort(404, 'Deze pagina bestaat niet.');
+        }
+    }
+}
+
+$route  = (string) ($_GET['r'] ?? 'home');
 $method = $_SERVER['REQUEST_METHOD'] === 'POST' ? 'POST' : ($_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD' ? 'GET' : '');
 
 if (!isset($routes[$route])) {

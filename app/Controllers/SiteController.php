@@ -28,10 +28,14 @@ final class SiteController
     }
 
     /** Oude adressen van het nieuwsoverzicht en berichten sturen door naar de startpagina. */
-    public static function news(): void
+    /** Enkel bericht op een eigen adres (/nieuws/<naam>). */
+    public static function post(): void
     {
-        $slug = (string) ($_GET['slug'] ?? '');
-        redirect(url('home') . ($slug !== '' ? '#bericht-' . rawurlencode($slug) : ''));
+        $p = Database::one('SELECT * FROM posts WHERE slug = ?', [(string) ($_GET['slug'] ?? '')]);
+        if (!$p || ($p['status'] !== 'PUBLISHED' && !Auth::can('content.manage'))) {
+            abort(404, 'Dit bericht bestaat niet.');
+        }
+        render_public('site/post', ['p' => $p], $p['title']);
     }
 
     public static function page(): void

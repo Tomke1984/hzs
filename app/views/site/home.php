@@ -25,7 +25,7 @@
     <?php foreach ($posts as $p): ?>
       <article class="news-item" id="bericht-<?= e($p['slug']) ?>">
         <?php if ($p['status'] !== 'PUBLISHED'): ?><p class="alert alert-warning">Concept: dit bericht is nog niet publiek (enkel zichtbaar voor het bestuur).</p><?php endif; ?>
-        <h3><?= e($p['title']) ?></h3>
+        <h3><a href="<?= e(url('post', ['slug' => $p['slug']])) ?>"><?= e($p['title']) ?></a></h3>
         <time datetime="<?= e(substr((string) ($p['published_at'] ?: $p['created_at']), 0, 10)) ?>"><?= e(fmt_date(substr((string) ($p['published_at'] ?: $p['created_at']), 0, 10))) ?></time>
         <?php if ($p['image']): ?><img class="post-hero" src="<?= e($p['image']) ?>" alt=""><?php endif; ?>
         <div class="prose"><?= Markup::render((string) $p['body']) ?></div>

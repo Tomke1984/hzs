@@ -20,7 +20,7 @@
         <td><span class="chip <?= $p['status'] === 'PUBLISHED' ? 'ok' : 'off' ?>"><?= $p['status'] === 'PUBLISHED' ? 'Gepubliceerd' : 'Concept' ?></span></td>
         <td><?= $p['published_at'] ? e(fmt_date(substr($p['published_at'], 0, 10))) : '—' ?></td>
         <td class="right">
-          <a class="btn btn-small btn-ghost" href="<?= e(url('home')) ?>#bericht-<?= e($p['slug']) ?>">Bekijken</a>
+          <a class="btn btn-small btn-ghost" href="<?= e(url('post', ['slug' => $p['slug']])) ?>">Bekijken</a>
           <form method="post" action="<?= e(url('post_delete')) ?>" data-confirm="Dit bericht definitief verwijderen?">
             <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
             <button class="btn btn-small btn-ghost" type="submit">Verwijderen</button>

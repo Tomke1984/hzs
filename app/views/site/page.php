@@ -57,7 +57,7 @@
     <?php endif; ?>
     <?php if ($goalGroups): ?>
       <nav class="goal-jump" aria-label="Groepen">
-        <?php foreach ($goalGroups as $g): ?><a href="#groep-<?= (int) $g['id'] ?>"><?= e($g['name']) ?></a><?php endforeach; ?>
+        <?php foreach ($goalGroups as $g): ?><a href="<?= e(self_url()) ?>#groep-<?= (int) $g['id'] ?>"><?= e($g['name']) ?></a><?php endforeach; ?>
       </nav>
       <?php foreach ($goalGroups as $g): ?>
         <section class="goal" id="groep-<?= (int) $g['id'] ?>">

@@ -16,14 +16,75 @@ function config(string $key, $default = null)
     return $cur;
 }
 
+/** Map waarin de site staat, zonder slash op het einde ('' = hoofdmap). Houdt rekening met een doorverwijzing via /public. */
+function base_path(): string
+{
+    static $b = null;
+    if ($b === null) {
+        $b = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
+        $uri = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+        if (str_ends_with($b, '/public') && !str_starts_with($uri, $b . '/')) {
+            $b = substr($b, 0, -7);
+        }
+    }
+    return $b;
+}
+
+/** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
+const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden'];
+/** Adressen die een pagina niet mag gebruiken (ze zijn al in gebruik door de app of de server). */
+const RESERVED_SLUGS = ['kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
+
+/**
+ * Adres voor een route, relatief aan de basis (de layouts zetten <base href>), dus zonder voorloopslash.
+ * Publieke pagina's krijgen een leesbaar adres (/zwemschool); de rest van de app blijft ?r=route.
+ */
 function url(string $route = 'dashboard', array $params = []): string
 {
+    $path = null;
+    if ($route === 'home') {
+        $path = '';
+    } elseif ($route === 'page' && !empty($params['slug'])) {
+        $path = rawurlencode((string) $params['slug']);
+        unset($params['slug']);
+    } elseif ($route === 'post' && !empty($params['slug'])) {
+        $path = 'nieuws/' . rawurlencode((string) $params['slug']);
+        unset($params['slug']);
+    } elseif (isset(PRETTY_ROUTES[$route])) {
+        $path = PRETTY_ROUTES[$route];
+    }
+    if ($path !== null) {
+        return $path . ($params ? '?' . http_build_query($params) : '') ?: './';
+    }
     return '?' . http_build_query(array_merge(['r' => $route], $params));
+}
+
+/** Adres van de huidige pagina (voor #anker-links, omdat <base> die anders naar de startpagina zou sturen). */
+function self_url(): string
+{
+    return (string) strtok((string) ($_SERVER['REQUEST_URI'] ?? ''), '#');
+}
+
+/** Zet een intern adres uit een tekst (?r=page&slug=x) om naar het leesbare adres. */
+function pretty_internal(string $href): string
+{
+    if (!str_starts_with($href, '?r=')) {
+        return $href;
+    }
+    parse_str(substr($href, 1), $q);
+    $route = (string) ($q['r'] ?? '');
+    unset($q['r']);
+    return $route === '' ? $href : url($route, $q);
 }
 
 function redirect(string $to): void
 {
-    header('Location: ' . str_replace(["\r", "\n"], '', $to));
+    $to = str_replace(["\r", "\n"], '', $to);
+    // Adressen zijn relatief aan de basis van de site, een Location-header niet: maak ze absoluut.
+    if (!preg_match('#^([a-z][a-z0-9+.-]*:|/)#i', $to)) {
+        $to = base_path() . '/' . ($to === './' ? '' : $to);
+    }
+    header('Location: ' . $to);
     exit;
 }
 

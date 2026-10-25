@@ -18,6 +18,7 @@ $curSlug = (string) ($_GET['slug'] ?? '');
 <html lang="nl">
 <head>
 <meta charset="utf-8">
+<base href="<?= e(base_path() . '/') ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05264d">
 <title><?= e($title && $title !== 'Hasseltse Zwemvereniging Spartacus' ? $title . ' · ' : '') ?>Hasseltse Zwemvereniging Spartacus</title>
@@ -27,7 +28,7 @@ $curSlug = (string) ($_GET['slug'] ?? '');
 <script src="assets/app.js" defer></script>
 </head>
 <body class="site">
-<a class="skip" href="#inhoud">Naar de inhoud</a>
+<a class="skip" href="<?= e(self_url()) ?>#inhoud">Naar de inhoud</a>
 <header class="site-head">
   <div class="wrap bar">
     <a class="brand" href="<?= e(url('home')) ?>" aria-label="Hasseltse Zwemvereniging Spartacus"><img src="assets/logo.png" alt="" width="58" height="51"><span><small>Hasseltse Zwemvereniging</small><b>Spartacus</b></span></a>
