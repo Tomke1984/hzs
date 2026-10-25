@@ -44,6 +44,6 @@
   <?php endforeach; ?>
   <?= $content ?>
 </main>
-<footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp V1</footer>
+<footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp</footer>
 </body>
 </html>

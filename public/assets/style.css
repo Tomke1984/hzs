@@ -299,3 +299,8 @@ textarea.editor { min-height: 320px; font-family: ui-monospace, Menlo, Consolas,
 .check-col { width: 36px; text-align: center; }
 .check-col input { width: 20px; height: 20px; }
 .move-form { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+.no-margin { margin: 0; }
+.mt-s { margin-top: 8px; }
+.thumb-small { max-width: 220px; border-radius: 8px; }
+form.inline-form, .actions-inline form { display: inline; }

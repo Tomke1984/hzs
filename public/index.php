@@ -115,6 +115,8 @@ if ($method === 'POST') {
     verify_csrf();
 }
 if ($permission !== 'public') {
+    header('Cache-Control: no-store');
+    header('X-Robots-Tag: noindex, nofollow');
     Auth::requireLogin();
     if ($permission !== null) {
         Auth::require($permission);

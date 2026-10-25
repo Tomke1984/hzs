@@ -7,7 +7,7 @@
 <?php if (!empty($pending)): ?>
   <div class="alert alert-warning">
     <strong>Nog niet geactiveerd.</strong> Deze gebruiker heeft de uitnodiging nog niet gebruikt en kan nog niet aanmelden.
-    <form method="post" action="<?= e(url('invite_resend')) ?>" style="margin-top:8px">
+    <form class="mt-s" method="post" action="<?= e(url('invite_resend')) ?>">
       <?= csrf_field() ?>
       <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">
       <button class="btn btn-small" type="submit">Uitnodiging opnieuw versturen</button>
@@ -153,6 +153,7 @@
     <?php else: ?>
     <div class="table-wrap">
     <table class="table">
+      <thead><tr><th>Groep</th><th></th></tr></thead>
       <tbody>
       <?php foreach ($trainerGroups as $tg): ?>
         <tr>

@@ -308,3 +308,10 @@ CREATE TABLE IF NOT EXISTS media (
   uploaded_by INT NULL,
   created_at VARCHAR(19) NOT NULL
 ){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id {{PK}},
+  email VARCHAR(190) NOT NULL,
+  ip VARCHAR(45) NOT NULL,
+  created_at VARCHAR(19) NOT NULL
+){{ENGINE}};

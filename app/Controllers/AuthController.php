@@ -14,7 +14,16 @@ final class AuthController
         $email = input('email');
         $password = (string) ($_POST['password'] ?? '');
 
+        if ($email !== '' && Auth::throttled($email)) {
+            http_response_code(429);
+            flash('error', 'Te veel mislukte pogingen. Probeer het over 15 minuten opnieuw, of gebruik “Wachtwoord vergeten?”.');
+            render('login', ['email' => $email], 'Aanmelden');
+            return;
+        }
         if ($email === '' || $password === '' || !Auth::attempt($email, $password)) {
+            if ($email !== '') {
+                Auth::recordFailure($email);
+            }
             http_response_code(401);
             flash('error', 'E-mailadres of wachtwoord is onjuist, of het account is niet actief.');
             render('login', ['email' => $email], 'Aanmelden');

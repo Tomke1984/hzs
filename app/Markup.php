@@ -38,12 +38,12 @@ final class Markup
         $s = e($s);
         $s = preg_replace_callback('/!\[([^\]]*)\]\(([^)\s]+)\)/', function ($m) {
             $src = html_entity_decode($m[2], ENT_QUOTES);
-            $ok = preg_match('#^(uploads/[A-Za-z0-9._-]+|https://[^\s"<>]+)$#', $src);
+            $ok = preg_match('#^(uploads/[A-Za-z0-9._-]+|https://[^\s"<>*]+)$#', $src);
             return $ok ? '<img src="' . e($src) . '" alt="' . $m[1] . '" loading="lazy">' : $m[0];
         }, $s);
         $s = preg_replace_callback('/\[([^\]]+)\]\(([^)\s]+)\)/', function ($m) {
             $href = html_entity_decode($m[2], ENT_QUOTES);
-            $ok = preg_match('#^(https?://[^\s"<>]+|mailto:[^\s"<>]+|uploads/[A-Za-z0-9._-]+|\?r=[A-Za-z0-9_&=%.-]+)$#', $href);
+            $ok = preg_match('#^(https?://[^\s"<>*]+|mailto:[^\s"<>*]+|uploads/[A-Za-z0-9._-]+|\?r=[A-Za-z0-9_&=%.-]+)$#', $href);
             if (!$ok) {
                 return $m[0];
             }

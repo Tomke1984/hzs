@@ -1,6 +1,6 @@
 <div class="row-between">
   <h1>Gebruikers</h1>
-  <div class="actions" style="margin:0">
+  <div class="actions no-margin">
     <a class="btn btn-ghost" href="<?= e(url('invite_bulk')) ?>">Leden uitnodigen</a>
     <a class="btn" href="<?= e(url('user_form')) ?>">+ Nieuwe gebruiker</a>
   </div>

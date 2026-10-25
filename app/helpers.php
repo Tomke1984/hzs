@@ -23,7 +23,7 @@ function url(string $route = 'dashboard', array $params = []): string
 
 function redirect(string $to): void
 {
-    header('Location: ' . $to);
+    header('Location: ' . str_replace(["\r", "\n"], '', $to));
     exit;
 }
 
@@ -118,7 +118,13 @@ function abort(int $code, string $message = ''): void
 {
     http_response_code($code);
     $titles = [403 => 'Geen toegang', 404 => 'Niet gevonden', 405 => 'Methode niet toegestaan', 419 => 'Formulier verlopen'];
-    render('error', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
+    $titles[500] = 'Er ging iets mis';
+    // Bezoekers zonder login krijgen de foutpagina in de stijl van de website.
+    if (Auth::user()) {
+        render('error', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
+    } else {
+        render_public('error_public', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
+    }
     exit;
 }
 

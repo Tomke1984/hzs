@@ -177,15 +177,18 @@ body.site { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
 .site-foot b { display: block; color: #fff; font: 800 1.35rem/1.1 var(--display); font-style: italic; margin-bottom: 8px; }
 .site-foot a { color: #cfe0ef; display: block; padding: 3px 0; text-decoration: none; }
 .site-foot a:hover { color: #fff; text-decoration: underline; }
+.site-foot .legal a { display: inline; }
 .site-foot .legal { border-top: 1px solid rgba(255, 255, 255, .18); padding-block: 14px 22px; font-size: .9rem; }
 
 @media (max-width: 820px) {
   .hero-inner, .home-cols { grid-template-columns: 1fr; }
   .page-grid { grid-template-columns: 1fr; }
   .side { position: static; }
-  .site-foot .inner { grid-template-columns: 1fr; }
+  .site-foot .inner { grid-template-columns: 1fr 1fr; gap: 24px 32px; }
+  .site-foot .inner > :first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) {
+  .site-foot .inner { grid-template-columns: 1fr; }
   .lanes { grid-template-columns: 1fr; }
   .lane + .lane { border-left: 0; border-top: 6px solid var(--float); }
 }

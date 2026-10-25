@@ -9,7 +9,7 @@
   <p class="muted md-help">Opmaak: <code>## Kop</code>, <code>### Subkop</code>, <code>- opsomming</code>, <code>**vet**</code>, <code>*cursief*</code>, <code>[tekst](https://adres)</code>, <code>![omschrijving](uploads/bestand.jpg)</code> (code van een geüploade afbeelding vind je bij <a href="<?= e(url('content', ['tab' => 'media'])) ?>">Afbeeldingen</a>). Een lege regel start een nieuwe alinea.</p>
   <label>Hoofdafbeelding (optioneel)<input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></label>
   <?php if ($p['image']): ?>
-    <p><img src="<?= e($p['image']) ?>" alt="" style="max-width:220px;border-radius:8px"></p>
+    <p><img src="<?= e($p['image']) ?>" alt="" class="thumb-small"></p>
     <label class="check"><input type="checkbox" name="remove_image" value="1"> Afbeelding verwijderen</label>
   <?php endif; ?>
   <label>Status

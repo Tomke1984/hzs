@@ -30,6 +30,11 @@ final class Uploads
         if (!is_dir(self::dir()) && !@mkdir(self::dir(), 0775, true)) {
             return [null, 'De map public/uploads kan niet worden aangemaakt.'];
         }
+        $ht = self::dir() . '/.htaccess';
+        if (!is_file($ht)) {
+            // Nooit scripts uitvoeren in de uploadmap.
+            @file_put_contents($ht, "Options -Indexes -ExecCGI\nRemoveHandler .php .phtml .php5\nRemoveType .php .phtml .php5\n<IfModule mod_php.c>\n  php_flag engine off\n</IfModule>\n");
+        }
         $name = bin2hex(random_bytes(8)) . '.' . $ext;
         if (!move_uploaded_file($file['tmp_name'], self::dir() . '/' . $name) && !@rename($file['tmp_name'], self::dir() . '/' . $name)) {
             return [null, 'De afbeelding kon niet worden opgeslagen.'];

@@ -49,6 +49,7 @@
     <p class="muted small">Eerstvolgende activiteiten</p>
     <div class="table-wrap">
     <table class="table">
+      <thead><tr><th>Wanneer</th><th>Activiteit</th><th>Soort</th><th>Plaats</th></tr></thead>
       <tbody>
       <?php foreach ($activities as $a): ?>
         <tr class="<?= $a['status'] === 'CANCELLED' ? 'is-off' : '' ?>">

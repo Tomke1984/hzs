@@ -46,7 +46,7 @@
     <?php if (!$nIssues): ?>alle pagina's zijn in orde (geen lege pagina's, kapotte links of onbereikbare pagina's).
     <?php else: ?><?= $nIssues ?> pagina's met opmerkingen (zie kolom <em>Controle</em>).
       <?php if ($check['removable']): ?>
-      <form method="post" action="<?= e(url('page_cleanup')) ?>" data-confirm="<?= count($check['removable']) ?> verouderde of lege pagina's definitief verwijderen?" style="display:inline">
+      <form class="inline-form" method="post" action="<?= e(url('page_cleanup')) ?>" data-confirm="<?= count($check['removable']) ?> verouderde of lege pagina's definitief verwijderen?">
         <?= csrf_field() ?><button class="btn btn-small" type="submit">Overbodige pagina's opruimen (<?= count($check['removable']) ?>)</button>
       </form>
       <?php endif; ?>
