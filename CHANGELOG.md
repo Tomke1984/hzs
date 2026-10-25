@@ -5,7 +5,10 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `main` en `dev` zijn gelijk._
+- **Publieke website (start):** wie niet is aangemeld ziet nu een publieke startpagina in plaats van het inlogscherm (aanmelden staat in het menu). Bevat: nieuws (overzicht met paginering en detail), vrije pagina's met menu en subpagina's, publieke kalender, trainingsuren per groep en een link naar inschrijven. Een pagina met adres `home` verschijnt als introtekst.
+- **Website beheren:** nieuw menu *Website* (Admin en Bestuur, recht `content.manage`): nieuwsberichten en pagina's als concept of gepubliceerd, hoofdafbeelding bij nieuws, afbeeldingenbibliotheek met kopieerbare code. Eenvoudige, veilige opmaak (koppen, lijsten, vet, links, afbeeldingen); alle tekst wordt ge-escaped.
+- **Wat is publiek:** activiteiten en trainingsreeksen hebben een vakje *Tonen op de website*. Enkel die komen in de publieke kalender en trainingsuren (geschrapte trainingen met reden). Alles anders blijft binnen de login.
+- **Database:** nieuwe tabellen `posts`, `pages`, `media` en kolom `is_public` bij activiteiten en reeksen; automatisch toegevoegd aan bestaande databases. Geüploade afbeeldingen staan in `public/uploads/` (niet in git).
 
 ## Op main
 

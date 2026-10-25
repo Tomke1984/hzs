@@ -3,3 +3,5 @@ storage/data/*
 !storage/data/.gitkeep
 storage/mail/*
 !storage/mail/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep

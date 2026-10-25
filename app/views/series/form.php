@@ -28,6 +28,8 @@
     <textarea name="description" rows="2"><?= e($s['description']) ?></textarea>
   </label>
 
+  <label class="check"><input type="checkbox" name="is_public" value="1" <?= !empty($s['is_public']) ? 'checked' : '' ?>> Tonen op de website (kalender en trainingsuren)</label>
+
   <fieldset>
     <legend>Trainingsdagen * <span class="muted small">(vink de dagen aan; een tweede training op dezelfde dag = een aparte reeks, bv. droogtraining)</span></legend>
     <?php foreach (SeriesService::DAYS as $n => $label): $sl = $slots[$n] ?? null; ?>

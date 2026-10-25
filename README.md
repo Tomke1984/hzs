@@ -66,6 +66,9 @@ Ouders kijk mee (kalender, aanwezigheid van hun kind/kinderen); ze kunnen zelf n
 ### Trainingsreeksen
 *Kalender → Trainingsreeksen* (Admin/Bestuur): kies groepen, periode en per weekdag begin/einde (en eventueel een andere locatie). De app maakt de trainingen aan; schrappen kan per training of per periode (*Schrappen / verplaatsen*). Een tweede training op dezelfde dag (droogtraining) is een aparte reeks.
 
+### Website
+De app bevat ook de publieke clubwebsite (nieuws, pagina's, kalender, trainingsuren). Het bestuur beheert die via *Website* in het menu. Geüploade afbeeldingen komen in `public/uploads/`: zorg dat die map schrijfbaar is voor de webserver en meegenomen wordt in back-ups.
+
 ## Structuur
 
 ```

@@ -60,7 +60,7 @@ final class SeriesController
             $s = [
                 'id' => 0, 'type_id' => (int) Database::val("SELECT id FROM activity_types WHERE code = 'TRAINING'"),
                 'title' => '', 'description' => '', 'location' => '',
-                'start_date' => today(), 'end_date' => date('Y-m-d', strtotime('+6 months')), 'is_active' => 1,
+                'start_date' => today(), 'end_date' => date('Y-m-d', strtotime('+6 months')), 'is_active' => 1, 'is_public' => 0,
             ];
             $selected = [];
             $slots = [];
@@ -83,6 +83,7 @@ final class SeriesController
             'start_date' => input('start_date'),
             'end_date' => input('end_date'),
             'is_active' => $id ? (input('is_active') === '1' ? 1 : 0) : 1,
+            'is_public' => input('is_public') === '1' ? 1 : 0,
         ];
         $raw = $_POST['group_ids'] ?? [];
         $selected = is_array($raw) ? array_values(array_unique(array_map('intval', $raw))) : [];
@@ -141,15 +142,15 @@ final class SeriesController
         $id = Database::tx(function () use ($id, $s, $desc, $loc, $slots, $selected) {
             if ($id) {
                 Database::exec(
-                    'UPDATE activity_series SET type_id=?, title=?, description=?, location=?, start_date=?, end_date=?, is_active=? WHERE id=?',
-                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], $s['is_active'], $id]
+                    'UPDATE activity_series SET type_id=?, title=?, description=?, location=?, start_date=?, end_date=?, is_active=?, is_public=? WHERE id=?',
+                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], $s['is_active'], $s['is_public'], $id]
                 );
                 Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$id]);
                 Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$id]);
             } else {
                 $id = Database::insert(
-                    'INSERT INTO activity_series (type_id, title, description, location, start_date, end_date, is_active, created_by, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
-                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], 1, Auth::user()['id'], now()]
+                    'INSERT INTO activity_series (type_id, title, description, location, start_date, end_date, is_active, is_public, created_by, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], 1, $s['is_public'], Auth::user()['id'], now()]
                 );
             }
             foreach ($slots as $sl) {

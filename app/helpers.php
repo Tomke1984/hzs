@@ -104,6 +104,16 @@ function render(string $view, array $data = [], string $title = ''): void
     require APP_ROOT . '/app/views/layout.php';
 }
 
+/** Weergave binnen de publieke website-layout. */
+function render_public(string $view, array $data = [], string $title = ''): void
+{
+    extract($data, EXTR_SKIP);
+    ob_start();
+    require APP_ROOT . '/app/views/' . $view . '.php';
+    $content = ob_get_clean();
+    require APP_ROOT . '/app/views/layout_public.php';
+}
+
 function abort(int $code, string $message = ''): void
 {
     http_response_code($code);

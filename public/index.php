@@ -18,6 +18,23 @@ $routes = [
     'logout'           => ['POST' => ['AuthController', 'logout', null]],
     'dashboard'        => ['GET' => ['DashboardController', 'index', null]],
 
+    'home'             => ['GET' => ['SiteController', 'home', 'public']],
+    'news'             => ['GET' => ['SiteController', 'news', 'public']],
+    'post'             => ['GET' => ['SiteController', 'post', 'public']],
+    'page'             => ['GET' => ['SiteController', 'page', 'public']],
+    'agenda'           => ['GET' => ['SiteController', 'agenda', 'public']],
+    'trainingstimes'   => ['GET' => ['SiteController', 'trainingTimes', 'public']],
+
+    'content'          => ['GET' => ['ContentController', 'index', 'content.manage']],
+    'post_form'        => ['GET' => ['ContentController', 'postForm', 'content.manage']],
+    'post_save'        => ['POST' => ['ContentController', 'postSave', 'content.manage']],
+    'post_delete'      => ['POST' => ['ContentController', 'postDelete', 'content.manage']],
+    'page_form'        => ['GET' => ['ContentController', 'pageForm', 'content.manage']],
+    'page_save'        => ['POST' => ['ContentController', 'pageSave', 'content.manage']],
+    'page_delete'      => ['POST' => ['ContentController', 'pageDelete', 'content.manage']],
+    'media_upload'     => ['POST' => ['ContentController', 'mediaUpload', 'content.manage']],
+    'media_delete'     => ['POST' => ['ContentController', 'mediaDelete', 'content.manage']],
+
     'members'          => ['GET' => ['MemberController', 'index', 'members.read']],
     'member'           => ['GET' => ['MemberController', 'show', 'members.read']],
     'member_form'      => ['GET' => ['MemberController', 'form', 'members.write']],
@@ -63,7 +80,7 @@ $routes = [
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
 ];
 
-$route  = (string) ($_GET['r'] ?? 'dashboard');
+$route  = (string) ($_GET['r'] ?? (Auth::user() ? 'dashboard' : 'home'));
 $method = $_SERVER['REQUEST_METHOD'] === 'POST' ? 'POST' : ($_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD' ? 'GET' : '');
 
 if (!isset($routes[$route])) {

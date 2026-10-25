@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS activities (
   series_id INT NULL,
   is_custom TINYINT NOT NULL DEFAULT 0,
   status_note VARCHAR(200) NULL,
+  is_public TINYINT NOT NULL DEFAULT 0,
   FOREIGN KEY (type_id) REFERENCES activity_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 ){{ENGINE}};
@@ -203,6 +204,7 @@ CREATE TABLE IF NOT EXISTS activity_series (
   start_date VARCHAR(10) NOT NULL,
   end_date VARCHAR(10) NOT NULL,
   is_active TINYINT NOT NULL DEFAULT 1,
+  is_public TINYINT NOT NULL DEFAULT 0,
   created_by INT NULL,
   created_at VARCHAR(19) NOT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id)
@@ -226,4 +228,38 @@ CREATE TABLE IF NOT EXISTS activity_series_groups (
   PRIMARY KEY (series_id, group_id),
   FOREIGN KEY (series_id) REFERENCES activity_series(id),
   FOREIGN KEY (group_id) REFERENCES `groups`(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS posts (
+  id {{PK}},
+  title VARCHAR(190) NOT NULL,
+  slug VARCHAR(190) NOT NULL UNIQUE,
+  summary VARCHAR(300) NULL,
+  body TEXT NULL,
+  image VARCHAR(120) NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','PUBLISHED')),
+  published_at VARCHAR(19) NULL,
+  author_id INT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  updated_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS pages (
+  id {{PK}},
+  title VARCHAR(190) NOT NULL,
+  slug VARCHAR(190) NOT NULL UNIQUE,
+  body TEXT NULL,
+  parent_id INT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  status VARCHAR(10) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','PUBLISHED')),
+  in_menu TINYINT NOT NULL DEFAULT 1,
+  updated_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS media (
+  id {{PK}},
+  path VARCHAR(120) NOT NULL UNIQUE,
+  original_name VARCHAR(190) NOT NULL,
+  uploaded_by INT NULL,
+  created_at VARCHAR(19) NOT NULL
 ){{ENGINE}};

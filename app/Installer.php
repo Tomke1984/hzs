@@ -12,13 +12,14 @@ final class Installer
         'attendance.read' => 'Aanwezigheden bekijken (binnen scope)',
         'attendance.write' => 'Aanwezigheden registreren',
         'registrations.manage' => 'Inschrijvingen beoordelen (goedkeuren of afwijzen)',
+        'content.manage'  => 'Website beheren (nieuws, pagina\'s, afbeeldingen)',
         'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
     ];
 
     public const ROLES = [
         'ADMIN'   => ['Beheerder', ['*']],
         'BOARD'   => ['Bestuur', ['members.read', 'members.write', 'members.contact', 'groups.read', 'groups.write',
-                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage']],
+                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage', 'content.manage']],
         'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write']],
         'SWIMMER' => ['Zwemmer', ['members.read', 'activities.read', 'attendance.read']],
         'PARENT'  => ['Ouder', ['members.read', 'activities.read', 'attendance.read']],
@@ -48,7 +49,7 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations', 'activity_series'] as $table) {
+        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {
@@ -62,6 +63,12 @@ final class Installer
             Database::exec('ALTER TABLE activities ADD COLUMN series_id INT NULL');
             Database::exec('ALTER TABLE activities ADD COLUMN is_custom TINYINT NOT NULL DEFAULT 0');
             Database::exec('ALTER TABLE activities ADD COLUMN status_note VARCHAR(200) NULL');
+        }
+        try {
+            Database::val('SELECT is_public FROM activities LIMIT 1');
+        } catch (Throwable $e) {
+            Database::exec('ALTER TABLE activities ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');
+            Database::exec('ALTER TABLE activity_series ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');
         }
         try {
             Database::val('SELECT street FROM members LIMIT 1');

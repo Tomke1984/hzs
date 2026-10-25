@@ -87,8 +87,8 @@ final class SeriesService
                 }
                 $sl = $desired[$date];
                 Database::exec(
-                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=? WHERE id=?',
-                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', $a['id']]
+                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, is_public=? WHERE id=?',
+                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', (int) $s['is_public'], $a['id']]
                 );
                 self::setGroups((int) $a['id'], $groupIds);
                 $out['updated']++;
@@ -98,9 +98,9 @@ final class SeriesService
                     continue;
                 }
                 $id = Database::insert(
-                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, series_id, is_custom)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,0)',
-                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', 'PLANNED', $s['created_by'], now(), $seriesId]
+                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, series_id, is_custom, is_public)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)',
+                    [$s['type_id'], $s['title'], $s['description'], $sl['location'] ?: $s['location'], "$date {$sl['start_time']}:00", "$date {$sl['end_time']}:00", 'GROUPS', 'PLANNED', $s['created_by'], now(), $seriesId, (int) $s['is_public']]
                 );
                 self::setGroups($id, $groupIds);
                 $out['created']++;

@@ -117,6 +117,23 @@
     });
   }
 
+  // Publiek menu: op smalle schermen inklapbaar achter een knop
+  var menuBtn = document.querySelector('.menu-btn'), siteNav = document.getElementById('site-nav');
+  if (menuBtn && siteNav && window.matchMedia) {
+    var mq = window.matchMedia('(max-width: 820px)');
+    var apply = function () {
+      menuBtn.hidden = !mq.matches;
+      if (mq.matches) { siteNav.classList.add('is-collapsed'); menuBtn.setAttribute('aria-expanded', 'false'); }
+      else { siteNav.classList.remove('is-collapsed'); }
+    };
+    menuBtn.addEventListener('click', function () {
+      var open = siteNav.classList.toggle('is-collapsed') === false;
+      menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    if (mq.addEventListener) { mq.addEventListener('change', apply); }
+    apply();
+  }
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

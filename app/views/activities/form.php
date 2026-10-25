@@ -58,6 +58,8 @@
     </div>
   </fieldset>
 
+  <label class="check"><input type="checkbox" name="is_public" value="1" <?= !empty($activity['is_public']) ? 'checked' : '' ?>> Tonen op de website (publieke kalender)</label>
+
   <?php if ($activity['id']): ?>
   <label>Status
     <select name="status">
