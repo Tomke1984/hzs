@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Bulk verplaatsen blijft op de brongroep:** na het verplaatsen van leden blijf je op de groep waaruit je ze haalde (zodat je rustig verder kan met de rest), in plaats van naar de nieuwe groep te springen. De melding vermeldt waarheen de leden gingen.
 - **Reeksen verwijderen:** knop *Verwijderen* op de pagina van een trainingsreeks. De reeks en al haar trainingen verdwijnen uit de kalender; trainingen waarvan de aanwezigheden al zijn ingevuld blijven als losse trainingen bestaan, zodat de registraties niet verloren gaan. Wil je enkel stoppen zonder te wissen, zet de reeks dan op gestopt via *Reeks wijzigen*.
 - **Competitie-uren overnemen:** op *Trainingsreeksen* staat (zolang er iets ontbreekt) de knop *Competitie-uren overnemen*. Die maakt de competitiegroepen aan die nog niet bestaan (Competitie 3, Competitie 2, Beloften, Competitie 1 Provinciaal, Competitie 1 Nationaal, Kern) en per groep de reeksen *Zwemmen* en *Droogtraining* met de uren van khzs.be, publiek zichtbaar tot eind juni, met de trainingen in de kalender. Bestaande groepen en reeksen blijven ongemoeid; een tweede keer klikken doet niets. Trainers koppel je daarna bij *Groep wijzigen*. Enkel voor wie groepen en activiteiten mag beheren.
 - **Fix upgrade zwemtest:** een bestaande database kreeg de tabel `swimtest_requests` niet automatisch aangemaakt, waardoor het overzicht een fout gaf ("no such table"). De tabel wordt nu bij het opstarten aangemaakt.

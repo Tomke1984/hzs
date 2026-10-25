@@ -348,7 +348,7 @@ final class GroupController
         flash($moved ? 'success' : 'error', $moved
             ? $moved . ($moved === 1 ? ' lid' : ' leden') . ' verplaatst naar "' . $target['name'] . '"' . ($skipped ? ", $skipped overgeslagen" : '') . '.'
             : 'Geen enkel lid kon worden verplaatst.');
-        redirect($moved ? url('group', ['id' => $to]) : $back);
+        redirect($back);
     }
 
     /** Lid uit de groep halen. */
