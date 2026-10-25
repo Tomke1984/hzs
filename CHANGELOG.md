@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Koppen (`## Kop`) en lijsten werken ook na plakken uit chats of andere programma's:** onzichtbare tekens (vaste spatie, zero-width spatie, BOM) en "mooie" varianten (`＃＃`, `•`) tussen of vóór `##`/`-` worden bij het tonen opgeschoond, ook voor de introtekst bovenaan een pagina. Eerder bleef `## Kop` dan letterlijk staan.
 - **Statistieken: uitleg bij het testen:** het dashboard toont nu waarom je eigen bezoek niet meetelt (ingelogd als beheerder/bestuur op de website, *Do Not Track*/*Global Privacy Control* in je browser, bot) en wanneer de laatste meting was. Nieuwe instelling `'stats' => ['count_staff' => true]` in `config.php` telt bezoek van beheerders/bestuur wel mee (handig om te testen). Fouten van de teller komen in het serverlog.
 - **Opmaak van websiteteksten tolerant bij plakken:** een regel die met `##` of `###` begint wordt altijd een kop en een opsomming (`- `) start ook rechtstreeks na een gewone regel, ook als er bij het plakken (bv. uit een ander programma) lege regels verloren gingen. Eerder verscheen `##` dan letterlijk in de tekst.
 - **Privacybeleid: vervanging robuuster:** de oude tekst van 2018 wordt nu herkend aan de datum (*24 mei 2018*), ook als de editor de opmaak lichtjes heeft aangepast. Nieuwe opdracht `php tools/seed-site.php privacy` forceert de nieuwe tekst (maakt de pagina aan als ze ontbreekt).

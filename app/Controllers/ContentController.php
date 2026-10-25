@@ -131,7 +131,7 @@ final class ContentController
             $p['parent_id'] = $old['parent_id'];
             $p['status'] = 'PUBLISHED';
             if ($dyn[2]) {
-                $p['body'] = trim((string) preg_split('/^#{2,3}\s/m', $p['body'], 2)[0]);
+                $p['body'] = trim((string) preg_split('/^#{2,3}\s/m', Markup::clean((string) $p['body']), 2)[0]);
             }
         }
         $errors = [];

@@ -6,9 +6,19 @@
  */
 final class Markup
 {
+    /** Plakken uit chats, webpagina's of tekstverwerkers brengt onzichtbare of "mooie" tekens mee (vaste spatie, zero-width spatie, BOM, ＃, •). Die laten een kop of opsomming onopgemerkt; ze worden opgeschoond. */
+    public static function clean(string $text): string
+    {
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        $out = preg_replace_callback('/^([ \t]*)(\x{FF03}+)/mu', fn($m) => $m[1] . str_repeat('#', strlen($m[2]) / 3), $text);
+        $out = preg_replace(['/[\x{00A0}\x{1680}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]/u', '/[\x{200B}-\x{200D}\x{2060}\x{FEFF}\x{00AD}]/u', '/^([ \t]*)\x{2022}\s/mu'], [' ', '', '$1- '], $out ?? $text);
+        return $out ?? $text;
+    }
+
     public static function render(string $text): string
     {
-        $text = str_replace(["\r\n", "\r"], "\n", trim($text));
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        $text = trim(self::clean($text));
         if ($text === '') {
             return '';
         }
