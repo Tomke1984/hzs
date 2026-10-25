@@ -261,26 +261,7 @@ T],
 - [Swimrankings](https://www.swimrankings.net/)
 - [Toptime](http://www.toptime.be/nl/)
 T],
-            ['privacybeleid', 'Privacybeleid', 'club', 3, 1, <<<'T'
-*Dit privacybeleid is een overname van de vorige website (laatst bijgewerkt op 24 mei 2018) en wordt nog herzien voor de nieuwe werking van de club.*
-
-## Toepassingsgebied
-Dit beleid geldt voor de diensten van de Hasseltse Zwemvereniging Spartacus. De club is niet verantwoordelijk voor het privacybeleid van andere websites waarnaar wordt verwezen. Wie de website gebruikt, gaat akkoord met dit beleid. De club wil de privacy van alle gebruikers respecteren en persoonlijke informatie vertrouwelijk behandelen.
-
-## Gebruik van verzamelde gegevens
-- **Diensten:** bij aanmelding voor een dienst vragen we persoonsgegevens. Die dienen om de dienst uit te voeren en worden opgeslagen op beveiligde servers. Ze worden niet gecombineerd met andere persoonsgegevens.
-- **Communicatie:** e-mails en andere berichten aan de club kunnen worden bewaard, om vragen te beantwoorden en verzoeken te verwerken.
-- **Cookies:** de website kan cookies gebruiken om te analyseren hoe de site wordt gebruikt, zodat de diensten beter kunnen worden afgestemd.
-
-## Doeleinden en derden
-We gebruiken of verzamelen geen gegevens voor andere doeleinden dan hierboven, tenzij we vooraf toestemming hebben gekregen. Gegevens worden niet met derden gedeeld. Intern kunnen gegevens in enkele gevallen worden gedeeld; medewerkers zijn verplicht de vertrouwelijkheid te respecteren.
-
-## Jouw keuzes
-Je kunt je persoonsgegevens die je aan de club verstrekte inzien, wijzigen of laten verwijderen. Neem hiervoor contact op met de club. Je kunt cookies in je browser uitschakelen; sommige functies werken dan mogelijk niet correct.
-
-## Contact
-Hasseltse Zwemvereniging Spartacus, Koning Boudewijnlaan 22, 3500 Hasselt. Zie ook de pagina [Contact](?r=page&slug=contact).
-T],
+            ['privacybeleid', 'Privacybeleid', 'club', 3, 1, self::privacyBody()],
 
             // ---------- Contact ----------
             ['contact', 'Contact', null, 4, 1, self::contactBody()],
@@ -302,6 +283,80 @@ T],
     }
 
     /** Voegt ontbrekende pagina's toe (bestaande adressen blijven ongemoeid). @return array{added:int,skipped:int} */
+    /** Tekst van het privacybeleid (AVG, stand oktober 2026). */
+    public static function privacyBody(): string
+    {
+        return <<<'T'
+*Laatst bijgewerkt op 26 oktober 2026. Dit beleid vervangt het privacybeleid van 24 mei 2018.*
+
+Hasseltse Zwemvereniging Spartacus (HZS) vindt jouw privacy belangrijk. Hieronder lees je welke persoonsgegevens we verwerken via deze website en de Clubapp (het ledengedeelte), waarom, hoelang, met wie we ze delen en welke rechten je hebt. We volgen daarbij de Algemene Verordening Gegevensbescherming (AVG/GDPR) en de Belgische wetgeving.
+
+## Wie is verantwoordelijk?
+
+De verantwoordelijke voor de verwerking is Hasseltse Zwemvereniging Spartacus, Koning Boudewijnlaan 22, 3500 Hasselt. Vragen over privacy stel je via het formulier op de pagina [Contact](?r=page&slug=contact), of door een bestuurslid aan te spreken (zie [Bestuur](?r=page&slug=bestuur)).
+
+## Welke gegevens verwerken we, waarom en op welke grond?
+
+- **Website bezoeken (zonder aan te melden):** we tellen anoniem hoeveel mensen welke pagina bezoeken, via welk soort toestel en via welke website ze komen. Zo zien we of de site gebruikt wordt en wat nuttig is. We bewaren daarbij **geen IP-adres en geen naam**, en plaatsen hiervoor **geen cookie**. Een bezoeker wordt herkend aan een afgekapte code die elke dag verandert en niet naar jou terug te leiden is. Bots en bezoekers die "Do Not Track" of "Global Privacy Control" aanzetten, tellen niet mee. Grond: ons gerechtvaardigd belang om de website te verbeteren.
+- **Zwemtest aanvragen:** voor- en achternaam en geboortedatum van het kind, diploma's en zwemervaring, beschikbaarheid, naam, e-mailadres, telefoonnummer en adres van de ouder of voogd en je eventuele opmerking. We gebruiken dit om de wachtlijst bij te houden, je uit te nodigen voor de zwemtest en je kind eventueel in te schrijven. Grond: de uitvoering van jouw vraag (vóór het sluiten van een overeenkomst) en je toestemming bij het versturen.
+- **Inschrijven als lid:** naam, geboortedatum, adres, e-mailadres en telefoonnummer van de aanvrager en van de te registreren personen, en je opmerking. Grond: de uitvoering van de overeenkomst (het lidmaatschap) en je toestemming bij het versturen.
+- **Ledenadministratie:** voor leden houden we bij: lidnummer, naam, geboortedatum, adres, e-mailadres, telefoonnummer, status, de groep waarin het lid zit, het trainingsmoment (dag en uur) en de aanwezigheden op trainingen en activiteiten. Grond: de uitvoering van de overeenkomst en ons gerechtvaardigd belang om de club te organiseren (bv. een trainer ziet de lijst van zijn groep).
+- **Accounts voor de Clubapp (leden, ouders, trainers, bestuur):** e-mailadres, weergavenaam en een versleutelde vorm van het wachtwoord (we kunnen je wachtwoord zelf nooit lezen), de koppeling tussen ouder en kind of tussen trainer en groep, en uitnodigings- of resetlinks. Grond: de uitvoering van de overeenkomst en ons gerechtvaardigd belang om de gegevens te beveiligen.
+- **Contactformulier en e-mail:** naam, e-mailadres en je bericht. We gebruiken dit enkel om te antwoorden. Grond: je vraag zelf en ons gerechtvaardigd belang om vragen te beantwoorden.
+- **Beveiliging:** bij een mislukte aanmelding bewaren we het opgegeven e-mailadres en het IP-adres kort, om het raden van wachtwoorden tegen te gaan. Wie wijzigingen aanbrengt in de Clubapp laat een spoor na in een logboek (wie, wat, wanneer). Grond: ons gerechtvaardigd belang om de gegevens van onze leden te beveiligen.
+
+We vragen **geen** gezondheidsgegevens en bijzondere categorieën van persoonsgegevens. Vul ze ook niet in het opmerkingenveld in. Doe je dat toch (bijvoorbeeld een medische opmerking die belangrijk is voor de trainer), dan behandelen we die gegevens strikt vertrouwelijk, en gebruiken we ze enkel voor dat doel.
+
+## Cookies
+
+We gebruiken **geen** tracking-, analyse- of reclamecookies en laden geen onderdelen van externe partijen (lettertypes en afbeeldingen staan op onze eigen server). Er is slechts één cookie, `hzs_session`: een technische sessiecookie die bij je bezoek wordt geplaatst. Hij is strikt noodzakelijk om veilig te kunnen aanmelden en om formulieren tegen misbruik te beschermen, bevat geen persoonlijke informatie en verdwijnt zodra je de browser sluit. Daarvoor is geen toestemming nodig, en daarom zie je geen cookiebanner.
+
+## Met wie delen we gegevens?
+
+- **Binnen de club:** enkel bestuursleden, trainers en medewerkers die de gegevens nodig hebben, zien ze, en alleen voor hun taak. Een trainer ziet bijvoorbeeld de leden van zijn eigen groep; ouders zien alleen hun eigen kinderen. Zij zijn tot vertrouwelijkheid gehouden.
+- **Verwerkers:** onze hostingprovider (opslag van de website en de database) en onze e-mailprovider (versturen van bevestigingen, uitnodigingen en wachtwoordlinks) verwerken gegevens in onze opdracht en volgens onze instructies.
+- **Sportfederatie:** voor competitiezwemmers kunnen we de nodige gegevens (zoals naam en geboortedatum) doorgeven aan de Vlaamse Zwemfederatie voor aansluiting, verzekering en wedstrijden.
+- **Verder niet:** we verkopen je gegevens niet en geven ze niet door aan andere derden, tenzij de wet ons dat verplicht. We geven je gegevens niet door aan landen buiten de Europese Economische Ruimte.
+
+## Hoelang bewaren we gegevens?
+
+- Onbevestigde aanvragen (zwemtest of inschrijving waarbij de e-mail niet werd bevestigd) worden na **7 dagen** automatisch gewist.
+- Uitnodigingslinks voor de Clubapp zijn **7 dagen** geldig, links om een wachtwoord opnieuw in te stellen **60 minuten**.
+- Gegevens over mislukte aanmeldingen worden na **24 uur** gewist.
+- Anonieme bezoekersstatistieken bewaren we maximaal **400 dagen**.
+- Ledengegevens, aanvragen op de wachtlijst en berichten bewaren we zolang dat nodig is voor het doel waarvoor we ze verzamelden, bijvoorbeeld zolang je lid bent of op de wachtlijst staat en daarna zolang we ze nodig hebben voor administratieve, boekhoudkundige of verzekeringsdoeleinden of om geschillen op te lossen. Daarna wissen we ze of maken we ze anoniem.
+
+## Beveiliging
+
+We nemen redelijke technische en organisatorische maatregelen: toegang per rol (ieder ziet enkel wat nodig is), versleutelde wachtwoorden, beveiligde verbindingen, bescherming tegen misbruik van formulieren en beperking van mislukte aanmeldpogingen. Ondanks onze zorg bestaat een volledig risicoloze verwerking niet. Merk je iets verdachts, of is er een inbreuk op de gegevens, dan onderneemt het bestuur de nodige stappen en meldt het die waar nodig aan de Gegevensbeschermingsautoriteit en aan de betrokkenen.
+
+## Kinderen
+
+Veel leden zijn minderjarig. Aanvragen en inschrijvingen voor kinderen worden gedaan door een ouder of voogd, die ook de Clubapp-account van het kind kan beheren. Jongeren vanaf 13 jaar mogen in België zelf toestemming geven voor online diensten; voor jongere kinderen is de toestemming van een ouder of voogd nodig. Foto's of video's waarop leden herkenbaar zijn, publiceren we enkel met toestemming van het lid of de ouder.
+
+## Jouw rechten
+
+Je hebt het recht om:
+
+- je gegevens **in te kijken** en een kopie te krijgen;
+- onjuiste gegevens te laten **verbeteren**;
+- je gegevens te laten **wissen** ("recht om vergeten te worden"), voor zover de wet of ons gerechtvaardigd belang dat niet in de weg staat;
+- de verwerking te laten **beperken** of je ertegen te **verzetten**, bijvoorbeeld wanneer we je gegevens gebruiken op basis van ons gerechtvaardigd belang;
+- je gegevens in een gangbaar formaat mee te nemen (**overdraagbaarheid**);
+- je **toestemming in te trekken**. Dat heeft geen gevolgen voor de verwerking die al gebeurde.
+
+Je kan je rechten uitoefenen via de pagina [Contact](?r=page&slug=contact). We vragen je mogelijk om je identiteit te bewijzen en antwoorden binnen **één maand**. Als lid kan je veel gegevens ook zelf bekijken in de Clubapp.
+
+## Klacht indienen
+
+Ben je niet tevreden met hoe we met je gegevens omgaan? Spreek ons eerst aan, dan zoeken we samen een oplossing. Je hebt ook altijd het recht om klacht in te dienen bij de toezichthouder: de **Gegevensbeschermingsautoriteit**, Drukpersstraat 35, 1000 Brussel, contact@apd-gba.be, [gegevensbeschermingsautoriteit.be](https://www.gegevensbeschermingsautoriteit.be).
+
+## Wijzigingen
+
+We kunnen dit beleid aanpassen, bijvoorbeeld bij nieuwe functies in de Clubapp of nieuwe regelgeving. De datum bovenaan toont wanneer het voor het laatst is bijgewerkt. Bij belangrijke wijzigingen brengen we de leden op de hoogte.
+T;
+    }
+
     /** Tekst van de contactpagina (boven het contactformulier). */
     public static function contactBody(): string
     {

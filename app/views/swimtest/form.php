@@ -85,7 +85,7 @@
 
     <label class="check">
       <input type="checkbox" name="consent" value="1" required>
-      <span>Ik ga akkoord met de verwerking van deze gegevens door HZS voor de wachtlijst en de inschrijving.<?php $pu = trim((string) config('privacy_url', '')); if ($pu !== ''): ?> <a href="<?= e($pu) ?>" target="_blank" rel="noopener">Privacyverklaring</a><?php endif; ?></span>
+      <span>Ik ga akkoord met de verwerking van deze gegevens door HZS voor de wachtlijst en de inschrijving.<?php $pu = privacy_href(); if ($pu !== ''): ?> <a href="<?= e($pu) ?>" target="_blank" rel="noopener">Privacyverklaring</a><?php endif; ?></span>
     </label>
 
     <p><button class="btn" type="submit">Zwemtest aanvragen</button></p>

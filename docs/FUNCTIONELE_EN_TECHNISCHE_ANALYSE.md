@@ -127,3 +127,5 @@ Het weekoverzicht (`series_week`, `SeriesController::week`) toont de zwemblokken
 
 ### Statistieken (beheerders)
 Teller `Stats::track()` (aangeroepen in `public/index.php` vlak voor de actie) schrijft na een 200-antwoord een rij in `page_views` (dag, gebied SITE/APP, route, pad zonder querystring, dagelijkse hash als bezoeker, apparaat, enkel de herkomsthost). Geen cookies, IP-adres of gebruikers-id; de hash gebruikt een geheim in `storage/stats.salt`. Bots, POST, niet-200, DNT/GPC en beheerders op de site tellen niet. Bewaartermijn 400 dagen. Dashboard: route `stats` (`StatsController`, permissie `stats.read`, enkel ADMIN), grafieken als inline SVG omdat de CSP inline `style` verbiedt.
+
+Het privacybeleid staat als pagina `privacybeleid` (tekst in `SiteSeed::privacyBody()`; `Installer::migrate()` vervangt enkel de oorspronkelijke tekst van 2018). `privacy_href()` geeft het adres: `config privacy_url` of anders de gepubliceerde pagina. Controleer de tekst bij elke nieuwe verwerking (bv. nieuwe velden, nieuwe externe diensten).

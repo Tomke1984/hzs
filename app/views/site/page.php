@@ -50,7 +50,7 @@
           <label>Bericht *
             <textarea name="message" rows="6" maxlength="3000" required><?= e($old['message']) ?></textarea>
           </label>
-          <p class="muted small">We gebruiken je gegevens enkel om op je bericht te antwoorden.<?php $pu = trim((string) config('privacy_url', '')); if ($pu !== ''): ?> <a href="<?= e($pu) ?>" target="_blank" rel="noopener">Privacyverklaring</a><?php endif; ?></p>
+          <p class="muted small">We gebruiken je gegevens enkel om op je bericht te antwoorden.<?php $pu = privacy_href(); if ($pu !== ''): ?> <a href="<?= e($pu) ?>" target="_blank" rel="noopener">Privacyverklaring</a><?php endif; ?></p>
           <p><button class="btn" type="submit">Bericht versturen</button></p>
         </form>
       </section>

@@ -96,6 +96,11 @@ final class Installer
             "UPDATE pages SET body = ? WHERE slug = 'contact' AND body LIKE '%Vragen over de **zwemschool** gaan naar de secretaris%'",
             [trim(SiteSeed::contactBody())]
         );
+        // Het oorspronkelijke privacybeleid (nog onaangepast, overname uit 2018) krijgt de nieuwe AVG-tekst.
+        Database::exec(
+            "UPDATE pages SET body = ?, updated_at = ? WHERE slug = 'privacybeleid' AND body LIKE '%overname van de vorige website (laatst bijgewerkt op 24 mei 2018)%'",
+            [SiteSeed::privacyBody(), now()]
+        );
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
         if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
             Database::exec('DELETE FROM group_memberships WHERE end_date IS NOT NULL');

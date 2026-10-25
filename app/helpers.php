@@ -148,6 +148,24 @@ function redirect(string $to): void
     exit;
 }
 
+/** Adres van het privacybeleid: het ingestelde adres, anders de gepubliceerde pagina 'privacybeleid' (leeg als die ontbreekt). */
+function privacy_href(): string
+{
+    $c = trim((string) config('privacy_url', ''));
+    if ($c !== '') {
+        return $c;
+    }
+    static $h = null;
+    if ($h === null) {
+        try {
+            $h = Database::val("SELECT 1 FROM pages WHERE slug = 'privacybeleid' AND status = 'PUBLISHED'") ? url('page', ['slug' => 'privacybeleid']) : '';
+        } catch (Throwable $e) {
+            $h = '';
+        }
+    }
+    return $h;
+}
+
 function now(): string
 {
     return date('Y-m-d H:i:s');

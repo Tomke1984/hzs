@@ -76,7 +76,7 @@ $curSlug = (string) ($_GET['slug'] ?? '');
       <a href="<?= e(url($user ? 'dashboard' : 'login')) ?>"><?= $user ? 'Mijn Clubapp' : 'Aanmelden' ?></a>
     </div>
   </div>
-  <div class="wrap legal"><?php $pu = trim((string) config('privacy_url', '')); if ($pu !== ''): ?><a href="<?= e($pu) ?>">Privacy</a><?php endif; ?></div>
+  <div class="wrap legal"><?php $pu = privacy_href(); if ($pu !== ''): ?><a href="<?= e($pu) ?>">Privacy</a><?php endif; ?></div>
 </footer>
 </body>
 </html>
