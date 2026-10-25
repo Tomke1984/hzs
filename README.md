@@ -28,6 +28,8 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
 | Ouder | `ouder@demo.local` | enkel het gekoppelde kind |
 
+Voorbeelddata vergeten aan te vinken? Voer in de projectmap `php tools/seed-demo.php` uit. Het script voegt de demo-groepen, -leden, -activiteiten en -accounts toe en weigert te draaien als er al groepen of leden zijn.
+
 Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubapp.sqlite`, en open `install.php` opnieuw.
 
 ## Op MySQL / shared hosting
