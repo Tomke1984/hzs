@@ -21,6 +21,18 @@ CREATE TABLE IF NOT EXISTS users (
   FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};
 
+CREATE TABLE IF NOT EXISTS user_tokens (
+  id {{PK}},
+  user_id INT NOT NULL,
+  token_hash VARCHAR(64) NOT NULL UNIQUE,
+  purpose VARCHAR(10) NOT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  expires_at VARCHAR(19) NOT NULL,
+  used_at VARCHAR(19) NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  CHECK (purpose IN ('INVITE','RESET'))
+){{ENGINE}};
+
 CREATE TABLE IF NOT EXISTS roles (
   id {{PK}},
   code VARCHAR(30) NOT NULL UNIQUE,

@@ -11,4 +11,5 @@
     </label>
     <button class="btn" type="submit">Aanmelden</button>
   </form>
+  <p class="center"><a href="<?= e(url('forgot')) ?>">Wachtwoord vergeten?</a></p>
 </div>

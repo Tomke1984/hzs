@@ -1,6 +1,9 @@
 <div class="row-between">
   <h1>Gebruikers</h1>
-  <a class="btn" href="<?= e(url('user_form')) ?>">+ Nieuwe gebruiker</a>
+  <div class="actions" style="margin:0">
+    <a class="btn btn-ghost" href="<?= e(url('invite_bulk')) ?>">Leden uitnodigen</a>
+    <a class="btn" href="<?= e(url('user_form')) ?>">+ Nieuwe gebruiker</a>
+  </div>
 </div>
 <p class="muted">Een account is enkel nodig om aan te melden. Leden zijn niet automatisch gebruikers: kinderen loggen meestal niet zelf in, hun ouder doet dat. Maak een account voor een lid aan via de ledenpagina.</p>
 
@@ -38,7 +41,8 @@
           <?= e($u['m_first'] . ' ' . $u['m_last']) ?>
         <?php else: ?><span class="muted">—</span><?php endif; ?>
       </td>
-      <td><span class="chip <?= (int) $u['is_active'] ? 'ok' : 'off' ?>"><?= (int) $u['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
+      <td><span class="chip <?= (int) $u['is_active'] ? 'ok' : 'off' ?>"><?= (int) $u['is_active'] ? 'Actief' : 'Inactief' ?></span>
+        <?php if (Invites::isPending($u)): ?><span class="chip warn">Nog niet geactiveerd</span><?php endif; ?></td>
     </tr>
   <?php endforeach; ?>
   </tbody>

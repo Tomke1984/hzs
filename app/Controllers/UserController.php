@@ -353,6 +353,7 @@ final class UserController
             'children' => $children,
             'linkableMembers' => $linkableMembers,
             'trainerGroups' => $trainerGroups,
+            'pending' => $id && Invites::isPending((array) Database::one('SELECT password_hash FROM users WHERE id = ?', [$id])),
             'isSelf' => $id && (int) $id === (int) Auth::user()['id'],
         ], $id ? 'Gebruiker wijzigen' : 'Nieuwe gebruiker');
     }

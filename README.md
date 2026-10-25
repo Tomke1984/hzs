@@ -47,6 +47,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 - Groepen zijn opgesplitst in **Zwemschool** en **Competitie** (keuze per groep; overzicht, groepspagina en activiteitenformulier tonen de indeling). Bestaande databases krijgen de kolom automatisch, alle bestaande groepen starten als Zwemschool.
 - Filteren op **zwemschool/competitie** en op groep in de ledenlijst en de kalender (filter blijft behouden bij maand vooruit/terug; clubbrede activiteiten blijven zichtbaar).
 - Gebruikerslijst met twee tabbladen: **Beheer en trainers** en **Ouders en zwemmers** (met zoekbalk). Leden zijn niet automatisch gebruikers: op de ledenpagina maakt de beheerder met één klik een eigen account aan (rol Zwemmer, gegevens vooraf ingevuld). Bij minderjarigen meldt de ouder of voogd aan.
+- **E-mail en uitnodigingen:** beheerders nodigen ouders/voogden en leden per e-mail uit (per lid of in bulk voor alle leden met een e-mailadres). De ontvanger kiest zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen geldig). Ook *Wachtwoord vergeten?* werkt via mail (link 60 minuten geldig). Bij minderjarige leden wordt het e-mailadres van het lid als adres van de ouder gebruikt; broers/zussen op hetzelfde adres delen één account. Zo hoeft er geen wachtwoord uitgedeeld te worden.
 - Mobielvriendelijk: compacte header met scrollbaar menu, tabellen worden kaarten op telefoon, grote aanraakdoelen en radioknoppen voor aanwezigheid, formulieren en knoppen over de volledige breedte (getest tot 320 px).
 - Rollen zijn combineerbaar: een **trainer die ook lid is** krijgt de rollen Trainer + Zwemmer en wordt gekoppeld aan zijn lidprofiel. Aanwezigheid registreert hij enkel voor de groepen die hij traint, niet voor groepen waar hij zelf lid van is.
 - Het lidnummer bestaat enkel intern in de database (automatisch aangemaakt) en wordt nergens getoond; gelijknamige leden onderscheid je via het geboortejaar in keuzelijsten.
@@ -85,3 +86,20 @@ Nog te doen voor productie: login-throttling, wachtwoordreset, MFA voor beheerde
 ## Changelog
 
 Alle wijzigingen staan in [`CHANGELOG.md`](CHANGELOG.md). Elke push naar `dev` voegt er een regel aan toe; bij een merge naar `main` verhuizen die regels naar de sectie *Op main* met datum en commit.
+
+## E-mail instellen
+
+In `config.php` (zie `config.sample.php`):
+
+```php
+'app_url' => 'https://clubapp.jouwdomein.be',   // basisadres voor de links in e-mails
+'mail' => [
+    'driver'     => 'log',   // 'log' = lokaal testen: mails komen in storage/mail/ (niets wordt verstuurd)
+                             // 'smtp' = echte mail via je mailserver, 'mail' = PHP mail() van de host
+    'from_email' => 'noreply@jouwdomein.be',
+    'from_name'  => 'HZS Clubapp',
+    'smtp' => ['host' => 'smtp.jouwdomein.be', 'port' => 587, 'encryption' => 'tls', 'user' => '...', 'pass' => '...'],
+],
+```
+
+Lokaal testen: laat `driver` op `log` staan. Na een uitnodiging staat de activatielink in de melding en in `storage/mail/outbox.log`.

@@ -11,6 +11,8 @@ if (config('db') === null) {
  */
 $routes = [
     'login'            => ['GET' => ['AuthController', 'showLogin', 'public'], 'POST' => ['AuthController', 'login', 'public']],
+    'forgot'           => ['GET' => ['AuthController', 'showForgot', 'public'], 'POST' => ['AuthController', 'forgot', 'public']],
+    'activate'         => ['GET' => ['AuthController', 'showActivate', 'public'], 'POST' => ['AuthController', 'activate', 'public']],
     'logout'           => ['POST' => ['AuthController', 'logout', null]],
     'dashboard'        => ['GET' => ['DashboardController', 'index', null]],
 
@@ -33,6 +35,11 @@ $routes = [
     'user_child_remove' => ['POST' => ['UserController', 'removeChild', 'users.manage']],
     'user_trainer_add' => ['POST' => ['UserController', 'addTrainerGroup', 'users.manage']],
     'user_trainer_end' => ['POST' => ['UserController', 'endTrainerGroup', 'users.manage']],
+
+    'invite_parent'    => ['POST' => ['InviteController', 'parent', 'users.manage']],
+    'invite_member'    => ['POST' => ['InviteController', 'member', 'users.manage']],
+    'invite_resend'    => ['POST' => ['InviteController', 'resend', 'users.manage']],
+    'invite_bulk'      => ['GET' => ['InviteController', 'bulk', 'users.manage'], 'POST' => ['InviteController', 'bulkSend', 'users.manage']],
 
     'calendar'         =>['GET' => ['ActivityController', 'calendar', 'activities.read']],
     'activity'         => ['GET' => ['ActivityController', 'show', 'activities.read']],

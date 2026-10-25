@@ -4,6 +4,17 @@
   <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
 
+<?php if (!empty($pending)): ?>
+  <div class="alert alert-warning">
+    <strong>Nog niet geactiveerd.</strong> Deze gebruiker heeft de uitnodiging nog niet gebruikt en kan nog niet aanmelden.
+    <form method="post" action="<?= e(url('invite_resend')) ?>" style="margin-top:8px">
+      <?= csrf_field() ?>
+      <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">
+      <button class="btn btn-small" type="submit">Uitnodiging opnieuw versturen</button>
+    </form>
+  </div>
+<?php endif; ?>
+
 <form class="card form" method="post" action="<?= e(url('user_save')) ?>" autocomplete="off">
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= (int) $user['id'] ?>">

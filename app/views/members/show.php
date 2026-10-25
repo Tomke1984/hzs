@@ -77,7 +77,21 @@
       <button class="btn" type="submit">Koppelen</button>
     </form>
     <?php endif; ?>
-    <p class="muted small">Bestaat de ouder nog niet? <a href="<?= e(url('user_form')) ?>">Maak eerst een ouderaccount aan</a> (rol Ouder) en koppel het daarna aan dit lid.</p>
+    <form class="inline-form" method="post" action="<?= e(url('invite_parent')) ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+      <label>Of nodig een ouder of voogd uit per e-mail
+        <input type="email" name="email" required maxlength="190" placeholder="e-mailadres van de ouder">
+      </label>
+      <label>Naam (optioneel)
+        <input name="display_name" maxlength="120" placeholder="de ouder kan dit zelf aanpassen">
+      </label>
+      <label>Relatie (optioneel)
+        <input name="relationship" maxlength="40" placeholder="bv. moeder, vader, voogd">
+      </label>
+      <button class="btn" type="submit">Uitnodigen</button>
+    </form>
+    <p class="muted small">De ouder krijgt een mail met een persoonlijke link om zelf een wachtwoord te kiezen en is meteen gekoppeld aan dit lid.</p>
   <?php endif; ?>
 </details>
 <?php else: ?>
@@ -130,7 +144,21 @@
       <button class="btn" type="submit">Koppelen</button>
     </form>
     <?php endif; ?>
-    <p class="muted small">Bestaat de ouder nog niet? <a href="<?= e(url('user_form')) ?>">Maak eerst een ouderaccount aan</a> (rol Ouder) en koppel het daarna aan dit lid.</p>
+    <form class="inline-form" method="post" action="<?= e(url('invite_parent')) ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+      <label>Of nodig een ouder of voogd uit per e-mail
+        <input type="email" name="email" required maxlength="190" placeholder="e-mailadres van de ouder">
+      </label>
+      <label>Naam (optioneel)
+        <input name="display_name" maxlength="120" placeholder="de ouder kan dit zelf aanpassen">
+      </label>
+      <label>Relatie (optioneel)
+        <input name="relationship" maxlength="40" placeholder="bv. moeder, vader, voogd">
+      </label>
+      <button class="btn" type="submit">Uitnodigen</button>
+    </form>
+    <p class="muted small">De ouder krijgt een mail met een persoonlijke link om zelf een wachtwoord te kiezen en is meteen gekoppeld aan dit lid.</p>
   <?php endif; ?>
 </section>
 <?php endif; ?>
@@ -145,7 +173,16 @@
     <p><a class="btn btn-small btn-ghost" href="<?= e(url('user_form', ['id' => $account['id']])) ?>">Account beheren</a></p>
   <?php else: ?>
     <p class="muted">Dit lid heeft geen eigen login. Maak een account aan als het lid zelf wil aanmelden om de eigen kalender en groepen te zien.</p>
-    <p><a class="btn btn-small" href="<?= e(url('user_form', ['member_id' => $member['id']])) ?>">Account aanmaken</a></p>
+    <div class="actions">
+      <?php if (filter_var((string) $member['email'], FILTER_VALIDATE_EMAIL)): ?>
+      <form method="post" action="<?= e(url('invite_member')) ?>">
+        <?= csrf_field() ?>
+        <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+        <button class="btn btn-small" type="submit">Uitnodigen per e-mail (<?= e($member['email']) ?>)</button>
+      </form>
+      <?php endif; ?>
+      <a class="btn btn-small btn-ghost" href="<?= e(url('user_form', ['member_id' => $member['id']])) ?>">Account zelf aanmaken</a>
+    </div>
   <?php endif; ?>
 </section>
 <?php elseif (Auth::can('users.manage')): ?>

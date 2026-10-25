@@ -6,6 +6,26 @@ return [
     'debug'         => false,   // true toont PHP-fouten (enkel lokaal gebruiken)
     'cookie_secure' => false,   // true zodra je via HTTPS draait
 
+    // Basisadres van de app, gebruikt in links in e-mails (uitnodigingen, wachtwoord vergeten).
+    // Laat leeg om het uit het verzoek af te leiden (enkel lokaal); zet het op de echte URL in productie.
+    'app_url' => '',
+
+    'mail' => [
+        // 'log'  = er wordt niets verstuurd; mails komen in storage/mail/ (lokaal testen)
+        // 'smtp' = echte mail via je mailserver (aanbevolen in productie)
+        // 'mail' = PHP mail() van de server (eenvoudig op shared hosting)
+        'driver'     => 'log',
+        'from_email' => 'noreply@example.be',
+        'from_name'  => 'HZS Clubapp',
+        'smtp' => [
+            'host'       => 'smtp.example.be',
+            'port'       => 587,
+            'encryption' => 'tls',   // 'tls' (STARTTLS, poort 587), 'ssl' (poort 465) of 'none'
+            'user'       => '',
+            'pass'       => '',
+        ],
+    ],
+
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting
         'driver' => 'sqlite',

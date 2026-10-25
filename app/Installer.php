@@ -46,6 +46,11 @@ final class Installer
     public static function migrate(): void
     {
         try {
+            Database::val('SELECT 1 FROM user_tokens LIMIT 1');
+        } catch (Throwable $e) {
+            self::createSchema(); // alle tabellen zijn CREATE TABLE IF NOT EXISTS: enkel wat ontbreekt wordt aangemaakt
+        }
+        try {
             Database::val('SELECT category FROM `groups` LIMIT 1');
         } catch (Throwable $e) {
             Database::exec("ALTER TABLE `groups` ADD COLUMN category VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'");

@@ -5,6 +5,10 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **E-mail:** eigen mailfunctie zonder extra bibliotheken (`log` voor lokaal testen, `smtp`, of PHP `mail()`), in te stellen in `config.php`. Bulkverzending gebruikt één SMTP-verbinding.
+- **Uitnodigingen:** ouders/voogden en leden uitnodigen per e-mail vanaf de ledenpagina, of in bulk via *Gebruikers → Leden uitnodigen* (alle actieve leden met een e-mailadres; broers/zussen op hetzelfde adres delen één ouder-account). De ontvanger kiest zelf een wachtwoord via een eenmalige link (7 dagen geldig, opgeslagen als hash). Accounts die nog niet geactiveerd zijn tonen een label en kunnen opnieuw uitgenodigd worden.
+- **Wachtwoord vergeten:** aanvragen via e-mail (link 60 minuten geldig, eenmalig, max. 1 mail per minuut per account, neutrale melding zodat niet te raden is welke adressen bestaan).
+- **Database:** nieuwe tabel `user_tokens`, automatisch aangemaakt bij bestaande databases.
 - **Werkwijze:** changelog toegevoegd (`CHANGELOG.md`) met versienummers per merge naar `main`. (`23862b6`, `2702b6a`)
 
 ## Op main
