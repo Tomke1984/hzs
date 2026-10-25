@@ -59,7 +59,7 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 
 ### Website beheren (menu *Website*, recht `content.manage`: beheerder en bestuur)
 - **Nieuws**: berichten als concept of gepubliceerd, met hoofdafbeelding.
-- **Pagina's**: tekst met eenvoudige opmaak (`## kop`, lijsten, **vet**, links), hoofd- en subpagina's, menu aan/uit, concept/gepubliceerd. Knop *Inhoud van khzs.be importeren* zet de startinhoud van de oude site in de app (voegt enkel ontbrekende pagina's toe).
+- **Pagina's**: tekst met eenvoudige opmaak (`## kop`, lijsten, **vet**, links), hoofd- en subpagina's, menu aan/uit, concept/gepubliceerd.
 - **Automatische pagina's** (Trainingsuren competitie, Doelstellingen, Contact, startpagina) staan in het overzicht met het label *Automatisch*: adres, plaats en status liggen vast, ze kunnen niet verwijderd worden en bij de eerste twee pas je enkel de inleiding aan; de rest komt uit Reeksen/Groepen.
 - **Paginacontrole**: meldt verouderde `doelstellingen-…`-pagina's, lege pagina's, concepten, kapotte links en onbereikbare pagina's; de knop *Overbodige pagina's opruimen* verwijdert enkel de verouderde en lege.
 - **Afbeeldingen**: bibliotheek met kopieerbare code voor in teksten.
@@ -82,7 +82,7 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 ### Kalender, trainingsreeksen en aanwezigheid
 - **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op zwemschool/competitie en groep.
 - **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen met reden, herstellen.
-- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per reeks en in bulk **op de website tonen of verbergen**. Knop *Competitie-uren overnemen* maakt de competitiegroepen en -reeksen van khzs.be aan.
+- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per reeks en in bulk **op de website tonen of verbergen**.
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
@@ -106,7 +106,7 @@ app/SiteSeed.php        startinhoud khzs.be; app/CompetitionSeed.php = competiti
 app/views/              PHP-templates met escaping via e() (site/ = publieke site)
 db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
 docs/                   functionele en technische analyse
-tools/                  seed-demo.php, sync-scripts
+tools/                  seed-demo.php (demodata), seed-site.php (ontwikkelhulp: startinhoud khzs.be en competitie-uren), sync-scripts
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.

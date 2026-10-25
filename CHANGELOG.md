@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+- **Imports uit de app gehaald:** de knoppen *Inhoud van khzs.be importeren* (Website → Pagina's) en *Competitie-uren overnemen* (Trainingsreeksen) zijn verwijderd, samen met hun routes. De reeds geïmporteerde pagina's, groepen en reeksen blijven gewoon bestaan. Voor ontwikkeling en tests blijft de commandoregel `php tools/seed-site.php [pages] [competition]`.
 
 ## Op main
 

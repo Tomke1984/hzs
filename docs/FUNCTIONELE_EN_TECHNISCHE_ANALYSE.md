@@ -8,7 +8,7 @@ HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwe
 ## 2. Scope
 ### In scope (v0.7.0)
 - Publieke website: startpagina, pagina's met menu, nieuws, kalender, trainingsuren, doelstellingen, contact, zwemtestformulier en inschrijfformulier.
-- Website-beheer: nieuws, pagina's, afbeeldingen, paginacontrole, import van de inhoud van khzs.be.
+- Website-beheer: nieuws, pagina's, afbeeldingen, paginacontrole (de eenmalige import van khzs.be is uit de app gehaald; `tools/seed-site.php` blijft als ontwikkelhulp).
 - Authenticatie, rollen (Beheerder, Bestuur, Trainer, Zwemmer, Ouder), permissies, gegevensscope, uitnodigingen en wachtwoord vergeten per e-mail.
 - Leden, groepen (zwemschool/competitie), trainers per groep, ouder-kindkoppeling, gebruikersbeheer.
 - Activiteiten, trainingsreeksen, persoonlijke kalender, schrappen/verplaatsen, presentielijst.

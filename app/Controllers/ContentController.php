@@ -167,15 +167,6 @@ final class ContentController
         redirect(url('content', ['tab' => 'pages']));
     }
 
-    /** Startinhoud van de vorige website (khzs.be) importeren; voegt enkel ontbrekende pagina's toe. */
-    public static function seedPages(): void
-    {
-        $r = SiteSeed::import();
-        audit('IMPORT', 'page', null, json_encode($r));
-        flash('success', $r['added'] . ' pagina\'s toegevoegd' . ($r['skipped'] ? ', ' . $r['skipped'] . ' bestonden al en bleven ongemoeid' : '') . '.');
-        redirect(url('content', ['tab' => 'pages']));
-    }
-
     public static function pageDelete(): void
     {
         $id = (int) input('id', '0');

@@ -31,7 +31,7 @@ final class SeriesController
             $s['slots'] = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
         }
         unset($s);
-        render('series/index', ['importPending' => Auth::can('groups.write') ? CompetitionSeed::pending() : 0, 'series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
+        render('series/index', ['series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
     /** Reeks(en) op de website tonen of verbergen (één reeks via id, meerdere via ids[]). */
@@ -55,20 +55,6 @@ final class SeriesController
         flash('success', $n ? sprintf('%d %s %s de website.', $n, $n === 1 ? 'reeks staat' : 'reeksen staan', $val ? 'nu op' : 'niet meer op') : 'Er was niets te wijzigen.');
         $back = (string) input('back', '');
         redirect(str_starts_with($back, '?r=series') ? $back : url('series'));
-    }
-
-    /** Eenmalige startdata: de competitie-trainingsuren van khzs.be als reeksen (met de groepen indien nodig). */
-    public static function importCompetition(): void
-    {
-        if (!Auth::can('groups.write')) {
-            abort(403, 'Je hebt geen toegang tot deze actie.');
-        }
-        $r = CompetitionSeed::import();
-        audit('IMPORT', 'activity_series', 0, json_encode($r));
-        flash('success', $r['series']
-            ? sprintf('%d reeksen aangemaakt (%d trainingen in de kalender)%s. Koppel de trainers bij Groep wijzigen.', $r['series'], $r['trainings'], $r['groups'] ? ", plus {$r['groups']} nieuwe competitiegroepen" : '')
-            : 'Alles stond er al; er is niets toegevoegd.');
-        redirect(url('series'));
     }
 
     public static function show(): void

@@ -35,10 +35,6 @@
 <?php elseif ($tab === 'pages'): ?>
   <div class="actions-inline">
     <a class="btn" href="<?= e(url('page_form')) ?>">+ Nieuwe pagina</a>
-    <form method="post" action="<?= e(url('content_seed')) ?>" data-confirm="Pagina's van de vorige website (khzs.be) toevoegen? Bestaande pagina's blijven ongemoeid.">
-      <?= csrf_field() ?>
-      <button class="btn btn-ghost" type="submit">Inhoud van khzs.be importeren</button>
-    </form>
   </div>
   <?php $nIssues = count($check['issues']); ?>
   <div class="card">
