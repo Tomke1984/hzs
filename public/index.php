@@ -44,6 +44,7 @@ $routes = [
     'groups'           => ['GET' => ['GroupController', 'index', 'groups.read']],
     'group'            => ['GET' => ['GroupController', 'show', 'groups.read']],
     'group_form'       => ['GET' => ['GroupController', 'form', 'groups.write']],
+    'groups_seed'      => ['POST' => ['GroupController', 'seedSwimSchool', 'groups.write']],
     'group_save'       => ['POST' => ['GroupController', 'save', 'groups.write']],
     'membership_add'   => ['POST' => ['GroupController', 'addMember', 'groups.write']],
     'membership_end'   => ['POST' => ['GroupController', 'endMembership', 'groups.write']],

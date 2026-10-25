@@ -45,6 +45,26 @@ final class GroupController
         return [$cat, $gid];
     }
 
+    public const SWIM_SCHOOL_GROUPS = [
+        'Startersgroep', 'Groep 1 – Grijs', 'Groep 2 – Geel', 'Groep 3 – Oranje', 'Groep 4 – Rood',
+        'Groep 5 – Groen', 'Recreatie (12+)', 'Pre-competitie 2', 'Pre-competitie 1',
+    ];
+
+    /** Voegt de standaardgroepen van de zwemschool toe (bestaande namen blijven ongemoeid). */
+    public static function seedSwimSchool(): void
+    {
+        $added = 0;
+        foreach (self::SWIM_SCHOOL_GROUPS as $name) {
+            if (!Database::val('SELECT COUNT(*) FROM `groups` WHERE name = ?', [$name])) {
+                $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,1)', [$name, null, 'SWIM_SCHOOL']);
+                audit('CREATE', 'group', $id);
+                $added++;
+            }
+        }
+        flash('success', $added ? "$added zwemschoolgroepen toegevoegd." : 'Alle zwemschoolgroepen bestonden al.');
+        redirect(url('groups'));
+    }
+
     public static function show(): void
     {
         $group = self::loadVisible((int) ($_GET['id'] ?? 0));
