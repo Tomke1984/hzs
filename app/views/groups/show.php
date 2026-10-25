@@ -4,6 +4,7 @@
     <a class="btn btn-ghost" href="<?= e(url('group_form', ['id' => $group['id']])) ?>">Wijzigen</a>
   <?php endif; ?>
 </div>
+<p><span class="chip cat-<?= e(strtolower($group['category'] ?? 'SWIM_SCHOOL')) ?>"><?= e(group_category_label($group['category'] ?? null)) ?></span></p>
 <?php if ($group['description']): ?><p class="muted"><?= e($group['description']) ?></p><?php endif; ?>
 
 <section class="card">

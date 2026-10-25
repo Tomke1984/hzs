@@ -46,7 +46,10 @@
       <?php if (!$groups): ?>
         <p class="muted">Er zijn nog geen actieve groepen.</p>
       <?php endif; ?>
-      <?php foreach ($groups as $g): ?>
+      <?php $lastCat = null; foreach ($groups as $g): ?>
+        <?php if ($lastCat !== $g['category']): $lastCat = $g['category']; ?>
+          <p class="muted small cat-head"><?= e(group_category_label($g['category'])) ?></p>
+        <?php endif; ?>
         <label class="check">
           <input type="checkbox" name="group_ids[]" value="<?= (int) $g['id'] ?>" <?= in_array((int) $g['id'], $selected, true) ? 'checked' : '' ?>>
           <?= e($g['name']) ?>

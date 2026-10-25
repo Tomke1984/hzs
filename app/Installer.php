@@ -42,6 +42,16 @@ final class Installer
      * Vult ontbrekende permissies en rol-koppelingen aan in een bestaande database
      * (bv. na een update die een nieuwe permissie toevoegt). Doet niets als alles er al is.
      */
+    /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
+    public static function migrate(): void
+    {
+        try {
+            Database::val('SELECT category FROM `groups` LIMIT 1');
+        } catch (Throwable $e) {
+            Database::exec("ALTER TABLE `groups` ADD COLUMN category VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'");
+        }
+    }
+
     public static function syncReferenceData(): void
     {
         if ((int) Database::val('SELECT COUNT(*) FROM roles') === 0) {
@@ -119,11 +129,11 @@ final class Installer
             $ts = now();
             $groups = [];
             foreach ([
-                'Beginners'      => 'Eerste stappen in het water',
-                'Gevorderden'    => 'Techniek en conditie',
-                'Wedstrijdploeg' => 'Training voor competitie',
-            ] as $name => $desc) {
-                $groups[$name] = Database::insert('INSERT INTO `groups` (name, description, is_active) VALUES (?,?,1)', [$name, $desc]);
+                'Beginners'      => ['Eerste stappen in het water', 'SWIM_SCHOOL'],
+                'Gevorderden'    => ['Techniek en conditie', 'SWIM_SCHOOL'],
+                'Wedstrijdploeg' => ['Training voor competitie', 'COMPETITION'],
+            ] as $name => [$desc, $cat]) {
+                $groups[$name] = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,1)', [$name, $desc, $cat]);
             }
 
             $names = [

@@ -168,3 +168,14 @@ function audit(string $action, string $entity, ?int $entityId = null, ?string $d
         [$u['id'] ?? null, $action, $entity, $entityId, $detail, now()]
     );
 }
+
+/** Groepscategorieën: zwemschool of competitie. */
+function group_categories(): array
+{
+    return ['SWIM_SCHOOL' => 'Zwemschool', 'COMPETITION' => 'Competitie'];
+}
+
+function group_category_label(?string $code): string
+{
+    return group_categories()[$code ?? ''] ?? 'Zwemschool';
+}

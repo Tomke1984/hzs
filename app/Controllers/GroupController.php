@@ -14,7 +14,7 @@ final class GroupController
             "SELECT g.*,
                 (SELECT COUNT(*) FROM group_memberships gm WHERE gm.group_id = g.id
                    AND gm.start_date <= ? AND (gm.end_date IS NULL OR gm.end_date >= ?)) AS member_count
-             FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.name",
+             FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.category, g.name",
             $params
         );
         render('groups/index', ['groups' => $groups], 'Groepen');
@@ -66,7 +66,7 @@ final class GroupController
     public static function form(): void
     {
         $id = (int) ($_GET['id'] ?? 0);
-        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'is_active' => 1];
+        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
         render('groups/form', ['group' => $group, 'errors' => []], $id ? 'Groep wijzigen' : 'Nieuwe groep');
     }
 
@@ -79,9 +79,13 @@ final class GroupController
         $data = [
             'name' => input('name'),
             'description' => input('description'),
+            'category' => input('category'),
             'is_active' => input('is_active') === '1' ? 1 : 0,
         ];
 
+        if ($data['category'] === '') {
+            $data['category'] = 'SWIM_SCHOOL';
+        }
         $errors = [];
         if ($data['name'] === '') {
             $errors[] = 'Naam is verplicht.';
@@ -89,6 +93,9 @@ final class GroupController
             $errors[] = 'Naam is te lang (max. 80 tekens).';
         } elseif (Database::val('SELECT COUNT(*) FROM `groups` WHERE name = ? AND id <> ?', [$data['name'], $id]) > 0) {
             $errors[] = 'Er bestaat al een groep met deze naam.';
+        }
+        if (!array_key_exists($data['category'], group_categories())) {
+            $errors[] = 'Kies zwemschool of competitie.';
         }
         if (mb_strlen($data['description']) > 255) {
             $errors[] = 'Omschrijving is te lang (max. 255 tekens).';
@@ -102,11 +109,11 @@ final class GroupController
 
         $desc = $data['description'] === '' ? null : $data['description'];
         if ($id) {
-            Database::exec('UPDATE `groups` SET name=?, description=?, is_active=? WHERE id=?', [$data['name'], $desc, $data['is_active'], $id]);
+            Database::exec('UPDATE `groups` SET name=?, description=?, category=?, is_active=? WHERE id=?', [$data['name'], $desc, $data['category'], $data['is_active'], $id]);
             audit('UPDATE', 'group', $id);
             flash('success', 'Groep bijgewerkt.');
         } else {
-            $id = Database::insert('INSERT INTO `groups` (name, description, is_active) VALUES (?,?,?)', [$data['name'], $desc, $data['is_active']]);
+            $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active']]);
             audit('CREATE', 'group', $id);
             flash('success', 'Groep aangemaakt.');
         }

@@ -10,6 +10,13 @@
   <label>Naam *
     <input name="name" value="<?= e($group['name']) ?>" maxlength="80" required>
   </label>
+  <label>Soort groep *
+    <select name="category" required>
+      <?php foreach (group_categories() as $code => $label): ?>
+        <option value="<?= e($code) ?>" <?= ($group['category'] ?? 'SWIM_SCHOOL') === $code ? 'selected' : '' ?>><?= e($label) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </label>
   <label>Omschrijving
     <input name="description" value="<?= e($group['description']) ?>" maxlength="255">
   </label>

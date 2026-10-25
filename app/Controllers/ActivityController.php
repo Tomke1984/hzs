@@ -230,7 +230,7 @@ final class ActivityController
             'selected' => $selected,
             'errors' => $errors,
             'types' => Database::all('SELECT id, name FROM activity_types ORDER BY id'),
-            'groups' => Database::all('SELECT id, name FROM `groups` WHERE is_active = 1 ORDER BY name'),
+            'groups' => Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 ORDER BY category, name'),
         ], $title);
     }
 }
