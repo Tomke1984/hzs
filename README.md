@@ -64,3 +64,10 @@ db/schema.sql           schema voor SQLite en MySQL
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
 Nog te doen voor productie: login-throttling, wachtwoordreset, MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
+
+## Werkwijze met GitHub
+
+- `main` = goedgekeurde versie. `dev` = testversie waar alle aanpassingen eerst op komen.
+- Lokaal testen: `git clone https://github.com/Tomke1984/hzs.git`, daarna `./tools/sync.sh` (Windows: `.\tools\sync.ps1`). Het script zet je op `dev` en haalt elke 60 seconden nieuwe aanpassingen binnen.
+- Is `dev` goedgekeurd, dan wordt het samengevoegd met `main`.
+- Je lokale database (`storage/data/`) en `config.php` staan niet in git en blijven dus behouden.
