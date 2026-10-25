@@ -393,3 +393,8 @@ form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
 .inline-form-card label { margin: 0; }
 .inline-form-card input[type=date] { width: auto; }
 .inline-form-card .small { flex: 1 1 100%; margin: 0; }
+.cat-banner { margin: 28px 0 4px; padding: 8px 14px; border-radius: 10px; font-size: 1.15rem; color: #fff; background: var(--blue); }
+.cat-banner-swim_school { background: #0b7ab8; }
+.cat-banner-competition { background: var(--competition); }
+.cat-banner .small { opacity: .85; font-weight: 400; }
+h3.section-title { margin: 16px 0 8px; font-size: 1.05rem; }

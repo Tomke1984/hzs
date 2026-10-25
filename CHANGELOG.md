@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Trainingsreeksen: zwemschool en competitie apart:** op het overzicht staan de reeksen onder een kleurbanner *Zwemschool* (blauw) en *Competitie* (oranje), met daaronder per groep de reeksen.
 - **Trainingsdag per lid: nu per weekdag en altijd zichtbaar:** het blok *Trainingsdag per lid* staat altijd op de groepspagina (voor wie reeksen mag beheren) en toont per kolom elk trainingsmoment: dus ook de verschillende weekdagen binnen één reeks (bv. Zwemmen – dinsdag en Zwemmen – donderdag), niet enkel losse reeksen. Heeft de groep minder dan twee trainingsmomenten, dan staat er een uitleg in plaats van het rooster. Eerder opgeslagen keuzes uit v0.10.0 worden bij de update gewist (de functie was nog nergens te vinden); opnieuw invullen.
 
 ## Op main

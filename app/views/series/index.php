@@ -45,8 +45,15 @@ uksort($byGroup, function ($a, $b) use ($cats, $catOf) {
     return [$ca === false ? 99 : $ca, $a] <=> [$cb === false ? 99 : $cb, $b];
 });
 ?>
-<?php foreach ($byGroup as $gname => $list): ?>
-<h2 class="section-title"><?= group_chip($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h2>
+<?php $curCat = null; foreach ($byGroup as $gname => $list):
+    $cat2 = $catOf[$gname] ?? '';
+    if ($cat2 !== $curCat):
+        $curCat = $cat2;
+        $catCount = 0;
+        foreach ($byGroup as $gn2 => $l2) { if (($catOf[$gn2] ?? '') === $cat2) { $catCount += count($l2); } } ?>
+<h2 class="cat-banner cat-banner-<?= e(strtolower($cat2 ?: 'none')) ?>"><?= e($cat2 !== '' ? group_category_label($cat2) : 'Zonder categorie') ?> <span class="small">(<?= $catCount ?> <?= $catCount === 1 ? 'reeks' : 'reeksen' ?>)</span></h2>
+<?php endif; ?>
+<h3 class="section-title"><?= group_chip($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h3>
 <div class="cards">
 <?php foreach ($list as $s): ?>
   <div class="card <?= (int) $s['is_active'] ? '' : 'is-off' ?>">
