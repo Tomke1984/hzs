@@ -84,6 +84,10 @@ final class Installer
             $intro = 'Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.';
             Database::exec("UPDATE pages SET body = ? WHERE slug = 'doelstellingen' AND body LIKE '%doelstellingen-%'", [$intro]);
         }
+        // De uitleg over de zwemtest verwijst naar het aparte zwemtestformulier.
+        Database::exec(
+            "UPDATE pages SET body = REPLACE(body, '[inschrijfformulier](?r=register)', '[formulier voor de zwemtest](?r=swimtest)') WHERE slug = 'inschrijven-zwemtest' AND body LIKE '%(?r=register)%'"
+        );
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
         if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
             Database::exec('DELETE FROM group_memberships WHERE end_date IS NOT NULL');

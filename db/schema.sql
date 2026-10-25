@@ -196,6 +196,36 @@ CREATE TABLE IF NOT EXISTS registration_persons (
   FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};
 
+CREATE TABLE IF NOT EXISTS swimtest_requests (
+  id {{PK}},
+  status VARCHAR(12) NOT NULL DEFAULT 'UNCONFIRMED',
+  child_first_name VARCHAR(80) NOT NULL,
+  child_last_name VARCHAR(80) NOT NULL,
+  child_birth_date VARCHAR(10) NOT NULL,
+  diploma VARCHAR(10) NOT NULL DEFAULT 'NONE',
+  experience VARCHAR(300) NULL,
+  availability VARCHAR(500) NULL,
+  contact_name VARCHAR(120) NOT NULL,
+  contact_email VARCHAR(190) NOT NULL,
+  contact_phone VARCHAR(40) NOT NULL,
+  relationship VARCHAR(40) NULL,
+  street VARCHAR(120) NOT NULL,
+  postal_code VARCHAR(10) NOT NULL,
+  city VARCHAR(80) NOT NULL,
+  remarks VARCHAR(500) NULL,
+  consent_at VARCHAR(19) NOT NULL,
+  confirm_token_hash VARCHAR(64) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  confirmed_at VARCHAR(19) NULL,
+  status_changed_at VARCHAR(19) NULL,
+  status_changed_by INT NULL,
+  invite_info VARCHAR(300) NULL,
+  decline_reason VARCHAR(500) NULL,
+  internal_note VARCHAR(500) NULL,
+  registration_id INT NULL,
+  CHECK (status IN ('UNCONFIRMED','WAITING','INVITED','TESTED','ENROLLED','DECLINED'))
+){{ENGINE}};
+
 CREATE TABLE IF NOT EXISTS activity_series (
   id {{PK}},
   type_id INT NOT NULL,

@@ -29,7 +29,7 @@ T],
             ['inschrijven-zwemtest', 'Inschrijven zwemtest', 'zwemschool', 1, 1, <<<'T'
 De club heeft momenteel een zeer grote wachtlijst. Kinderen kunnen daarom niet meteen getest of ingeschreven worden.
 
-Je kind aanmelden voor de zwemschool doe je via het [inschrijfformulier](?r=register). Zorg dat alle gegevens correct zijn.
+Je kind aanmelden voor de zwemtest doe je via het [formulier voor de zwemtest](?r=swimtest). Zorg dat alle gegevens correct zijn.
 
 ## Diploma's en ervaring
 
@@ -39,7 +39,7 @@ Je kind aanmelden voor de zwemschool doe je via het [inschrijfformulier](?r=regi
 
 ## Beschikbare zwemmomenten
 
-Geef in je opmerking aan wanneer je kind zou kunnen zwemmen:
+Duid in het formulier aan wanneer je kind zou kunnen zwemmen:
 
 - dinsdag 17u30–18u30
 - donderdag 16u30–17u30
@@ -50,7 +50,7 @@ Geef in je opmerking aan wanneer je kind zou kunnen zwemmen:
 
 ## Na het inschrijven
 
-Je kind komt automatisch op de wachtlijst. Je wordt uitgenodigd voor een zwemtest zodra de club die organiseert, meestal tijdens de vakantieperiodes.
+Je kind komt op de wachtlijst, zodra je je e-mailadres hebt bevestigd. Je wordt uitgenodigd voor een zwemtest zodra de club die organiseert, meestal tijdens de vakantieperiodes.
 T],
             ['doelstellingen', 'Doelstellingen', 'zwemschool', 2, 1, <<<'T'
 Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.

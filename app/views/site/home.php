@@ -4,7 +4,7 @@
     <div>
       <?php if ($intro): ?><div class="lede prose"><?= Markup::render((string) $intro['body']) ?></div><?php endif; ?>
       <div class="hero-actions">
-        <a class="btn btn-float" href="<?= e(url('register')) ?>">Inschrijven</a>
+        <a class="btn btn-float" href="<?= e(url('swimtest')) ?>">Zwemtest aanvragen</a>
         <a class="btn btn-ghost" href="<?= e(url('trainingstimes')) ?>">Trainingsuren</a>
       </div>
     </div>

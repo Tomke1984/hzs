@@ -46,7 +46,7 @@ $curSlug = (string) ($_GET['slug'] ?? '');
       <a href="<?= e(url('trainingstimes')) ?>" <?= $cur === 'trainingstimes' ? 'aria-current="page"' : '' ?>>Trainingsuren</a>
       <a href="<?= e(url('agenda')) ?>" <?= $cur === 'agenda' ? 'aria-current="page"' : '' ?>>Kalender</a>
       <a class="nav-login" href="<?= e(url($user ? 'dashboard' : 'login')) ?>"><?= $user ? 'Mijn Clubapp' : 'Aanmelden' ?></a>
-      <a class="nav-cta" href="<?= e(url('register')) ?>">Inschrijven</a>
+      <a class="nav-cta" href="<?= e(url('swimtest')) ?>">Zwemtest aanvragen</a>
     </nav>
   </div>
   <div class="rope" aria-hidden="true"></div>
@@ -69,7 +69,8 @@ $curSlug = (string) ($_GET['slug'] ?? '');
       <?php foreach ($top as $t): ?><a href="<?= e(url('page', ['slug' => $t['slug']])) ?>"><?= e($t['title']) ?></a><?php endforeach; ?>
     </div>
     <div><b>Snel naar</b>
-      <a href="<?= e(url('register')) ?>">Inschrijven</a>
+      <a href="<?= e(url('swimtest')) ?>">Zwemtest aanvragen</a>
+      <a href="<?= e(url('register')) ?>">Lid worden</a>
       <a href="<?= e(url('trainingstimes')) ?>">Trainingsuren</a>
       <a href="<?= e(url('agenda')) ?>">Kalender</a>
       <a href="<?= e(url($user ? 'dashboard' : 'login')) ?>"><?= $user ? 'Mijn Clubapp' : 'Aanmelden' ?></a>
