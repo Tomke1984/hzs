@@ -52,6 +52,9 @@ final class PageCheck
                     $removable[] = $id;
                 }
             }
+            if ($p['slug'] === 'trainingsuren-competitie' && preg_match('/^##\s/m', $body) && !empty(SiteController::timetable()['COMPETITION'])) {
+                $i[] = ['info', 'De trainingsuren komen automatisch uit Reeksen; de vaste uren in deze tekst worden niet getoond (enkel de inleiding vóór de eerste kop). Je mag ze hier verwijderen.'];
+            }
             if ($p['status'] !== 'PUBLISHED') {
                 $i[] = ['info', 'Concept: niet zichtbaar op de website.'];
             }

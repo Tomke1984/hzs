@@ -155,7 +155,7 @@ final class SiteController
     }
 
     /** Publieke trainingsreeksen, per soort groep en per groep, met de trainers van elke groep. */
-    private static function timetable(): array
+    public static function timetable(): array
     {
         $series = Database::all(
             "SELECT s.*, t.name AS type_name FROM activity_series s JOIN activity_types t ON t.id = s.type_id
