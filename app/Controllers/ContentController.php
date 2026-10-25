@@ -2,6 +2,13 @@
 /** Beheer van de website: nieuws, pagina's en afbeeldingen (permissie content.manage). */
 final class ContentController
 {
+    /** Pagina's waarvan (een deel van) de inhoud uit de backend komt: slug => [bron, route, enkel inleiding bewerkbaar]. */
+    public const DYNAMIC = [
+        'trainingsuren-competitie' => ['de trainingsuren komen uit Reeksen', 'series', true],
+        'doelstellingen' => ['de groepen en hun doelstellingen komen uit Groepen', 'groups', true],
+        'contact' => ['het contactformulier en de berichten komen uit de app (menu Berichten)', 'messages', false],
+    ];
+
     public static function index(): void
     {
         $tab = in_array($_GET['tab'] ?? '', ['news', 'pages', 'media'], true) ? $_GET['tab'] : 'news';
@@ -111,12 +118,21 @@ final class ContentController
         if ($id && !$old) {
             abort(404, 'Pagina niet gevonden.');
         }
+        $dyn = $old ? (self::DYNAMIC[$old['slug']] ?? null) : null;
         $parent = (int) input('parent_id', '0');
         $p = [
             'id' => $id, 'title' => input('title'), 'slug' => input('slug'), 'body' => (string) ($_POST['body'] ?? ''),
             'parent_id' => $parent ?: null, 'sort_order' => (int) input('sort_order', '0'),
             'status' => input('status') === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT', 'in_menu' => input('in_menu') === '1' ? 1 : 0,
         ];
+        if ($dyn) {
+            $p['slug'] = $old['slug'];
+            $p['parent_id'] = $old['parent_id'];
+            $p['status'] = 'PUBLISHED';
+            if ($dyn[2]) {
+                $p['body'] = trim((string) preg_split('/^#{2,3}\s/m', $p['body'], 2)[0]);
+            }
+        }
         $errors = [];
         if ($p['title'] === '' || mb_strlen($p['title']) > 190) {
             $errors[] = 'Titel is verplicht (max. 190 tekens).';
@@ -165,6 +181,10 @@ final class ContentController
         if (!Database::val('SELECT COUNT(*) FROM pages WHERE id = ?', [$id])) {
             abort(404, 'Pagina niet gevonden.');
         }
+        if (isset(self::DYNAMIC[(string) Database::val('SELECT slug FROM pages WHERE id = ?', [$id])])) {
+            flash('error', 'Deze pagina haalt zijn inhoud uit de app en kan niet verwijderd worden.');
+            redirect(url('content', ['tab' => 'pages']));
+        }
         if (Database::val('SELECT COUNT(*) FROM pages WHERE parent_id = ?', [$id]) > 0) {
             flash('error', 'Deze pagina heeft subpagina\'s. Verwijder of verplaats die eerst.');
             redirect(url('content', ['tab' => 'pages']));
@@ -181,7 +201,8 @@ final class ContentController
         global $routes;
         $n = 0;
         foreach (PageCheck::run($routes)['removable'] as $id) {
-            if (Database::val('SELECT COUNT(*) FROM pages WHERE parent_id = ?', [$id]) == 0) {
+            $slug = (string) Database::val('SELECT slug FROM pages WHERE id = ?', [$id]);
+            if (!isset(self::DYNAMIC[$slug]) && Database::val('SELECT COUNT(*) FROM pages WHERE parent_id = ?', [$id]) == 0) {
                 Database::exec('DELETE FROM pages WHERE id = ?', [$id]);
                 audit('DELETE', 'page', $id, 'opruiming');
                 $n++;

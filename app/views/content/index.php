@@ -59,17 +59,17 @@
     <tbody>
     <?php foreach ($pages as $p): ?>
       <tr>
-        <td><?= $p['parent_id'] ? '↳ ' : '' ?><a href="<?= e(url('page_form', ['id' => $p['id']])) ?>"><?= e($p['title']) ?></a> <span class="muted small">(<?= e($p['slug']) ?>)</span></td>
+        <td><?= $p['parent_id'] ? '↳ ' : '' ?><a href="<?= e(url('page_form', ['id' => $p['id']])) ?>"><?= e($p['title']) ?></a> <span class="muted small">(<?= e($p['slug']) ?>)</span><?php if (isset(ContentController::DYNAMIC[$p['slug']])): ?> <span class="chip">Automatisch</span><?php endif; ?></td>
         <td><?= e($p['parent_title'] ?? '') ?: '—' ?></td>
         <td><?= (int) $p['in_menu'] ? 'Ja' : 'Nee' ?></td>
         <td><span class="chip <?= $p['status'] === 'PUBLISHED' ? 'ok' : 'off' ?>"><?= $p['status'] === 'PUBLISHED' ? 'Gepubliceerd' : 'Concept' ?></span></td>
         <td class="small"><?php foreach ($check['issues'][(int) $p['id']] ?? [] as [$lvl, $txt]): ?><div class="<?= $lvl === 'warn' ? '' : 'muted' ?>"><?= $lvl === 'warn' ? '⚠ ' : '' ?><?= e($txt) ?></div><?php endforeach; ?></td>
         <td class="right">
           <a class="btn btn-small btn-ghost" href="<?= e(url('page', ['slug' => $p['slug']])) ?>">Bekijken</a>
-          <form method="post" action="<?= e(url('page_delete')) ?>" data-confirm="Deze pagina definitief verwijderen?">
+          <?php if (!isset(ContentController::DYNAMIC[$p['slug']])): ?><form method="post" action="<?= e(url('page_delete')) ?>" data-confirm="Deze pagina definitief verwijderen?">
             <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
             <button class="btn btn-small btn-ghost" type="submit">Verwijderen</button>
-          </form>
+          </form><?php endif; ?>
         </td>
       </tr>
     <?php endforeach; ?>
