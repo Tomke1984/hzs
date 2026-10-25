@@ -332,3 +332,15 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   ip VARCHAR(45) NOT NULL,
   created_at VARCHAR(19) NOT NULL
 ){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS page_views (
+  id {{PK}},
+  day VARCHAR(10) NOT NULL,
+  viewed_at VARCHAR(19) NOT NULL,
+  area VARCHAR(4) NOT NULL,
+  route VARCHAR(40) NOT NULL,
+  path VARCHAR(190) NOT NULL,
+  visitor VARCHAR(16) NOT NULL,
+  device VARCHAR(8) NOT NULL,
+  referrer VARCHAR(120) NOT NULL DEFAULT ''
+){{ENGINE}};

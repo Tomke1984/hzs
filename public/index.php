@@ -99,6 +99,7 @@ $routes = [
     'series_save'      => ['POST' => ['SeriesController', 'save', 'activities.write']],
     'series_bulk'      => ['GET' => ['SeriesController', 'bulkForm', 'activities.write'], 'POST' => ['SeriesController', 'bulk', 'activities.write']],
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
+    'stats'            => ['GET' => ['StatsController', 'index', 'stats.read']],
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
 ];
 
@@ -161,4 +162,5 @@ if ($permission !== 'public') {
     }
 }
 
+Stats::track($route);
 $class::$action();

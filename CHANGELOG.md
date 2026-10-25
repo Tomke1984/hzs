@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_(niets nieuws sinds v0.10.3)_
+- **Statistieken (enkel beheerders):** nieuw menu-item *Statistieken* (`/app/statistieken`, nieuwe permissie `stats.read`, enkel de rol Beheerder; bestuur, trainers en ouders krijgen een 403). Toont per periode (7/30/90 dagen, 1 jaar) voor de **website** en de **app** apart: bezoeken, paginaweergaves, gemiddelde per dag, bezoekers vandaag, staafdiagram per dag, meest bezochte pagina's/schermen, apparaten (computer/gsm/tablet) en bij de website de herkomst (zoekmachine, sociale media, rechtstreeks) plus een tabel per dag. **Privacy:** geen cookies, geen IP-adres, geen namen of gebruikers-id bewaard; een bezoeker is een dagelijks wisselende hash (daarom enkel unieke bezoekers per dag). Niet geteld: bots, POST-aanvragen, mislukte aanvragen, bezoekers met *Do Not Track*/*Global Privacy Control*, beheerders/bestuur op de website en het dashboard zelf. Gegevens ouder dan 400 dagen worden automatisch gewist. Nieuwe tabel `page_views` (wordt automatisch aangemaakt) en bestand `storage/stats.salt`.
 
 ## Op main
 

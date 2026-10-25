@@ -124,3 +124,6 @@ Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande l
 Een zwemschoolreeks (dag + uur) is een blok; `member_series` (weekday 0) koppelt leden aan blokken. Zwemschoolleden zonder blok staan op geen aanwezigheidslijst (`Scope::targetMembers`) en zien geen trainingen van hun groep (`Scope::hiddenSlots`); competitie volgt het vaste groepsschema. Beheer via `series_show` (Leden in dit blok), `series` (Nog niet ingedeeld) en routes `series_member_add` / `series_member_remove`. Groepswissel wist de indeling (`SeriesService::clearMemberBlocks`).
 
 Het weekoverzicht (`series_week`, `SeriesController::week`) toont de zwemblokken als raster dag × uur met groepen en aantal leden.
+
+### Statistieken (beheerders)
+Teller `Stats::track()` (aangeroepen in `public/index.php` vlak voor de actie) schrijft na een 200-antwoord een rij in `page_views` (dag, gebied SITE/APP, route, pad zonder querystring, dagelijkse hash als bezoeker, apparaat, enkel de herkomsthost). Geen cookies, IP-adres of gebruikers-id; de hash gebruikt een geheim in `storage/stats.salt`. Bots, POST, niet-200, DNT/GPC en beheerders op de site tellen niet. Bewaartermijn 400 dagen. Dashboard: route `stats` (`StatsController`, permissie `stats.read`, enkel ADMIN), grafieken als inline SVG omdat de CSP inline `style` verbiedt.

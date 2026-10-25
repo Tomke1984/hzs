@@ -10,6 +10,7 @@ $icons = [
     'inbox' => '<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>',
     'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
     'mail' => '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/>',
+    'chart' => '<path d="M4 20h17"/><path d="M6.5 20v-6M11.5 20V6M16.5 20v-9"/>',
     'globe' => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
 ];
 $nReg = Auth::can('registrations.manage') ? (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'") : 0;
@@ -24,6 +25,7 @@ $menu = [
         [members_label(), 'members', 'users', 'members.read', ['members', 'member', 'member_form', 'member_save', 'membership_add', 'membership_move', 'membership_end', 'member_group', 'invite_member', 'invite_parent', 'invite_bulk', 'invite_resend', 'user_child_add', 'user_child_remove', 'user_child_relation'], 0],
         ['Groepen', 'groups', 'groups', 'groups.read', ['groups', 'group', 'group_form', 'group_save', 'group_delete'], 0],
         ['Gebruikers', 'users', 'key', 'users.manage', ['users', 'user_form', 'user_save', 'user_trainer_add', 'user_trainer_remove'], 0],
+        ['Statistieken', 'stats', 'chart', 'stats.read', ['stats'], 0],
     ]],
     ['Planning', [
         ['Kalender', 'calendar', 'calendar', 'activities.read', ['calendar', 'activity', 'activity_form', 'activity_save', 'attendance_save'], 0],

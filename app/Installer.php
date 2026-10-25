@@ -13,6 +13,7 @@ final class Installer
         'attendance.write' => 'Aanwezigheden registreren',
         'registrations.manage' => 'Inschrijvingen beoordelen (goedkeuren of afwijzen)',
         'content.manage'  => 'Website beheren (nieuws, pagina\'s, afbeeldingen)',
+        'stats.read'      => 'Statistieken over bezoekers en verkeer bekijken (enkel beheerders)',
         'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
     ];
 
@@ -49,7 +50,7 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages', 'login_attempts', 'activity_series_skips', 'member_series'] as $table) {
+        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages', 'login_attempts', 'activity_series_skips', 'member_series', 'page_views'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {
