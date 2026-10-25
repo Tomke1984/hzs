@@ -79,13 +79,13 @@
     <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Lid</th><?php foreach ($daySlots as $ds): ?><th><?= e($ds['when']) ?><br><span class="muted small"><?= e($ds['label']) ?></span></th><?php endforeach; ?></tr></thead>
+      <thead><tr><th>Lid</th><?php foreach ($daySlots as $ds): ?><th><?= e($ds['when']) ?></th><?php endforeach; ?></tr></thead>
       <tbody>
       <?php foreach ($memberships as $m): ?>
         <tr>
           <td><?= e($m['last_name'] . ' ' . $m['first_name']) ?></td>
           <?php foreach ($daySlots as $ds): ?>
-            <td data-label="<?= e($ds['when'] . ' · ' . $ds['label']) ?>"><input type="checkbox" name="days[<?= (int) $m['id'] ?>][]" value="<?= e($ds['key']) ?>" <?= !empty($assigned[(int) $m['id']][$ds['key']]) ? 'checked' : '' ?> aria-label="<?= e($m['first_name'] . ' ' . $m['last_name'] . ': ' . $ds['when'] . ' ' . $ds['label']) ?>"></td>
+            <td data-label="<?= e($ds['when']) ?>"><input type="checkbox" name="days[<?= (int) $m['id'] ?>][]" value="<?= e($ds['key']) ?>" <?= !empty($assigned[(int) $m['id']][$ds['key']]) ? 'checked' : '' ?> aria-label="<?= e($m['first_name'] . ' ' . $m['last_name'] . ': ' . $ds['when']) ?>"></td>
           <?php endforeach; ?>
         </tr>
       <?php endforeach; ?>

@@ -151,7 +151,7 @@ final class MemberController
              WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title',
             [$member['id']]
         ) as $r) {
-            $myDays[] = ucfirst(SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']]))) . ' (' . $r['title'] . ')';
+            $myDays[] = ucfirst(SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']])));
         }
 
         render('members/show', [
