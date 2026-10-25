@@ -20,7 +20,7 @@ final class SeriesService
     }
 
     /**
-     * Brengt de toekomstige trainingen (vanaf vandaag) in lijn met de reeks.
+     * Brengt de komende trainingen in lijn met de reeks en vult het verleden aan vóór de eerste bestaande training.
      * @return array{created:int,updated:int,removed:int,kept:int}
      */
     public static function sync(int $seriesId): array
@@ -40,7 +40,7 @@ final class SeriesService
         // Gewenste trainingen: elke datum vanaf vandaag waarop een weekdag-slot past.
         $desired = [];
         if ((int) $s['is_active'] === 1 && $slots && $groupIds) {
-            $d = new DateTimeImmutable(max($s['start_date'], $today));
+            $d = new DateTimeImmutable($s['start_date']);
             $end = new DateTimeImmutable($s['end_date']);
             $guard = 0;
             for (; $d <= $end && $guard < self::MAX_DAYS + 1; $d = $d->modify('+1 day'), $guard++) {
@@ -52,11 +52,20 @@ final class SeriesService
         }
 
         $existing = [];
-        foreach (Database::all(
-            'SELECT id, starts_at, is_custom FROM activities WHERE series_id = ? AND starts_at >= ?',
-            [$seriesId, $today . ' 00:00:00']
-        ) as $a) {
-            $existing[substr($a['starts_at'], 0, 10)] = $a;
+        $earliest = $today;
+        foreach (Database::all('SELECT id, starts_at, is_custom FROM activities WHERE series_id = ?', [$seriesId]) as $a) {
+            $day = substr($a['starts_at'], 0, 10);
+            $earliest = min($earliest, $day);
+            if ($day >= $today) {
+                $existing[$day] = $a;
+            }
+        }
+        // Verleden: enkel aanvullen vóór de eerste bestaande training (bv. een reeks met startdatum in het verleden);
+        // bestaande trainingen uit het verleden blijven altijd ongemoeid.
+        foreach ($desired as $day => $_) {
+            if ($day < $today && $day >= $earliest) {
+                unset($desired[$day]);
+            }
         }
 
         Database::tx(function () use ($s, $desired, $existing, $groupIds, &$out, $seriesId) {

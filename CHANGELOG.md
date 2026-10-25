@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Trainingsreeksen met verleden:** een reeks met een startdatum in het verleden maakt ook de trainingen van het verleden aan, zodat ze in de kalender (en voor aanwezigheden) staan. Een vroegere startdatum bij een bestaande reeks vult het verleden aan; bestaande trainingen uit het verleden blijven altijd ongemoeid.
 - **Relatie bewerken:** de relatie tussen ouder en kind (moeder, vader, voogd, …) is nu aanpasbaar (knop *Bewerken*) of leeg te maken, zowel op de ledenpagina als op de gebruikerspagina van de ouder (enkel met gebruikersbeheer).
 - **Inschrijfformulier:** keuze zwemschool/competitie weggehaald (het bestuur deelt het kind in een groep in).  standaard enkel velden voor 1 kind; met de knop *+ Nog een kind inschrijven* verschijnt telkens een extra kind (zonder JavaScript blijven alle velden zichtbaar). Een per vergissing toegevoegd kind kan met het kruisje weer weg.
 
