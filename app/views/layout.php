@@ -38,8 +38,10 @@
 </header>
 <?php endif; ?>
 <main class="wrap">
-  <?php if ($user && (string) ($_GET['r'] ?? 'dashboard') !== 'dashboard'):
-      $backHref = back_url((string) ($_GET['r'] ?? ''), $_GET); ?>
+  <?php $curRoute = (string) ($_GET['r'] ?? 'dashboard');
+      if ($user) { remember_list_context($curRoute, $_GET); } ?>
+  <?php if ($user && !in_array($curRoute, BACK_TOP_ROUTES, true)):
+      $backHref = back_url($curRoute, $_GET); ?>
     <p class="backlink"><a href="<?= e($backHref) ?>">← Terug</a></p>
   <?php endif; ?>
   <?php foreach (pull_flash() as [$type, $msg]): ?>

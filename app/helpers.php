@@ -342,22 +342,49 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
     return $h . '</select>';
 }
 
-/** Doelpagina van de knop "Terug": altijd de bovenliggende pagina in de app, niet de browsergeschiedenis. */
+/** Hoofdpagina's uit het menu: daar is geen "Terug" nodig. */
+const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content'];
+
+/** Onthoudt de laatst bekeken filters/maand/tab van een lijstpagina, zodat "Terug" er precies naar terugkeert. */
+function remember_list_context(string $route, array $get): void
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' || !in_array($route, BACK_TOP_ROUTES, true)) {
+        return;
+    }
+    unset($get['r']);
+    $_SESSION['list_ctx'][$route] = array_filter($get, fn($v) => !is_array($v) && $v !== '');
+}
+
+/** URL van een lijstpagina met de laatst gebruikte filters. */
+function list_url(string $route): string
+{
+    return url($route, $_SESSION['list_ctx'][$route] ?? []);
+}
+
+/** Doelpagina van de knop "Terug": altijd de bovenliggende pagina in de app (met behoud van filters), niet de browsergeschiedenis. */
 function back_url(string $route, array $get): string
 {
     $id = (int) ($get['id'] ?? 0);
+    if ($route === 'activity') {
+        $when = $id ? Database::val('SELECT starts_at FROM activities WHERE id = ?', [$id]) : null;
+        $ctx = $_SESSION['list_ctx']['calendar'] ?? [];
+        if ($when) {
+            $ctx['m'] = substr((string) $when, 0, 7);
+        }
+        return url('calendar', $ctx);
+    }
     return match ($route) {
-        'member' => url('members'),
-        'member_form', 'member_save' => $id ? url('member', ['id' => $id]) : url('members'),
-        'group' => url('groups'),
-        'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : url('groups'),
-        'user_form', 'user_save' => url('users'),
-        'registration' => url('registrations'),
-        'swimtest_show' => url('swimtests'),
-        'activity' => url('calendar'),
-        'activity_form', 'activity_save' => $id ? url('activity', ['id' => $id]) : url('calendar'),
-        'series_show' => url('series'),
-        'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : url('series'),
+        'member' => list_url('members'),
+        'member_form', 'member_save' => $id ? url('member', ['id' => $id]) : list_url('members'),
+        'group' => list_url('groups'),
+        'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : list_url('groups'),
+        'user_form', 'user_save', 'invite_bulk' => list_url('users'),
+        'registration' => list_url('registrations'),
+        'swimtest_show' => list_url('swimtests'),
+        'activity_form', 'activity_save' => $id ? url('activity', ['id' => $id]) : list_url('calendar'),
+        'series_show' => list_url('series'),
+        'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : list_url('series'),
+        'series_bulk' => list_url('series'),
         'post_form', 'post_save' => url('content', ['tab' => 'news']),
         'page_form', 'page_save' => url('content', ['tab' => 'pages']),
         default => url('dashboard'),

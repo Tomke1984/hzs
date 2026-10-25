@@ -66,7 +66,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - **Groepskleuren:** `groups.color` (0–11) wordt toegekend door `ensure_group_colors()` (eerste ongebruikte, anders minst gebruikte) bij aanmaken en bij elke migratie; bestaande kleuren veranderen nooit. `group_chip()` toont naam + kleurstip; CSS-klassen `.g-0`…`.g-11` (geen inline styles wegens CSP).
 - **Schrappen:** `SeriesService::erase()` verwijdert een activiteit (incl. aanwezigheden/groepskoppelingen) en onthoudt bij reekstrainingen de dag in `activity_series_skips`, zodat `sync()` ze niet opnieuw aanmaakt; met geregistreerde aanwezigheden wordt de activiteit enkel op CANCELLED gezet.
 - **Menu van de app:** vaste zijbalk (`app/views/_nav.php`) met secties Club, Planning, Aanvragen (met tellers) en Website, gefilterd op rechten; onder 960 px een uitschuifbaar menu via een *Menu*-knop (`app.js`), zonder JavaScript altijd zichtbaar (`nojs.css`).
-- **Navigatie:** de knop *← Terug* gaat naar de bovenliggende pagina via `back_url()` (geen browsergeschiedenis).
+- **Navigatie:** de knop *← Terug* gaat naar de bovenliggende pagina via `back_url()` (geen browsergeschiedenis); filters, tab en kalendermaand van de lijst worden in de sessie onthouden (`remember_list_context()`), activiteiten keren terug naar hun eigen maand; op de hoofdpagina's uit het menu (`BACK_TOP_ROUTES`) staat geen Terug.
 - **Mail:** driver `log` (lokaal, `storage/mail/outbox.log`), `smtp` of PHP `mail()`. Links in mails gebruiken `app_url`.
 - **Uploads:** `public/uploads/` (enkel afbeeldingen, type- en groottecontrole).
 
