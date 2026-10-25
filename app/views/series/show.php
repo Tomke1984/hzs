@@ -1,8 +1,13 @@
 <div class="row-between">
   <h1><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
-    <?php if (!(int) $s['is_public']): ?><span class="chip warn">Niet op website</span><?php endif; ?>
+    <span class="chip <?= (int) $s['is_public'] ? 'ok' : 'warn' ?>"><?= (int) $s['is_public'] ? 'Op website' : 'Niet op website' ?></span>
     <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h1>
   <span class="actions-inline">
+    <form method="post" action="<?= e(url('series_public')) ?>">
+      <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"><input type="hidden" name="back" value="?r=series_show&amp;id=<?= (int) $s['id'] ?>">
+      <input type="hidden" name="public" value="<?= (int) $s['is_public'] ? 0 : 1 ?>">
+      <button class="btn btn-ghost" type="submit"><?= (int) $s['is_public'] ? 'Van website halen' : 'Op website tonen' ?></button>
+    </form>
     <a class="btn btn-ghost" href="<?= e(url('series_bulk')) ?>">Schrappen / verplaatsen</a>
     <a class="btn" href="<?= e(url('series_form', ['id' => $s['id']])) ?>">Reeks wijzigen</a>
     <form method="post" action="<?= e(url('series_delete')) ?>" data-confirm="Reeks &quot;<?= e($s['title']) ?>&quot; definitief verwijderen? Alle trainingen van deze reeks verdwijnen uit de kalender, behalve trainingen waarvan de aanwezigheden al zijn ingevuld (die blijven als losse trainingen bestaan).">

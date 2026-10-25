@@ -34,6 +34,29 @@ final class SeriesController
         render('series/index', ['importPending' => Auth::can('groups.write') ? CompetitionSeed::pending() : 0, 'series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
+    /** Reeks(en) op de website tonen of verbergen (één reeks via id, meerdere via ids[]). */
+    public static function setPublic(): void
+    {
+        $ids = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
+        if (($one = (int) input('id', '0')) > 0) {
+            $ids = [$one];
+        }
+        $val = input('public') === '1' ? 1 : 0;
+        $n = 0;
+        foreach ($ids as $id) {
+            if (!self::load($id) || (int) Database::val('SELECT is_public FROM activity_series WHERE id = ?', [$id]) === $val) {
+                continue;
+            }
+            Database::exec('UPDATE activity_series SET is_public = ? WHERE id = ?', [$val, $id]);
+            SeriesService::sync($id);
+            audit('UPDATE', 'activity_series', $id, $val ? 'op website' : 'van website');
+            $n++;
+        }
+        flash('success', $n ? sprintf('%d %s %s de website.', $n, $n === 1 ? 'reeks staat' : 'reeksen staan', $val ? 'nu op' : 'niet meer op') : 'Er was niets te wijzigen.');
+        $back = (string) input('back', '');
+        redirect(str_starts_with($back, '?r=series') ? $back : url('series'));
+    }
+
     /** Eenmalige startdata: de competitie-trainingsuren van khzs.be als reeksen (met de groepen indien nodig). */
     public static function importCompetition(): void
     {
