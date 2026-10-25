@@ -179,3 +179,28 @@ function group_category_label(?string $code): string
 {
     return group_categories()[$code ?? ''] ?? 'Zwemschool';
 }
+
+/** Filtervelden Zwemschool/Competitie + groep (voor ledenlijst en kalender). */
+function group_filter_fields(string $cat, int $gid, array $groupOptions): string
+{
+    $h = '<select name="cat" aria-label="Soort groep"><option value="">Zwemschool + competitie</option>';
+    foreach (group_categories() as $code => $label) {
+        $h .= '<option value="' . e($code) . '"' . ($cat === $code ? ' selected' : '') . '>' . e($label) . '</option>';
+    }
+    $h .= '</select><select name="g" aria-label="Groep"><option value="0">Alle groepen</option>';
+    $last = null;
+    foreach ($groupOptions as $g) {
+        if ($last !== $g['category']) {
+            if ($last !== null) {
+                $h .= '</optgroup>';
+            }
+            $last = $g['category'];
+            $h .= '<optgroup label="' . e(group_category_label($g['category'])) . '">';
+        }
+        $h .= '<option value="' . (int) $g['id'] . '"' . ((int) $g['id'] === $gid ? ' selected' : '') . '>' . e($g['name']) . '</option>';
+    }
+    if ($last !== null) {
+        $h .= '</optgroup>';
+    }
+    return $h . '</select>';
+}

@@ -20,7 +20,9 @@
     <option value="INACTIVE" <?= $status === 'INACTIVE' ? 'selected' : '' ?>>Inactieve leden</option>
     <option value="ALL" <?= $status === 'ALL' ? 'selected' : '' ?>>Alle leden</option>
   </select>
+  <?= group_filter_fields($cat, $gid, $groupOptions) ?>
   <button class="btn btn-small" type="submit">Zoeken</button>
+  <?php if ($cat !== '' || $gid || $q !== '' || $status !== 'ACTIVE'): ?><a href="<?= e(url('members')) ?>">Wis filters</a><?php endif; ?>
 </form>
 
 <?php if (!$members): ?>

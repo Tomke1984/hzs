@@ -10,10 +10,22 @@ $todayStr = today();
   <?php endif; ?>
 </div>
 
+<?php $keep = array_filter(['cat' => $cat, 'g' => $gid ?: '']); ?>
+<form class="filters" method="get" action="">
+  <input type="hidden" name="r" value="calendar">
+  <input type="hidden" name="m" value="<?= e($first->format('Y-m')) ?>">
+  <?= group_filter_fields($cat, $gid, $groupOptions) ?>
+  <button class="btn btn-small" type="submit">Filteren</button>
+  <?php if ($cat !== '' || $gid): ?><a href="<?= e(url('calendar', ['m' => $first->format('Y-m')])) ?>">Wis filter</a><?php endif; ?>
+</form>
+<?php if ($cat !== '' || $gid): ?>
+  <p class="muted small">Gefilterd op groep. Activiteiten voor de hele club blijven altijd zichtbaar.</p>
+<?php endif; ?>
+
 <div class="cal-nav">
-  <a class="btn btn-small btn-ghost" href="<?= e(url('calendar', ['m' => $prev])) ?>">← Vorige</a>
+  <a class="btn btn-small btn-ghost" href="<?= e(url('calendar', ['m' => $prev] + $keep)) ?>">← Vorige</a>
   <strong class="cal-title"><?= e(ucfirst($monthLabel)) ?></strong>
-  <a class="btn btn-small btn-ghost" href="<?= e(url('calendar', ['m' => $next])) ?>">Volgende →</a>
+  <a class="btn btn-small btn-ghost" href="<?= e(url('calendar', ['m' => $next] + $keep)) ?>">Volgende →</a>
 </div>
 
 <div class="legend">

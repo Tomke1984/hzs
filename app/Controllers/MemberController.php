@@ -25,6 +25,22 @@ final class MemberController
             $where[] = 'm.status = ?';
             $params[] = $status;
         }
+        [$cat, $gid] = GroupController::readFilter();
+        if ($cat !== '' || $gid) {
+            $sub = 'EXISTS (SELECT 1 FROM group_memberships fgm JOIN `groups` fg ON fg.id = fgm.group_id
+                    WHERE fgm.member_id = m.id AND fgm.start_date <= ? AND (fgm.end_date IS NULL OR fgm.end_date >= ?)';
+            $params[] = today();
+            $params[] = today();
+            if ($cat !== '') {
+                $sub .= ' AND fg.category = ?';
+                $params[] = $cat;
+            }
+            if ($gid) {
+                $sub .= ' AND fg.id = ?';
+                $params[] = $gid;
+            }
+            $where[] = $sub . ')';
+        }
         $missingOnly = Auth::can('members.contact') && (string) ($_GET['missing'] ?? '') === '1';
         if ($missingOnly) {
             $where[] = Guardianship::missingSql('m');
@@ -84,6 +100,9 @@ final class MemberController
             'missingOnly' => $missingOnly,
             'q' => $q,
             'status' => $status,
+            'cat' => $cat,
+            'gid' => $gid,
+            'groupOptions' => GroupController::filterOptions(),
             'showContact' => Auth::can('members.contact'),
         ], 'Leden');
     }

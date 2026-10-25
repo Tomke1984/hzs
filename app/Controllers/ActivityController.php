@@ -11,6 +11,20 @@ final class ActivityController
         $next = $first->modify('+1 month');
 
         [$sql, $params] = Scope::activityFilter('a');
+        [$cat, $gid] = GroupController::readFilter();
+        if ($cat !== '' || $gid) {
+            // Activiteiten voor de hele club blijven altijd zichtbaar; groepsactiviteiten worden gefilterd.
+            $sql .= " AND (a.audience = 'CLUB' OR EXISTS (SELECT 1 FROM activity_groups fag JOIN `groups` fg ON fg.id = fag.group_id WHERE fag.activity_id = a.id";
+            if ($cat !== '') {
+                $sql .= ' AND fg.category = ?';
+                $params[] = $cat;
+            }
+            if ($gid) {
+                $sql .= ' AND fg.id = ?';
+                $params[] = $gid;
+            }
+            $sql .= '))';
+        }
         $rows = Database::all(
             "SELECT a.id, a.title, a.starts_at, a.ends_at, a.status, a.location, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
@@ -29,6 +43,9 @@ final class ActivityController
             'prev' => $first->modify('-1 month')->format('Y-m'),
             'next' => $next->format('Y-m'),
             'byDay' => $byDay,
+            'cat' => $cat,
+            'gid' => $gid,
+            'groupOptions' => GroupController::filterOptions(),
             'monthLabel' => MONTHS_NL[(int) $first->format('n')] . ' ' . $first->format('Y'),
         ], 'Kalender');
     }

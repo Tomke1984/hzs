@@ -20,6 +20,31 @@ final class GroupController
         render('groups/index', ['groups' => $groups], 'Groepen');
     }
 
+    /** Groepen die de gebruiker mag zien, voor filterlijsten (per soort gesorteerd). */
+    public static function filterOptions(): array
+    {
+        $gids = Scope::groupIds();
+        if ($gids !== null && !$gids) {
+            return [];
+        }
+        $where = $gids === null ? '1=1' : 'id IN (' . Scope::in($gids) . ')';
+        return Database::all("SELECT id, name, category FROM `groups` WHERE is_active = 1 AND $where ORDER BY category, name", $gids ?? []);
+    }
+
+    /** @return array{0:string,1:int} gevalideerde filter (soort, groep-id) uit de querystring */
+    public static function readFilter(): array
+    {
+        $cat = (string) ($_GET['cat'] ?? '');
+        if (!array_key_exists($cat, group_categories())) {
+            $cat = '';
+        }
+        $gid = (int) ($_GET['g'] ?? 0);
+        if ($gid && !array_filter(self::filterOptions(), fn($g) => (int) $g['id'] === $gid)) {
+            $gid = 0;
+        }
+        return [$cat, $gid];
+    }
+
     public static function show(): void
     {
         $group = self::loadVisible((int) ($_GET['id'] ?? 0));
