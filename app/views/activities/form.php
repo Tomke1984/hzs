@@ -58,7 +58,6 @@
     </div>
   </fieldset>
 
-  <label class="check"><input type="checkbox" name="is_public" value="1" <?= !empty($activity['is_public']) ? 'checked' : '' ?>> Tonen op de website (wedstrijden en clubactiviteiten staan altijd op de website; dit vinkje is vooral voor trainingen)</label>
 
   <?php if ($activity['id']): ?>
   <label>Status

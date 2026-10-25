@@ -15,12 +15,7 @@ final class SiteController
         $posts = Database::all(
             "SELECT * FROM posts WHERE $statusSql ORDER BY COALESCE(published_at, created_at) DESC, id DESC LIMIT " . self::PER_PAGE . ' OFFSET ' . (($page - 1) * self::PER_PAGE)
         );
-        $events = Database::all(
-            "SELECT a.id, a.title, a.starts_at, a.ends_at, a.location, a.status, t.code AS type_code
-             FROM activities a JOIN activity_types t ON t.id = a.type_id
-             WHERE (a.is_public = 1 OR t.code IN ('COMPETITION', 'CLUB')) AND a.ends_at >= ? ORDER BY a.starts_at LIMIT 6",
-            [now()]
-        );
+        $events = self::events(now(), null, 6);
         $lanes = [];
         $blurbs = ['zwemschool' => 'Leren zwemmen op je eigen niveau, van startersgroep tot pre-competitie.', 'competitie' => 'Trainen en wedstrijden zwemmen met de club.'];
         foreach ($blurbs as $slug => $blurb) {
@@ -138,12 +133,7 @@ final class SiteController
             $first = new DateTimeImmutable('first day of this month');
         }
         $next = $first->modify('+1 month');
-        $events = Database::all(
-            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, t.code AS type_code, t.name AS type_name
-             FROM activities a JOIN activity_types t ON t.id = a.type_id
-             WHERE (a.is_public = 1 OR t.code IN ('COMPETITION', 'CLUB')) AND a.starts_at >= ? AND a.starts_at < ? ORDER BY a.starts_at",
-            [$first->format('Y-m-d 00:00:00'), $next->format('Y-m-d 00:00:00')]
-        );
+        $events = self::events($first->format('Y-m-d 00:00:00'), $next->format('Y-m-d 00:00:00'));
         $byDay = [];
         foreach ($events as $ev) {
             $byDay[substr($ev['starts_at'], 0, 10)][] = $ev;
@@ -152,6 +142,45 @@ final class SiteController
             'byDay' => $byDay, 'prev' => $first->modify('-1 month')->format('Y-m'), 'next' => $next->format('Y-m'),
             'monthLabel' => ucfirst(MONTHS_NL[(int) $first->format('n')]) . ' ' . $first->format('Y'),
         ], 'Kalender');
+    }
+
+    /**
+     * Activiteiten voor de publieke site. Bezoekers zien enkel wedstrijden en clubactiviteiten.
+     * Wie aangemeld is, ziet ook de trainingen van de eigen groepen; wedstrijden voor andere groepen krijgen mine=false.
+     * @param string      $from  starts_at >= (of ends_at >= als $to null is)
+     */
+    private static function events(string $from, ?string $to, int $limit = 0): array
+    {
+        $mine = Auth::user() ? Scope::myGroupIds() : [];
+        $in = $mine ? Scope::in($mine) : '';
+        $visible = "t.code IN ('COMPETITION', 'CLUB')";
+        $params = [];
+        if ($mine) {
+            $visible .= " OR (t.code = 'TRAINING' AND (a.audience = 'CLUB' OR EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = a.id AND ag.group_id IN ($in))))";
+            $params = $mine;
+        }
+        $time = $to === null ? 'a.ends_at >= ?' : 'a.starts_at >= ? AND a.starts_at < ?';
+        $params[] = $from;
+        if ($to !== null) {
+            $params[] = $to;
+        }
+        $rows = Database::all(
+            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, a.audience, t.code AS type_code, t.name AS type_name
+             FROM activities a JOIN activity_types t ON t.id = a.type_id
+             WHERE ($visible) AND $time ORDER BY a.starts_at" . ($limit ? " LIMIT $limit" : ''),
+            $params
+        );
+        foreach ($rows as &$r) {
+            $r['mine'] = true;
+            if ($mine && $r['type_code'] === 'COMPETITION' && $r['audience'] !== 'CLUB') {
+                $r['mine'] = (bool) Database::val(
+                    "SELECT COUNT(*) FROM activity_groups WHERE activity_id = ? AND group_id IN ($in)",
+                    array_merge([$r['id']], $mine)
+                );
+            }
+        }
+        unset($r);
+        return $rows;
     }
 
     /** Publieke trainingsreeksen, per soort groep en per groep, met de trainers van elke groep. */

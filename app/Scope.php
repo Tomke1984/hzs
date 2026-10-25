@@ -133,6 +133,35 @@ final class Scope
         return array_values(array_filter($members, fn($m) => in_array((int) $m['id'], $ids, true)));
     }
 
+    /** Groepen waar de ingelogde gebruiker zelf bij hoort (als trainer, als lid of via gekoppelde kinderen), ook voor beheerders. */
+    public static function myGroupIds(): array
+    {
+        $u = Auth::user();
+        if (!$u) {
+            return [];
+        }
+        $groups = [];
+        if (Auth::hasRole('TRAINER')) {
+            $groups = array_column(Database::all(
+                'SELECT gt.group_id FROM group_trainers gt JOIN `groups` g ON g.id = gt.group_id WHERE gt.user_id = ? AND g.is_active = 1',
+                [$u['id']]
+            ), 'group_id');
+        }
+        $own = [];
+        if ($u['member_id']) {
+            $own[] = (int) $u['member_id'];
+        }
+        $own = array_merge($own, array_column(Database::all('SELECT member_id FROM guardian_links WHERE user_id = ?', [$u['id']]), 'member_id'));
+        if ($own) {
+            $own = array_map('intval', $own);
+            $groups = array_merge($groups, array_column(Database::all(
+                'SELECT DISTINCT gm.group_id FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id WHERE gm.member_id IN (' . self::in($own) . ') AND g.is_active = 1',
+                $own
+            ), 'group_id'));
+        }
+        return array_values(array_unique(array_map('intval', $groups)));
+    }
+
     private static function compute(): void
     {
         if (self::$computed) {
