@@ -1,5 +1,5 @@
 <div class="row-between">
-  <h1><?= e($group['name']) ?> <?php if (!(int) $group['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h1>
+  <h1><?= group_chip($group['name']) ?> <?php if (!(int) $group['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h1>
   <?php if (Auth::can('groups.write')): ?>
     <span class="actions-inline">
       <a class="btn btn-ghost" href="<?= e(url('group_form', ['id' => $group['id']])) ?>">Wijzigen</a>

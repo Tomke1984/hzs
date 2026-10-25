@@ -40,7 +40,7 @@ uksort($byGroup, function ($a, $b) use ($cats, $catOf) {
 });
 ?>
 <?php foreach ($byGroup as $gname => $list): ?>
-<h2 class="section-title"><?= e($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h2>
+<h2 class="section-title"><?= group_chip($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h2>
 <div class="cards">
 <?php foreach ($list as $s): ?>
   <div class="card <?= (int) $s['is_active'] ? '' : 'is-off' ?>">

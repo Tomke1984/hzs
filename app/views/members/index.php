@@ -41,7 +41,7 @@
     <tr>
       <td><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a>
         <?php if (in_array((int) $m['id'], $missingIds, true)): ?><span class="chip warn">Ouder ontbreekt</span><?php endif; ?></td>
-      <td><?= e(implode(', ', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
+      <td><?= implode(', ', array_map('group_chip', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
       <?php if ($showContact): ?>
         <td>
           <?php foreach ($parentsByMember[$m['id']] ?? [] as $i => $p): ?>

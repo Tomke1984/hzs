@@ -187,6 +187,7 @@ final class GroupController
             flash('success', 'Groep bijgewerkt.');
         } else {
             $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active, goals) VALUES (?,?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active'], $goals]);
+            ensure_group_colors();
             audit('CREATE', 'group', $id);
             flash('success', 'Groep aangemaakt.');
         }

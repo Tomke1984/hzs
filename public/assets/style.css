@@ -387,3 +387,5 @@ form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
 .cal-event.g-9, .swatch.g-9 { background: #166534; }
 .cal-event.g-10, .swatch.g-10 { background: #1e3a8a; }
 .cal-event.g-11, .swatch.g-11 { background: #b45309; }
+.swatch { margin-right: 6px; vertical-align: -1px; }
+.cal-legend .swatch { margin-right: 0; }

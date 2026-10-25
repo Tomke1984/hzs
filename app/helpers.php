@@ -363,3 +363,46 @@ function back_url(string $route, array $get): string
         default => url('dashboard'),
     };
 }
+
+const GROUP_COLORS = 12;
+
+/** Geeft elke groep zonder kleur een vaste kleur (0..11): eerst een nog ongebruikte, anders de minst gebruikte. Bestaande kleuren veranderen nooit. */
+function ensure_group_colors(): void
+{
+    $rows = Database::all('SELECT id, color FROM `groups` ORDER BY id');
+    $used = array_fill(0, GROUP_COLORS, 0);
+    foreach ($rows as $r) {
+        if ($r['color'] !== null && (int) $r['color'] >= 0 && (int) $r['color'] < GROUP_COLORS) {
+            $used[(int) $r['color']]++;
+        }
+    }
+    foreach ($rows as $r) {
+        if ($r['color'] !== null && (int) $r['color'] >= 0 && (int) $r['color'] < GROUP_COLORS) {
+            continue;
+        }
+        $pick = array_keys($used, min($used))[0];
+        Database::exec('UPDATE `groups` SET color = ? WHERE id = ?', [$pick, $r['id']]);
+        $used[$pick]++;
+    }
+}
+
+/** naam => kleurindex (voor kleurstippen bij groepsnamen). */
+function group_color_map(): array
+{
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        foreach (Database::all('SELECT name, color FROM `groups`') as $r) {
+            $map[$r['name']] = (int) ($r['color'] ?? 0);
+        }
+    }
+    return $map;
+}
+
+/** Groepsnaam met kleurstip, in dezelfde kleur als in de kalender. */
+function group_chip(string $name): string
+{
+    $c = group_color_map()[$name] ?? null;
+    $dot = $c === null ? '' : '<span class="swatch g-' . (int) $c . '"></span>';
+    return $dot . e($name);
+}

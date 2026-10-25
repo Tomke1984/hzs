@@ -43,12 +43,11 @@ final class ActivityController
         $evGroups = [];
         if ($rows) {
             $ids = array_map('intval', array_column($rows, 'id'));
-            foreach (Database::all('SELECT ag.activity_id, g.id, g.name FROM activity_groups ag JOIN `groups` g ON g.id = ag.group_id WHERE ag.activity_id IN (' . Scope::in($ids) . ') ORDER BY g.name', $ids) as $g) {
-                $evGroups[(int) $g['activity_id']][] = ['id' => (int) $g['id'], 'name' => $g['name']];
+            foreach (Database::all('SELECT ag.activity_id, g.id, g.name, g.color FROM activity_groups ag JOIN `groups` g ON g.id = ag.group_id WHERE ag.activity_id IN (' . Scope::in($ids) . ') ORDER BY g.name', $ids) as $g) {
+                $evGroups[(int) $g['activity_id']][] = ['id' => (int) $g['id'], 'name' => $g['name'], 'color' => (int) ($g['color'] ?? 0)];
             }
         }
         $legend = [];
-        $rank = array_flip(array_map('intval', array_column(Database::all('SELECT id FROM `groups` ORDER BY id'), 'id')));
         foreach ($rows as $r) {
             // "mine": hoort bij jou (training/clubactiviteit altijd; wedstrijd enkel voor de eigen groepen)
             $r['mine'] = true;
@@ -60,11 +59,11 @@ final class ActivityController
             }
             $r['groups'] = $evGroups[(int) $r['id']] ?? [];
             $r['gnames'] = $r['audience'] === 'CLUB' ? 'Hele club' : implode(', ', array_column($r['groups'], 'name'));
-            $r['gcolor'] = $r['audience'] === 'CLUB' || !$r['groups'] ? 'club' : (string) (($rank[$r['groups'][0]['id']] ?? 0) % 12);
+            $r['gcolor'] = $r['audience'] === 'CLUB' || !$r['groups'] ? 'club' : (string) $r['groups'][0]['color'];
             if ($r['audience'] === 'CLUB' || !$r['groups']) {
                 $legend['club'] = ['Hele club', 'club'];
             } else {
-                $legend[$r['groups'][0]['name']] = [$r['groups'][0]['name'], (string) (($rank[$r['groups'][0]['id']] ?? 0) % 12)];
+                $legend[$r['groups'][0]['name']] = [$r['groups'][0]['name'], (string) $r['groups'][0]['color']];
             }
             $r['open'] = $clubWide || $r['mine'] || $r['type_code'] !== 'COMPETITION';
             $byDay[substr($r['starts_at'], 0, 10)][] = $r;

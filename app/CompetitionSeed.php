@@ -71,6 +71,7 @@ final class CompetitionSeed
             $gid = (int) Database::val('SELECT id FROM `groups` WHERE name = ?', [$group]);
             if (!$gid) {
                 $gid = Database::insert('INSERT INTO `groups` (name, category, is_active) VALUES (?,?,1)', [$group, 'COMPETITION']);
+                ensure_group_colors();
                 $out['groups']++;
             }
             foreach ($series as $title => $slots) {

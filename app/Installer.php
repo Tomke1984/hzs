@@ -108,6 +108,12 @@ final class Installer
             Database::exec('DELETE FROM group_trainers WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_trainers GROUP BY user_id, group_id) k)');
         }
         try {
+            Database::val('SELECT color FROM `groups` LIMIT 1');
+        } catch (Throwable $e) {
+            Database::exec('ALTER TABLE `groups` ADD COLUMN color INT NULL');
+        }
+        ensure_group_colors();
+        try {
             Database::val('SELECT is_public FROM activities LIMIT 1');
         } catch (Throwable $e) {
             Database::exec('ALTER TABLE activities ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');
@@ -211,6 +217,7 @@ final class Installer
             ] as $name => [$desc, $cat]) {
                 $groups[$name] = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,1)', [$name, $desc, $cat]);
             }
+            ensure_group_colors();
 
             $names = [
                 ['Emma', 'Peeters'], ['Lucas', 'Janssens'], ['Mila', 'Maes'], ['Noah', 'Jacobs'],

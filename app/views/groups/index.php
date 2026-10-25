@@ -15,7 +15,7 @@
   <div class="cards cards-compact">
     <?php foreach ($list as $g): ?>
       <a class="card card-link cat-border-<?= e(strtolower($code)) ?> <?= (int) $g['is_active'] ? '' : 'is-off' ?>" href="<?= e(url('group', ['id' => $g['id']])) ?>">
-        <h2><?= e($g['name']) ?> <?php if (!(int) $g['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h2>
+        <h2><?= group_chip($g['name']) ?> <?php if (!(int) $g['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h2>
         <p class="muted small"><?= e($g['description']) ?></p>
         <p class="small"><strong><?= (int) $g['member_count'] ?></strong> <?= (int) $g['member_count'] === 1 ? 'lid' : 'leden' ?></p>
       </a>
