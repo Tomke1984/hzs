@@ -92,7 +92,34 @@ final class GroupController
     {
         $id = (int) ($_GET['id'] ?? 0);
         $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
-        render('groups/form', ['group' => $group, 'errors' => []], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+        $selected = $id ? array_map('intval', array_column(Database::all('SELECT user_id FROM group_trainers WHERE group_id = ?', [$id]), 'user_id')) : [];
+        render('groups/form', ['group' => $group, 'errors' => [], 'trainerOptions' => self::trainerOptions($selected), 'selectedTrainers' => $selected], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+    }
+
+    /** Actieve trainers, plus reeds gekoppelde (ook indien nu inactief) zodat ze niet stilletjes verdwijnen. */
+    private static function trainerOptions(array $selected): array
+    {
+        $rows = Database::all(
+            "SELECT DISTINCT u.id, u.display_name, u.is_active FROM users u
+             JOIN user_roles ur ON ur.user_id = u.id JOIN roles r ON r.id = ur.role_id
+             WHERE r.code = 'TRAINER' ORDER BY u.display_name"
+        );
+        return array_values(array_filter($rows, fn($u) => (int) $u['is_active'] === 1 || in_array((int) $u['id'], $selected, true)));
+    }
+
+    private static function syncTrainers(int $groupId, array $wanted): void
+    {
+        $valid = array_map('intval', array_column(self::trainerOptions([]), 'id'));
+        $wanted = array_values(array_intersect(array_unique(array_map('intval', $wanted)), $valid));
+        $current = array_map('intval', array_column(Database::all('SELECT user_id FROM group_trainers WHERE group_id = ?', [$groupId]), 'user_id'));
+        foreach (array_diff($current, $wanted) as $uid) {
+            Database::exec('DELETE FROM group_trainers WHERE group_id = ? AND user_id = ?', [$groupId, $uid]);
+            audit('DELETE', 'group_trainer', $groupId);
+        }
+        foreach (array_diff($wanted, $current) as $uid) {
+            Database::insert('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$uid, $groupId, today()]);
+            audit('CREATE', 'group_trainer', $groupId);
+        }
     }
 
     public static function save(): void
@@ -128,7 +155,8 @@ final class GroupController
 
         if ($errors) {
             http_response_code(422);
-            render('groups/form', ['group' => array_merge(['id' => $id], $data), 'errors' => $errors], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+            $sel = array_map('intval', (array) ($_POST['trainers'] ?? []));
+            render('groups/form', ['group' => array_merge(['id' => $id], $data), 'errors' => $errors, 'trainerOptions' => self::trainerOptions($sel), 'selectedTrainers' => $sel], $id ? 'Groep wijzigen' : 'Nieuwe groep');
             return;
         }
 
@@ -142,6 +170,7 @@ final class GroupController
             audit('CREATE', 'group', $id);
             flash('success', 'Groep aangemaakt.');
         }
+        self::syncTrainers($id, (array) ($_POST['trainers'] ?? []));
         redirect(url('group', ['id' => $id]));
     }
 

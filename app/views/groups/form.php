@@ -24,6 +24,17 @@
     <input type="checkbox" name="is_active" value="1" <?= (int) $group['is_active'] ? 'checked' : '' ?>>
     Groep is actief
   </label>
+  <fieldset>
+    <legend>Trainers</legend>
+    <?php if (!$trainerOptions): ?>
+      <p class="muted">Er zijn nog geen gebruikers met de rol Trainer.</p>
+    <?php else: foreach ($trainerOptions as $t): ?>
+      <label class="check">
+        <input type="checkbox" name="trainers[]" value="<?= (int) $t['id'] ?>" <?= in_array((int) $t['id'], $selectedTrainers, true) ? 'checked' : '' ?>>
+        <?= e($t['display_name']) ?><?= (int) $t['is_active'] ? '' : ' (inactief)' ?>
+      </label>
+    <?php endforeach; endif; ?>
+  </fieldset>
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
     <a class="btn btn-ghost" href="<?= e($group['id'] ? url('group', ['id' => $group['id']]) : url('groups')) ?>">Annuleren</a>
