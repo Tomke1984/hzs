@@ -263,6 +263,34 @@ final class SeriesController
         redirect(url('series'));
     }
 
+    /** Reeks verwijderen. Trainingen met geregistreerde aanwezigheden blijven bewaard (los van de reeks); de rest verdwijnt. */
+    public static function delete(): void
+    {
+        $s = self::load((int) input('id', '0'));
+        $kept = 0;
+        $removed = 0;
+        Database::tx(function () use ($s, &$kept, &$removed) {
+            foreach (Database::all('SELECT id FROM activities WHERE series_id = ?', [$s['id']]) as $a) {
+                $marked = (int) Database::val("SELECT COUNT(*) FROM attendance WHERE activity_id = ? AND status <> 'UNKNOWN'", [$a['id']]);
+                if ($marked > 0) {
+                    Database::exec('UPDATE activities SET series_id = NULL, is_custom = 1 WHERE id = ?', [$a['id']]);
+                    $kept++;
+                    continue;
+                }
+                Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$a['id']]);
+                Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+                Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
+                $removed++;
+            }
+            Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
+            Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$s['id']]);
+            Database::exec('DELETE FROM activity_series WHERE id = ?', [$s['id']]);
+        });
+        audit('DELETE', 'activity_series', (int) $s['id'], $s['title'] . ": $removed trainingen verwijderd, $kept bewaard");
+        flash('success', sprintf('Reeks "%s" verwijderd (%d trainingen verwijderd%s).', $s['title'], $removed, $kept ? ", $kept met aanwezigheden bewaard in de kalender" : ''));
+        redirect(url('series'));
+    }
+
     private static function load(int $id): array
     {
         $s = $id ? Database::one('SELECT s.*, t.name AS type_name FROM activity_series s JOIN activity_types t ON t.id = s.type_id WHERE s.id = ?', [$id]) : null;

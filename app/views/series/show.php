@@ -3,6 +3,11 @@
   <span class="actions-inline">
     <a class="btn btn-ghost" href="<?= e(url('series_bulk')) ?>">Schrappen / verplaatsen</a>
     <a class="btn" href="<?= e(url('series_form', ['id' => $s['id']])) ?>">Reeks wijzigen</a>
+    <form method="post" action="<?= e(url('series_delete')) ?>" data-confirm="Reeks &quot;<?= e($s['title']) ?>&quot; definitief verwijderen? Alle trainingen van deze reeks verdwijnen uit de kalender, behalve trainingen waarvan de aanwezigheden al zijn ingevuld (die blijven als losse trainingen bestaan).">
+      <?= csrf_field() ?>
+      <input type="hidden" name="id" value="<?= (int) $s['id'] ?>">
+      <button class="btn btn-ghost" type="submit">Verwijderen</button>
+    </form>
   </span>
 </div>
 <section class="card">
