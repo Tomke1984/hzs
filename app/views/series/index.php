@@ -35,32 +35,50 @@
 </div>
 <?php endif; ?>
 <?php
-// Per groep: onder de eerste groep van de reeks; groepen eerst op categorie, dan op naam.
+// Competitie: per groep. Zwemschool: per weekdag (een reeks met meerdere weekdagen staat bij elke dag).
 $cats = array_keys(group_categories());
 $catOf = array_column(Database::all('SELECT name, category FROM `groups`'), 'category', 'name');
-$byGroup = [];
-foreach ($series as $s) { $byGroup[$s['groups'][0] ?? 'Zonder groep'][] = $s; }
-uksort($byGroup, function ($a, $b) use ($cats, $catOf) {
-    $ca = array_search($catOf[$a] ?? '', $cats, true); $cb = array_search($catOf[$b] ?? '', $cats, true);
-    return [$ca === false ? 99 : $ca, $a] <=> [$cb === false ? 99 : $cb, $b];
+$sections = []; // [cat => [sleutel => ['label'=>html, 'order'=>, 'list'=>[]]]]
+foreach ($series as $s) {
+    $first = $s['groups'][0] ?? 'Zonder groep';
+    $c = $catOf[$first] ?? '';
+    if ($c === 'SWIM_SCHOOL' && $s['slots']) {
+        foreach ($s['slots'] as $sl) {
+            $d = (int) $sl['weekday'];
+            $sections[$c][$d] ??= ['label' => e(ucfirst(SeriesService::DAYS[$d])), 'order' => $d, 'list' => []];
+            $sections[$c][$d]['list'][$s['id']] = $s + ['sort' => $sl['start_time']];
+        }
+    } else {
+        $sections[$c]['g' . $first] ??= ['label' => group_chip($first), 'order' => $first, 'list' => []];
+        $sections[$c]['g' . $first]['list'][$s['id']] = $s + ['sort' => ''];
+    }
+}
+uksort($sections, function ($a, $b) use ($cats) {
+    $ca = array_search($a, $cats, true); $cb = array_search($b, $cats, true);
+    return ($ca === false ? 99 : $ca) <=> ($cb === false ? 99 : $cb);
 });
 ?>
-<?php $curCat = null; foreach ($byGroup as $gname => $list):
-    $cat2 = $catOf[$gname] ?? '';
-    if ($cat2 !== $curCat):
-        $curCat = $cat2;
-        $catCount = 0;
-        foreach ($byGroup as $gn2 => $l2) { if (($catOf[$gn2] ?? '') === $cat2) { $catCount += count($l2); } } ?>
+<?php foreach ($sections as $cat2 => $secs):
+    uasort($secs, fn($x, $y) => $x['order'] <=> $y['order']);
+    $catIds = [];
+    foreach ($secs as $sec) { foreach ($sec['list'] as $sid => $_) { $catIds[$sid] = true; } }
+    $catCount = count($catIds); ?>
 <h2 class="cat-banner cat-banner-<?= e(strtolower($cat2 ?: 'none')) ?>"><?= e($cat2 !== '' ? group_category_label($cat2) : 'Zonder categorie') ?> <span class="small">(<?= $catCount ?> <?= $catCount === 1 ? 'reeks' : 'reeksen' ?>)</span></h2>
-<?php endif; ?>
-<h3 class="section-title"><?= group_chip($gname) ?> <span class="muted small">(<?= count($list) ?>)</span></h3>
+<?php foreach ($secs as $sec):
+    $list = array_values($sec['list']);
+    usort($list, fn($x, $y) => [$x['sort'], $x['title']] <=> [$y['sort'], $y['title']]); ?>
+<h3 class="section-title"><?= $sec['label'] ?> <span class="muted small">(<?= count($list) ?>)</span></h3>
 <div class="cards">
 <?php foreach ($list as $s): ?>
   <div class="card <?= (int) $s['is_active'] ? '' : 'is-off' ?>">
     <a class="card-link" href="<?= e(url('series_show', ['id' => $s['id']])) ?>">
     <h2><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
       <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h2>
-    <?php if (count($s['groups']) > 1): ?><p class="small">Ook: <?= e(implode(', ', array_slice($s['groups'], 1))) ?></p><?php endif; ?>
+    <?php if ($cat2 === 'COMPETITION'): ?>
+      <?php if (count($s['groups']) > 1): ?><p class="small">Ook: <?= e(implode(', ', array_slice($s['groups'], 1))) ?></p><?php endif; ?>
+    <?php else: ?>
+      <p class="small"><?= implode(', ', array_map('group_chip', $s['groups'])) ?></p>
+    <?php endif; ?>
     <p class="muted"><?= e(SeriesService::summary($s['slots'])) ?></p>
     <p class="muted small"><?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?> · <?= (int) $s['upcoming'] ?> komende trainingen</p>
     </a>
@@ -75,4 +93,5 @@ uksort($byGroup, function ($a, $b) use ($cats, $catOf) {
   </div>
 <?php endforeach; ?>
 </div>
+<?php endforeach; ?>
 <?php endforeach; ?>
