@@ -100,18 +100,18 @@ final class GroupController
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        // Trainingsdag per lid (zwemschool): elk trainingsmoment (reeks + weekdag) van de actieve reeksen van de groep.
+        // Trainingsmoment per lid (zwemschool): elk trainingsmoment (reeks + weekdag) van de actieve reeksen van de groep.
         $daySlots = [];
         $assigned = [];
         if (Auth::can('activities.read')) {
             foreach (Database::all(
                 'SELECT s.id, s.title, sl.weekday, sl.start_time, sl.end_time FROM activity_series s
                  JOIN activity_series_groups sg ON sg.series_id = s.id JOIN activity_series_slots sl ON sl.series_id = s.id
-                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY s.title, sl.weekday',
+                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY sl.weekday, sl.start_time, s.title',
                 [$group['id'], today()]
             ) as $r) {
                 $daySlots[] = ['key' => $r['id'] . ':' . $r['weekday'], 'series_id' => (int) $r['id'], 'weekday' => (int) $r['weekday'],
-                    'label' => $r['title'], 'when' => SeriesService::DAYS[(int) $r['weekday']] . ' ' . $r['start_time'] . '–' . $r['end_time']];
+                    'label' => $r['title'], 'when' => ucfirst(SeriesService::DAYS[(int) $r['weekday']]) . ' ' . $r['start_time'] . '–' . $r['end_time']];
             }
             if ($daySlots) {
                 $ids = array_values(array_unique(array_column($daySlots, 'series_id')));
@@ -128,7 +128,7 @@ final class GroupController
         render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySlots', 'assigned'), $group['name']);
     }
 
-    /** Trainingsdag(en) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
+    /** Trainingsmoment(en) (dag + uur) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
     public static function saveDays(): void
     {
         $group = Database::one('SELECT id FROM `groups` WHERE id = ?', [(int) input('group_id', '0')]);
@@ -152,9 +152,9 @@ final class GroupController
                 }
             }
         });
-        audit('UPDATE', 'groups', (int) $group['id'], 'trainingsdagen per lid');
-        flash('success', 'Trainingsdagen opgeslagen.');
-        redirect(url('group', ['id' => $group['id']]) . '#trainingsdagen');
+        audit('UPDATE', 'groups', (int) $group['id'], 'trainingsmoment per lid');
+        flash('success', 'Trainingsmomenten opgeslagen.');
+        redirect(url('group', ['id' => $group['id']]) . '#trainingsmoment');
     }
 
     public static function form(): void

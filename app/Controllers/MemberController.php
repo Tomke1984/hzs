@@ -153,7 +153,7 @@ final class MemberController
         ) as $r) {
             if ((int) $r['weekday'] > 0) {
                 $sl = Database::one('SELECT start_time, end_time FROM activity_series_slots WHERE series_id = ? AND weekday = ?', [$r['id'], $r['weekday']]);
-                $myDays[] = $r['title'] . ' (' . SeriesService::DAYS[(int) $r['weekday']] . ($sl ? ' ' . $sl['start_time'] . '–' . $sl['end_time'] : '') . ')';
+                $myDays[] = SeriesService::DAYS[(int) $r['weekday']] . ($sl ? ' ' . $sl['start_time'] . '–' . $sl['end_time'] : '') . ' (' . $r['title'] . ')';
             } else {
                 $myDays[] = $r['title'];
             }

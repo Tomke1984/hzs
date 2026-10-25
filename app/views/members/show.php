@@ -225,8 +225,8 @@
     <p><?= Auth::can('groups.read') && Scope::canSeeGroup((int) $cur['group_id'])
           ? '<a href="' . e(url('group', ['id' => $cur['group_id']])) . '">' . e($cur['group_name']) . '</a>'
           : e($cur['group_name']) ?></p>
-    <p class="muted small">Trainingen: <?= $myDays ? e(implode('; ', $myDays)) : 'alle trainingen van de groep' ?>
-      <?php if (Auth::can('activities.write')): ?>· <a href="<?= e(url('group', ['id' => $cur['group_id']])) ?>#trainingsdagen">aanpassen</a><?php endif; ?></p>
+    <p class="muted small">Trainingsmoment: <?= $myDays ? e(implode('; ', $myDays)) : 'alle trainingen van de groep' ?>
+      <?php if (Auth::can('activities.write')): ?>· <a href="<?= e(url('group', ['id' => $cur['group_id']])) ?>#trainingsmoment">aanpassen</a><?php endif; ?></p>
   <?php endif; ?>
 
   <?php if ($availableGroups && $member['status'] === 'ACTIVE'): ?>

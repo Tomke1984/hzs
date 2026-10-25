@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Trainingsmoment per lid:** *Trainingsdag per lid* heet nu *Trainingsmoment per lid*. Een trainingsmoment is een dag mét uur (bv. *Dinsdag 17:00–18:00*); de kolommen staan op dag en uur gesorteerd, met de naam van de reeks eronder. Op de ledenpagina staat *Trainingsmoment: dinsdag 17:00–18:00 (Duo)*.
 - **Terugknop opnieuw nagekeken:** *Terug* gaat altijd naar de bovenliggende pagina én onthoudt waar je was: terug naar *Leden* behoudt je zoekterm en filters, terug naar de kalender opent de maand van de activiteit (niet de huidige maand), en ook *Schrappen / verplaatsen* en *Uitnodigen* hadden geen eigen bovenliggende pagina meer (gingen naar het overzicht). Op de hoofdpagina's uit het menu (Leden, Groepen, Kalender, …) staat geen *Terug* meer: daar is het menu.
 
 ## Op main
