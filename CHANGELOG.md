@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_(niets nieuws sinds v0.10.3)_
+
+## Op main
+
+### v0.10.3 – 2026-10-26 – `ab99feb`
 - **Website: balk onder het menu en boven de footer** is geen blauw-geel baantouw meer maar een golvend water in drie blauwtinten (donker, midden, licht), zonder geel.
 - **Kalender:** knop *Weekoverzicht zwemschool* naast *Trainingsreeksen* (voor wie activiteiten mag beheren).
 - **Uniforme keuzelijsten en knoppen:** overal (ledenpagina's, filters, formulieren, publieke zwemtestaanvraag) hebben keuzelijsten nu het duidelijke veld met pijltje, invulvelden dezelfde duidelijke rand, en knoppen een stevigere vorm (vet, ruimere padding, duidelijke rand bij de lichte knoppen). Op smalle schermen zijn de kleine knoppen groter om aan te raken.
@@ -14,9 +19,6 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 - **Trainingsmoment zonder reeksnaam:** op de ledenpagina en in het rooster op de groepspagina staat enkel nog dag en uur (bv. *Ma 18:00–19:00*), niet meer de naam van de reeks.
 - **Zwemblokken (zwemschool):** een zwemschoolreeks (dag + uur) is een *blok*. Op de blokpagina staat de sectie **Leden in dit blok** (leden toevoegen uit de toegelaten groepen, of uit het blok halen); op *Trainingsreeksen* staat de lijst **Nog niet ingedeeld** met een keuzelijst per lid. Een lid mag in meerdere blokken, leden van verschillende groepen mogen samen in één blok, geen capaciteitslimiet. **Nieuwe regel:** een zwemschoollid zonder blok staat op geen enkele aanwezigheidslijst en ziet (ouder/zwemmer) geen trainingen van die groep tot het is ingedeeld; competitie blijft ongewijzigd (vast schema per groep). Verandert een lid van groep (of wordt het uit de groep gehaald/verplaatst), dan vervalt zijn indeling en komt hij terug in *Nog niet ingedeeld*. Het rooster op de groepspagina verschijnt enkel voor zwemschoolgroepen. Bestaande zwemleden zonder indeling verdwijnen dus van de lijsten tot ze ingedeeld zijn.
 - **Trainingsmoment per lid = per reeks:** het rooster op de groepspagina heeft één kolom per reeks (een reeks is één trainingsmoment: dag + uur, bv. *ma 18:00–19:00*) in plaats van per weekdag binnen een reeks. Maak dus één reeks per trainingsmoment en vink per lid aan welke reeks(en) hij volgt. De ledenpagina toont de gekozen reeks(en) met hun dag en uur.
-
-## Op main
-
 ### v0.10.2 – 2026-10-25 – `6020d3b`
 - **Trainingsmoment per lid:** *Trainingsdag per lid* heet nu *Trainingsmoment per lid*. Een trainingsmoment is een dag mét uur (bv. *Dinsdag 17:00–18:00*); de kolommen staan op dag en uur gesorteerd, met de naam van de reeks eronder. Op de ledenpagina staat *Trainingsmoment: dinsdag 17:00–18:00 (Duo)*.
 - **Terugknop opnieuw nagekeken:** *Terug* gaat altijd naar de bovenliggende pagina én onthoudt waar je was: terug naar *Leden* behoudt je zoekterm en filters, terug naar de kalender opent de maand van de activiteit (niet de huidige maand), en ook *Schrappen / verplaatsen* en *Uitnodigen* hadden geen eigen bovenliggende pagina meer (gingen naar het overzicht). Op de hoofdpagina's uit het menu (Leden, Groepen, Kalender, …) staat geen *Terug* meer: daar is het menu.
