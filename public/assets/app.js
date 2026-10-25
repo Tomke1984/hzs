@@ -95,6 +95,19 @@
     refresh();
   }
 
+  // Relatie bewerken: eerst tekst met knop "Bewerken"; het formulier klapt open na een klik
+  document.querySelectorAll('.rel-edit').forEach(function (box) {
+    var text = box.querySelector('.rel-text'), form = box.querySelector('.rel-form');
+    var edit = box.querySelector('.rel-edit-btn'), cancel = box.querySelector('.rel-cancel');
+    var show = function (editing) {
+      text.hidden = editing; edit.hidden = editing; form.hidden = !editing; cancel.hidden = !editing;
+      if (editing) { form.querySelector('input[name=relationship]').focus(); }
+    };
+    edit.addEventListener('click', function () { show(true); });
+    cancel.addEventListener('click', function () { form.reset(); show(false); });
+    show(false);
+  });
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

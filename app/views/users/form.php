@@ -95,13 +95,18 @@
           <td><a href="<?= e(url('member', ['id' => $c['member_id']])) ?>"><?= e($c['last_name']) ?> <?= e($c['first_name']) ?></a>
             <?php if ($c['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></td>
           <td><?php if (Auth::can('users.manage')): ?>
-          <form class="inline-form" method="post" action="<?= e(url('user_child_relation')) ?>">
+          <div class="rel-edit">
+          <span class="rel-text"><?= e($c['relationship']) ?: '<span class="muted">—</span>' ?></span>
+          <button type="button" class="btn btn-small btn-ghost rel-edit-btn" hidden>Bewerken</button>
+          <form class="inline-form rel-form" method="post" action="<?= e(url('user_child_relation')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="link_id" value="<?= (int) $c['id'] ?>">
             <input type="hidden" name="return" value="user">
             <input name="relationship" value="<?= e($c['relationship']) ?>" maxlength="40" placeholder="bv. moeder, vader, voogd" aria-label="Relatie">
-            <button class="btn btn-small btn-ghost" type="submit">Opslaan</button>
+            <button class="btn btn-small" type="submit">Opslaan</button>
+            <button type="button" class="btn btn-small btn-ghost rel-cancel" hidden>Annuleren</button>
           </form>
+          </div>
           <?php else: ?><?= e($c['relationship']) ?: '<span class="muted">—</span>' ?><?php endif; ?></td>
           <td class="right">
             <form method="post" action="<?= e(url('user_child_remove')) ?>" data-confirm="Koppeling verwijderen? Deze ouder ziet dit kind dan niet meer.">

@@ -49,13 +49,18 @@
               ? '<a href="' . e(url('user_form', ['id' => $p['user_id']])) . '">' . e($p['display_name']) . '</a>'
               : e($p['display_name']) ?></td>
         <td><?php if (Auth::can('users.manage')): ?>
-          <form class="inline-form" method="post" action="<?= e(url('user_child_relation')) ?>">
+          <div class="rel-edit">
+          <span class="rel-text"><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?></span>
+          <button type="button" class="btn btn-small btn-ghost rel-edit-btn" hidden>Bewerken</button>
+          <form class="inline-form rel-form" method="post" action="<?= e(url('user_child_relation')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="link_id" value="<?= (int) $p['link_id'] ?>">
             <input type="hidden" name="return" value="member">
             <input name="relationship" value="<?= e($p['relationship']) ?>" maxlength="40" placeholder="bv. moeder, vader, voogd" aria-label="Relatie">
-            <button class="btn btn-small btn-ghost" type="submit">Opslaan</button>
+            <button class="btn btn-small" type="submit">Opslaan</button>
+            <button type="button" class="btn btn-small btn-ghost rel-cancel" hidden>Annuleren</button>
           </form>
+          </div>
           <?php else: ?><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?><?php endif; ?></td>
         <td><a href="mailto:<?= e($p['email']) ?>"><?= e($p['email']) ?></a></td>
         <td><span class="chip <?= (int) $p['is_active'] ? 'ok' : 'off' ?>"><?= (int) $p['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
@@ -124,13 +129,18 @@
               ? '<a href="' . e(url('user_form', ['id' => $p['user_id']])) . '">' . e($p['display_name']) . '</a>'
               : e($p['display_name']) ?></td>
         <td><?php if (Auth::can('users.manage')): ?>
-          <form class="inline-form" method="post" action="<?= e(url('user_child_relation')) ?>">
+          <div class="rel-edit">
+          <span class="rel-text"><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?></span>
+          <button type="button" class="btn btn-small btn-ghost rel-edit-btn" hidden>Bewerken</button>
+          <form class="inline-form rel-form" method="post" action="<?= e(url('user_child_relation')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="link_id" value="<?= (int) $p['link_id'] ?>">
             <input type="hidden" name="return" value="member">
             <input name="relationship" value="<?= e($p['relationship']) ?>" maxlength="40" placeholder="bv. moeder, vader, voogd" aria-label="Relatie">
-            <button class="btn btn-small btn-ghost" type="submit">Opslaan</button>
+            <button class="btn btn-small" type="submit">Opslaan</button>
+            <button type="button" class="btn btn-small btn-ghost rel-cancel" hidden>Annuleren</button>
           </form>
+          </div>
           <?php else: ?><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?><?php endif; ?></td>
         <td><a href="mailto:<?= e($p['email']) ?>"><?= e($p['email']) ?></a></td>
         <td><span class="chip <?= (int) $p['is_active'] ? 'ok' : 'off' ?>"><?= (int) $p['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
