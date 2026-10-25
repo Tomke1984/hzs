@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Trainingsmoment per lid = per reeks:** het rooster op de groepspagina heeft één kolom per reeks (een reeks is één trainingsmoment: dag + uur, bv. *ma 18:00–19:00*) in plaats van per weekdag binnen een reeks. Maak dus één reeks per trainingsmoment en vink per lid aan welke reeks(en) hij volgt. De ledenpagina toont de gekozen reeks(en) met hun dag en uur.
 
 ## Op main
 

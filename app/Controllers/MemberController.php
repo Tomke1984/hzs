@@ -145,18 +145,13 @@ final class MemberController
 
         $myDays = [];
         foreach (Database::all(
-            'SELECT s.id, s.title, ms.weekday FROM member_series ms JOIN activity_series s ON s.id = ms.series_id
+            'SELECT DISTINCT s.id, s.title FROM member_series ms JOIN activity_series s ON s.id = ms.series_id
              JOIN activity_series_groups sg ON sg.series_id = s.id
              JOIN group_memberships gm ON gm.group_id = sg.group_id AND gm.member_id = ms.member_id
-             WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title, ms.weekday',
+             WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title',
             [$member['id']]
         ) as $r) {
-            if ((int) $r['weekday'] > 0) {
-                $sl = Database::one('SELECT start_time, end_time FROM activity_series_slots WHERE series_id = ? AND weekday = ?', [$r['id'], $r['weekday']]);
-                $myDays[] = SeriesService::DAYS[(int) $r['weekday']] . ($sl ? ' ' . $sl['start_time'] . '–' . $sl['end_time'] : '') . ' (' . $r['title'] . ')';
-            } else {
-                $myDays[] = $r['title'];
-            }
+            $myDays[] = ucfirst(SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']]))) . ' (' . $r['title'] . ')';
         }
 
         render('members/show', [

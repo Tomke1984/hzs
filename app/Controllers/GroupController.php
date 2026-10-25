@@ -100,27 +100,25 @@ final class GroupController
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        // Trainingsmoment per lid (zwemschool): elk trainingsmoment (reeks + weekdag) van de actieve reeksen van de groep.
+        // Trainingsmoment per lid (zwemschool): elke actieve reeks van de groep (een reeks = een trainingsmoment).
         $daySlots = [];
         $assigned = [];
         if (Auth::can('activities.read')) {
             foreach (Database::all(
-                'SELECT s.id, s.title, sl.weekday, sl.start_time, sl.end_time FROM activity_series s
-                 JOIN activity_series_groups sg ON sg.series_id = s.id JOIN activity_series_slots sl ON sl.series_id = s.id
-                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY sl.weekday, sl.start_time, s.title',
+                'SELECT s.id, s.title FROM activity_series s JOIN activity_series_groups sg ON sg.series_id = s.id
+                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ?',
                 [$group['id'], today()]
             ) as $r) {
-                $daySlots[] = ['key' => $r['id'] . ':' . $r['weekday'], 'series_id' => (int) $r['id'], 'weekday' => (int) $r['weekday'],
-                    'label' => $r['title'], 'when' => ucfirst(SeriesService::DAYS[(int) $r['weekday']]) . ' ' . $r['start_time'] . '–' . $r['end_time']];
+                $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']]);
+                $daySlots[] = ['key' => (string) $r['id'], 'series_id' => (int) $r['id'], 'label' => $r['title'],
+                    'when' => ucfirst(SeriesService::summary($slots)),
+                    'sort' => $slots ? sprintf('%d%s', $slots[0]['weekday'], $slots[0]['start_time']) : '9'];
             }
+            usort($daySlots, fn($x, $y) => [$x['sort'], $x['label']] <=> [$y['sort'], $y['label']]);
             if ($daySlots) {
-                $ids = array_values(array_unique(array_column($daySlots, 'series_id')));
-                foreach (Database::all('SELECT member_id, series_id, weekday FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
-                    foreach ($daySlots as $sl) {
-                        if ($sl['series_id'] === (int) $r['series_id'] && ((int) $r['weekday'] === 0 || (int) $r['weekday'] === $sl['weekday'])) {
-                            $assigned[(int) $r['member_id']][$sl['key']] = true;
-                        }
-                    }
+                $ids = array_column($daySlots, 'series_id');
+                foreach (Database::all('SELECT DISTINCT member_id, series_id FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
+                    $assigned[(int) $r['member_id']][(string) $r['series_id']] = true;
                 }
             }
         }
@@ -143,11 +141,10 @@ final class GroupController
                 if ($gSeries) {
                     Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id IN (' . Scope::in($gSeries) . ')', array_merge([$mid], $gSeries));
                 }
-                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('strval', $post[$mid])) : [];
-                foreach ($picked as $key) {
-                    [$sid, $day] = array_map('intval', explode(':', $key . ':0'));
-                    if (in_array($sid, $gSeries, true) && $day >= 1 && $day <= 7) {
-                        Database::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, ?)', [$mid, $sid, $day]);
+                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('intval', $post[$mid])) : [];
+                foreach ($picked as $sid) {
+                    if (in_array($sid, $gSeries, true)) {
+                        Database::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, 0)', [$mid, $sid]);
                     }
                 }
             }
