@@ -57,6 +57,40 @@ final class SeriesController
         redirect(str_starts_with($back, '?r=series') ? $back : url('series'));
     }
 
+    /** Reeks(en) verlengen tot een nieuwe einddatum; de extra trainingen worden meteen aangemaakt (geschrapte dagen blijven weg). */
+    public static function extend(): void
+    {
+        $ids = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
+        if (($one = (int) input('id', '0')) > 0) {
+            $ids = [$one];
+        }
+        $to = input('end_date');
+        $back = (string) input('back', '');
+        $dest = str_starts_with($back, '?r=series') ? $back : url('series');
+        if (!valid_date($to)) {
+            flash('error', 'Geef een geldige nieuwe einddatum op.');
+            redirect($dest);
+        }
+        if ((strtotime($to) - time()) / 86400 > SeriesService::MAX_DAYS) {
+            flash('error', 'De einddatum mag maximaal ongeveer 2 jaar na vandaag liggen.');
+            redirect($dest);
+        }
+        $n = 0;
+        $created = 0;
+        foreach ($ids as $id) {
+            $s = Database::one('SELECT id, end_date, is_active FROM activity_series WHERE id = ?', [$id]);
+            if (!$s || $to <= $s['end_date']) {
+                continue;
+            }
+            Database::exec('UPDATE activity_series SET end_date = ? WHERE id = ?', [$to, $id]);
+            $created += SeriesService::sync((int) $id)['created'];
+            audit('EXTEND', 'activity_series', (int) $id, "tot $to");
+            $n++;
+        }
+        flash('success', $n ? sprintf('%d %s verlengd tot %s (%d nieuwe trainingen aangemaakt).', $n, $n === 1 ? 'reeks' : 'reeksen', fmt_date($to), $created) : 'Geen reeksen verlengd: de nieuwe einddatum moet na de huidige einddatum liggen.');
+        redirect($dest);
+    }
+
     public static function show(): void
     {
         $s = self::load((int) ($_GET['id'] ?? 0));
@@ -146,8 +180,8 @@ final class SeriesController
             $errors[] = 'Geef een geldige start- en einddatum op.';
         } elseif ($s['end_date'] < $s['start_date']) {
             $errors[] = 'De einddatum moet na de startdatum liggen.';
-        } elseif ((strtotime($s['end_date']) - strtotime($s['start_date'])) / 86400 > SeriesService::MAX_DAYS) {
-            $errors[] = 'Een reeks mag maximaal ongeveer 18 maanden lang zijn.';
+        } elseif ((strtotime($s['end_date']) - strtotime(max($s['start_date'], today()))) / 86400 > SeriesService::MAX_DAYS) {
+            $errors[] = 'De einddatum mag maximaal ongeveer 2 jaar na vandaag liggen.';
         }
         if (!$selected) {
             $errors[] = 'Kies minstens één groep.';

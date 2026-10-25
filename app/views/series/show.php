@@ -17,6 +17,14 @@
     </form>
   </span>
 </div>
+<?php if ((int) $s['is_active']): ?>
+<form class="card inline-form-card" method="post" action="<?= e(url('series_extend')) ?>">
+  <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"><input type="hidden" name="back" value="?r=series_show&amp;id=<?= (int) $s['id'] ?>">
+  <label>Verlengen tot <input type="date" name="end_date" value="<?= e(date('Y-m-d', strtotime($s['end_date'] . ' +1 year'))) ?>" min="<?= e(date('Y-m-d', strtotime($s['end_date'] . ' +1 day'))) ?>" required></label>
+  <button class="btn" type="submit">Reeks verlengen</button>
+  <span class="muted small">Maakt de extra trainingen aan met hetzelfde schema; geschrapte dagen blijven weg.</span>
+</form>
+<?php endif; ?>
 <section class="card">
   <dl class="facts">
     <dt>Type</dt><dd><?= e($s['type_name']) ?></dd>

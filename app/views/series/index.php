@@ -18,6 +18,12 @@
 <?php endif; ?>
 <?php $back = '?' . http_build_query(array_filter(['r' => 'series', 'cat' => $cat, 'g' => $gid])); ?>
 <?php if ($series): ?>
+<form class="card inline-form-card" method="post" action="<?= e(url('series_extend')) ?>" data-confirm="Alle getoonde reeksen verlengen?">
+  <?= csrf_field() ?><input type="hidden" name="back" value="<?= e($back) ?>">
+  <?php foreach ($series as $s): ?><input type="hidden" name="ids[]" value="<?= (int) $s['id'] ?>"><?php endforeach; ?>
+  <label>Alle getoonde reeksen verlengen tot <input type="date" name="end_date" value="<?= e(date('Y-m-d', strtotime((max(array_column($series, 'end_date')) ?: today()) . ' +1 year'))) ?>" required></label>
+  <button class="btn" type="submit">Verlengen</button>
+</form>
 <div class="actions-inline">
   <?php foreach ([1 => ['Alles op de website zetten', 'Alle getoonde reeksen op de website zetten?'], 0 => ['Alles van de website halen', 'Alle getoonde reeksen van de website halen?']] as $val => [$label, $ask]): ?>
   <form method="post" action="<?= e(url('series_public')) ?>" data-confirm="<?= e($ask) ?>">

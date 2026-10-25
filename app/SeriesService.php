@@ -6,7 +6,7 @@
  */
 final class SeriesService
 {
-    public const MAX_DAYS = 550;
+    public const MAX_DAYS = 800;
     public const DAYS = [1 => 'maandag', 2 => 'dinsdag', 3 => 'woensdag', 4 => 'donderdag', 5 => 'vrijdag', 6 => 'zaterdag', 7 => 'zondag'];
 
     /** Beschrijving van het weekschema, bv. "di 18:30–20:00, wo 16:30–18:30". */
@@ -72,7 +72,10 @@ final class SeriesService
             $d = new DateTimeImmutable($s['start_date']);
             $end = new DateTimeImmutable($s['end_date']);
             $guard = 0;
-            for (; $d <= $end && $guard < self::MAX_DAYS + 1; $d = $d->modify('+1 day'), $guard++) {
+            for (; $d <= $end && $guard < self::MAX_DAYS + 1; $d = $d->modify('+1 day')) {
+                if ($d->format('Y-m-d') >= $today) {
+                    $guard++;
+                }
                 $n = (int) $d->format('N');
                 if (isset($slots[$n])) {
                     $desired[$d->format('Y-m-d')] = $slots[$n];
