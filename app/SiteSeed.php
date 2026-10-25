@@ -293,7 +293,7 @@ De Vlaamse Zwemfederatie, afdeling Limburg, waartoe onze club behoort, onderteke
 
 ## Hoe bereik je de API?
 
-- **Bart Bielen**: gsm +32 96 32 92 52
+- **Bart Bielen**: gsm +32 496 32 92 52
 - **Jolien Vanhentenrijk**: gsm +32 474 60 22 52
 
 Je kunt hen ook altijd persoonlijk aanspreken.

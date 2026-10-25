@@ -8,7 +8,9 @@ final class ContentController
         $posts = Database::all('SELECT id, title, slug, status, published_at, updated_at FROM posts ORDER BY COALESCE(published_at, created_at) DESC, id DESC');
         $pages = Database::all('SELECT p.*, par.title AS parent_title FROM pages p LEFT JOIN pages par ON par.id = p.parent_id ORDER BY COALESCE(par.sort_order, p.sort_order), COALESCE(par.title, p.title), p.parent_id IS NOT NULL, p.sort_order, p.title');
         $media = Database::all('SELECT * FROM media ORDER BY id DESC');
-        render('content/index', compact('tab', 'posts', 'pages', 'media'), 'Website');
+        global $routes;
+        $check = $tab === 'pages' ? PageCheck::run($routes) : ['issues' => [], 'removable' => []];
+        render('content/index', compact('tab', 'posts', 'pages', 'media', 'check'), 'Website');
     }
 
     /* ---------------- nieuws ---------------- */
@@ -170,6 +172,22 @@ final class ContentController
         Database::exec('DELETE FROM pages WHERE id = ?', [$id]);
         audit('DELETE', 'page', $id);
         flash('success', 'Pagina verwijderd.');
+        redirect(url('content', ['tab' => 'pages']));
+    }
+
+    /** Verwijdert enkel pagina's die de controle als verouderd of leeg aanmerkt. */
+    public static function pageCleanup(): void
+    {
+        global $routes;
+        $n = 0;
+        foreach (PageCheck::run($routes)['removable'] as $id) {
+            if (Database::val('SELECT COUNT(*) FROM pages WHERE parent_id = ?', [$id]) == 0) {
+                Database::exec('DELETE FROM pages WHERE id = ?', [$id]);
+                audit('DELETE', 'page', $id, 'opruiming');
+                $n++;
+            }
+        }
+        flash('success', $n ? $n . ' overbodige pagina\'s verwijderd.' : 'Er was niets op te ruimen.');
         redirect(url('content', ['tab' => 'pages']));
     }
 

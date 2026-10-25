@@ -35,6 +35,7 @@ $routes = [
     'page_form'        => ['GET' => ['ContentController', 'pageForm', 'content.manage']],
     'page_save'        => ['POST' => ['ContentController', 'pageSave', 'content.manage']],
     'content_seed'     => ['POST' => ['ContentController', 'seedPages', 'content.manage']],
+    'page_cleanup'     => ['POST' => ['ContentController', 'pageCleanup', 'content.manage']],
     'page_delete'      => ['POST' => ['ContentController', 'pageDelete', 'content.manage']],
     'media_upload'     => ['POST' => ['ContentController', 'mediaUpload', 'content.manage']],
     'media_delete'     => ['POST' => ['ContentController', 'mediaDelete', 'content.manage']],

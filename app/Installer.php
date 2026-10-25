@@ -84,6 +84,8 @@ final class Installer
             $intro = 'Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.';
             Database::exec("UPDATE pages SET body = ? WHERE slug = 'doelstellingen' AND body LIKE '%doelstellingen-%'", [$intro]);
         }
+        // Typfout in het gsm-nummer van de API (+32 96 → +32 496).
+        Database::exec("UPDATE pages SET body = REPLACE(body, 'gsm +32 96 32 92 52', 'gsm +32 496 32 92 52') WHERE slug = 'ombudsman' AND body LIKE '%gsm +32 96 32 92 52%'");
         // De uitleg over de zwemtest verwijst naar het aparte zwemtestformulier.
         Database::exec(
             "UPDATE pages SET body = REPLACE(body, '[inschrijfformulier](?r=register)', '[formulier voor de zwemtest](?r=swimtest)') WHERE slug = 'inschrijven-zwemtest' AND body LIKE '%(?r=register)%'"

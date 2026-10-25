@@ -40,10 +40,22 @@
       <button class="btn btn-ghost" type="submit">Inhoud van khzs.be importeren</button>
     </form>
   </div>
+  <?php $nIssues = count($check['issues']); ?>
+  <div class="card">
+    <strong>Controle:</strong>
+    <?php if (!$nIssues): ?>alle pagina's zijn in orde (geen lege pagina's, kapotte links of onbereikbare pagina's).
+    <?php else: ?><?= $nIssues ?> pagina's met opmerkingen (zie kolom <em>Controle</em>).
+      <?php if ($check['removable']): ?>
+      <form method="post" action="<?= e(url('page_cleanup')) ?>" data-confirm="<?= count($check['removable']) ?> verouderde of lege pagina's definitief verwijderen?" style="display:inline">
+        <?= csrf_field() ?><button class="btn btn-small" type="submit">Overbodige pagina's opruimen (<?= count($check['removable']) ?>)</button>
+      </form>
+      <?php endif; ?>
+    <?php endif; ?>
+  </div>
   <p class="muted small">Pagina's met het menu aangevinkt staan in de bovenste balk van de website; subpagina's verschijnen onder hun hoofdpagina. Een pagina met adres <code>home</code> wordt als introtekst op de startpagina getoond.</p>
   <?php if (!$pages): ?><p class="card muted">Nog geen pagina's.</p><?php else: ?>
   <div class="table-wrap"><table class="table">
-    <thead><tr><th>Titel</th><th>Onder</th><th>Menu</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Titel</th><th>Onder</th><th>Menu</th><th>Status</th><th>Controle</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($pages as $p): ?>
       <tr>
@@ -51,6 +63,7 @@
         <td><?= e($p['parent_title'] ?? '') ?: '—' ?></td>
         <td><?= (int) $p['in_menu'] ? 'Ja' : 'Nee' ?></td>
         <td><span class="chip <?= $p['status'] === 'PUBLISHED' ? 'ok' : 'off' ?>"><?= $p['status'] === 'PUBLISHED' ? 'Gepubliceerd' : 'Concept' ?></span></td>
+        <td class="small"><?php foreach ($check['issues'][(int) $p['id']] ?? [] as [$lvl, $txt]): ?><div class="<?= $lvl === 'warn' ? '' : 'muted' ?>"><?= $lvl === 'warn' ? '⚠ ' : '' ?><?= e($txt) ?></div><?php endforeach; ?></td>
         <td class="right">
           <a class="btn btn-small btn-ghost" href="<?= e(url('page', ['slug' => $p['slug']])) ?>">Bekijken</a>
           <form method="post" action="<?= e(url('page_delete')) ?>" data-confirm="Deze pagina definitief verwijderen?">
