@@ -55,7 +55,8 @@ final class SiteController
         $goalGroups = $p['slug'] === 'doelstellingen'
             ? Database::all("SELECT id, name, goals FROM `groups` WHERE is_active = 1 AND category = 'SWIM_SCHOOL' AND goals IS NOT NULL AND goals <> '' ORDER BY id")
             : [];
-        render_public('site/page', compact('p', 'parent', 'side', 'goalGroups'), $p['title']);
+        $timetable = $p['slug'] === 'trainingsuren-competitie' ? (self::timetable()['COMPETITION'] ?? []) : [];
+        render_public('site/page', compact('p', 'parent', 'side', 'goalGroups', 'timetable'), $p['title']);
     }
 
     public static function agenda(): void
@@ -82,7 +83,8 @@ final class SiteController
         ], 'Kalender');
     }
 
-    public static function trainingTimes(): void
+    /** Publieke trainingsreeksen, per soort groep en per groep, met de trainers van elke groep. */
+    private static function timetable(): array
     {
         $series = Database::all(
             "SELECT s.*, t.name AS type_name FROM activity_series s JOIN activity_types t ON t.id = s.type_id
@@ -92,11 +94,27 @@ final class SiteController
         $byCat = [];
         foreach ($series as $s) {
             $s['slots'] = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$s['id']]);
-            $s['groups'] = Database::all('SELECT g.name, g.category FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]);
+            $s['groups'] = Database::all('SELECT g.id, g.name, g.category FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]);
             foreach ($s['groups'] as $g) {
-                $byCat[$g['category'] ?? 'SWIM_SCHOOL'][$g['name']][] = $s;
+                $byCat[$g['category'] ?? 'SWIM_SCHOOL'][$g['name']]['series'][] = $s;
+                $byCat[$g['category'] ?? 'SWIM_SCHOOL'][$g['name']]['id'] = (int) $g['id'];
             }
         }
-        render_public('site/training_times', compact('byCat'), 'Trainingsuren');
+        foreach ($byCat as $cat => $groups) {
+            uasort($groups, fn($a, $b) => $a['id'] <=> $b['id']);
+            $byCat[$cat] = $groups;
+            foreach ($groups as $name => $g) {
+                $byCat[$cat][$name]['trainers'] = array_column(Database::all(
+                    'SELECT u.display_name FROM group_trainers gt JOIN users u ON u.id = gt.user_id WHERE gt.group_id = ? AND u.is_active = 1 ORDER BY u.display_name',
+                    [$g['id']]
+                ), 'display_name');
+            }
+        }
+        return $byCat;
+    }
+
+    public static function trainingTimes(): void
+    {
+        render_public('site/training_times', ['byCat' => self::timetable()], 'Trainingsuren');
     }
 }
