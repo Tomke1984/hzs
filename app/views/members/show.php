@@ -17,6 +17,38 @@
   </dl>
 </section>
 
+<?php if ($showContact): ?>
+<section class="card">
+  <div class="row-between">
+    <h2>Ouders / voogden</h2>
+    <?php if (Auth::can('users.manage')): ?>
+      <a class="btn btn-small btn-ghost" href="<?= e(url('users')) ?>">Gebruikers beheren</a>
+    <?php endif; ?>
+  </div>
+  <?php if (!$parents): ?>
+    <p class="muted">Nog geen ouder of voogd gekoppeld aan dit lid.</p>
+  <?php else: ?>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Naam</th><th>Relatie</th><th>E-mail</th><th>Account</th></tr></thead>
+    <tbody>
+    <?php foreach ($parents as $p): ?>
+      <tr>
+        <td><?= Auth::can('users.manage')
+              ? '<a href="' . e(url('user_form', ['id' => $p['user_id']])) . '">' . e($p['display_name']) . '</a>'
+              : e($p['display_name']) ?></td>
+        <td><?= e($p['relationship']) ?: '<span class="muted">—</span>' ?></td>
+        <td><a href="mailto:<?= e($p['email']) ?>"><?= e($p['email']) ?></a></td>
+        <td><span class="chip <?= (int) $p['is_active'] ? 'ok' : 'off' ?>"><?= (int) $p['is_active'] ? 'Actief' : 'Inactief' ?></span></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
+  </div>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
+
 <section class="card">
   <h2>Groepen</h2>
   <?php if (!$memberships): ?>

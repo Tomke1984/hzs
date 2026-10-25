@@ -49,9 +49,24 @@ final class MemberController
             }
         }
 
+        // Ouders/voogden enkel voor wie contactgegevens mag zien.
+        $parentsByMember = [];
+        if ($members && Auth::can('members.contact')) {
+            $mids = array_map('intval', array_column($members, 'id'));
+            foreach (Database::all(
+                'SELECT gl.member_id, gl.relationship, u.id AS user_id, u.display_name, u.is_active
+                 FROM guardian_links gl JOIN users u ON u.id = gl.user_id
+                 WHERE gl.member_id IN (' . Scope::in($mids) . ') ORDER BY u.display_name',
+                $mids
+            ) as $p) {
+                $parentsByMember[$p['member_id']][] = $p;
+            }
+        }
+
         render('members/index', [
             'members' => $members,
             'groupsByMember' => $groupsByMember,
+            'parentsByMember' => $parentsByMember,
             'q' => $q,
             'status' => $status,
             'showContact' => Auth::can('members.contact'),
@@ -73,8 +88,19 @@ final class MemberController
             $availableGroups = Database::all('SELECT id, name FROM `groups` WHERE is_active = 1 ORDER BY name');
         }
 
+        $parents = [];
+        if (Auth::can('members.contact')) {
+            $parents = Database::all(
+                'SELECT gl.relationship, u.id AS user_id, u.display_name, u.email, u.is_active
+                 FROM guardian_links gl JOIN users u ON u.id = gl.user_id
+                 WHERE gl.member_id = ? ORDER BY u.display_name',
+                [$member['id']]
+            );
+        }
+
         render('members/show', [
             'member' => $member,
+            'parents' => $parents,
             'memberships' => $memberships,
             'availableGroups' => $availableGroups,
             'showContact' => Auth::can('members.contact'),

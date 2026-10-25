@@ -24,7 +24,7 @@
   <thead>
     <tr>
       <th>Nr.</th><th>Naam</th><th>Groepen</th>
-      <?php if ($showContact): ?><th>E-mail</th><th>Telefoon</th><?php endif; ?>
+      <?php if ($showContact): ?><th>Ouders</th><th>E-mail</th><th>Telefoon</th><?php endif; ?>
       <th>Status</th>
     </tr>
   </thead>
@@ -35,6 +35,12 @@
       <td><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a></td>
       <td><?= e(implode(', ', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
       <?php if ($showContact): ?>
+        <td>
+          <?php foreach ($parentsByMember[$m['id']] ?? [] as $i => $p): ?>
+            <?= $i ? ', ' : '' ?><a href="<?= e(url('user_form', ['id' => $p['user_id']])) ?>"><?= e($p['display_name']) ?></a><?php if ($p['relationship']): ?> <span class="muted small">(<?= e($p['relationship']) ?>)</span><?php endif; ?>
+          <?php endforeach; ?>
+          <?php if (empty($parentsByMember[$m['id']])): ?><span class="muted">—</span><?php endif; ?>
+        </td>
         <td><?= e($m['email']) ?></td><td><?= e($m['phone']) ?></td>
       <?php endif; ?>
       <td><span class="chip <?= $m['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $m['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span></td>
