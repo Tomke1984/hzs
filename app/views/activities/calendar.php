@@ -30,12 +30,7 @@ $todayStr = today();
   <a class="btn btn-small btn-ghost" href="<?= e(url('calendar', ['m' => $next] + $keep)) ?>">Volgende →</a>
 </div>
 
-<div class="legend">
-  <span class="chip type-training">Training</span>
-  <span class="chip type-competition">Wedstrijd</span>
-  <span class="chip type-club">Clubactiviteit</span>
-  <span class="chip off">Wedstrijd voor een andere groep</span>
-</div>
+<div class="legend"><span class="chip off">Grijs: wedstrijd voor een andere groep</span></div>
 
 <div class="cal-grid" role="grid">
   <?php foreach (['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'] as $d): ?>
@@ -58,15 +53,22 @@ $todayStr = today();
         <?php endif; ?>
       </div>
       <?php foreach ($events as $ev): ?>
-        <<?= $ev['open'] ? 'a' : 'span' ?> class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> <?= $ev['mine'] ? '' : 'other' ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
-           title="<?= e(($ev['mine'] ? '' : 'Niet voor jouw groep. ') . ($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? ''))) ?>"
+        <<?= $ev['open'] ? 'a' : 'span' ?> class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> g-<?= e($ev['gcolor']) ?> <?= $ev['type_code'] === 'COMPETITION' ? 'is-comp' : '' ?> <?= $ev['mine'] ? '' : 'other' ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
+           title="<?= e($ev['type_name'] . ' · ' . $ev['gnames'] . ' · ' . ($ev['mine'] ? '' : 'Niet voor jouw groep. ') . ($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? ''))) ?>"
            <?= $ev['open'] ? 'href="' . e(url('activity', ['id' => $ev['id']])) . '"' : '' ?>>
-          <span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?>
+          <span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?><?php if ($ev['gnames'] !== ''): ?><span class="grp"><?= e($ev['gnames']) ?></span><?php endif; ?>
         </<?= $ev['open'] ? 'a' : 'span' ?>>
       <?php endforeach; ?>
     </div>
   <?php endfor; ?>
 </div>
+
+<?php if (!empty($legend)): ?>
+<ul class="cal-legend" aria-label="Legende">
+  <?php foreach ($legend as [$lname, $lcol]): ?><li><span class="swatch g-<?= e($lcol) ?>"></span><?= e($lname) ?></li><?php endforeach; ?>
+  <li><span class="swatch is-comp-sw"></span>Wedstrijd (gele rand)</li>
+</ul>
+<?php endif; ?>
 
 <?php if (!$byDay): ?>
   <p class="muted">Geen activiteiten in deze maand.</p>

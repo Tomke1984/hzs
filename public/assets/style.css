@@ -364,3 +364,26 @@ form.filters input[type=search] { min-width: 180px; flex: 1 1 180px; }
 .cards-compact .card p { margin: 2px 0; }
 .cards-series { gap: 12px; }
 .cal-skip { margin-left: 0; color: var(--bad, #b3261e); }
+
+/* Kalender: kleur per groep */
+.cal-event.g-0, .swatch.g-0 { background: #064ca2; }
+.cal-event.g-1, .swatch.g-1 { background: #0f766e; }
+.cal-event.g-2, .swatch.g-2 { background: #4d7c0f; }
+.cal-event.g-3, .swatch.g-3 { background: #a16207; }
+.cal-event.g-4, .swatch.g-4 { background: #be185d; }
+.cal-event.g-5, .swatch.g-5 { background: #0e7490; }
+.cal-event.g-6, .swatch.g-6 { background: #7c2d12; }
+.cal-event.g-7, .swatch.g-7 { background: #4338ca; }
+.cal-event.g-club, .swatch.g-club { background: var(--club); }
+.cal-event.other { background: #c9d0d7; color: #4a5560; }
+.cal-event.cancelled { background: #8a97a3; }
+.cal-event.is-comp { border-left: 4px solid #fbbf24; }
+.cal-event .grp { display: block; font-size: .72rem; opacity: .9; overflow: hidden; text-overflow: ellipsis; }
+.cal-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0; margin: 12px 0; font-size: .85rem; }
+.cal-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
+.swatch.is-comp-sw { background: #fff; border: 1px solid var(--line); border-left: 4px solid #fbbf24; }
+.cal-event.g-8, .swatch.g-8 { background: #9d174d; }
+.cal-event.g-9, .swatch.g-9 { background: #166534; }
+.cal-event.g-10, .swatch.g-10 { background: #1e3a8a; }
+.cal-event.g-11, .swatch.g-11 { background: #b45309; }
