@@ -276,6 +276,14 @@ CREATE TABLE IF NOT EXISTS activity_series_groups (
   FOREIGN KEY (group_id) REFERENCES `groups`(id)
 ){{ENGINE}};
 
+CREATE TABLE IF NOT EXISTS member_series (
+  member_id INT NOT NULL,
+  series_id INT NOT NULL,
+  PRIMARY KEY (member_id, series_id),
+  FOREIGN KEY (member_id) REFERENCES members(id),
+  FOREIGN KEY (series_id) REFERENCES activity_series(id)
+){{ENGINE}};
+
 CREATE TABLE IF NOT EXISTS activity_series_skips (
   series_id INT NOT NULL,
   day VARCHAR(10) NOT NULL,

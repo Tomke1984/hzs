@@ -100,7 +100,56 @@ final class GroupController
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series'), $group['name']);
+        // Trainingsdag per lid (zwemschool): enkel actieve reeksen van de groep.
+        $daySeries = [];
+        $assigned = [];
+        if (Auth::can('activities.read')) {
+            $daySeries = Database::all(
+                'SELECT s.id, s.title FROM activity_series s JOIN activity_series_groups sg ON sg.series_id = s.id
+                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY s.title',
+                [$group['id'], today()]
+            );
+            foreach ($daySeries as &$ds) {
+                $ds['summary'] = SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$ds['id']]));
+            }
+            unset($ds);
+            if ($daySeries) {
+                $ids = array_map('intval', array_column($daySeries, 'id'));
+                foreach (Database::all('SELECT member_id, series_id FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
+                    $assigned[(int) $r['member_id']][(int) $r['series_id']] = true;
+                }
+            }
+        }
+
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySeries', 'assigned'), $group['name']);
+    }
+
+    /** Trainingsdag(en) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
+    public static function saveDays(): void
+    {
+        $group = Database::one('SELECT id FROM `groups` WHERE id = ?', [(int) input('group_id', '0')]);
+        if (!$group) {
+            abort(404, 'Groep niet gevonden.');
+        }
+        $gSeries = array_map('intval', array_column(Database::all('SELECT series_id FROM activity_series_groups WHERE group_id = ?', [$group['id']]), 'series_id'));
+        $members = array_map('intval', array_column(Database::all('SELECT member_id FROM group_memberships WHERE group_id = ?', [$group['id']]), 'member_id'));
+        $post = is_array($_POST['days'] ?? null) ? $_POST['days'] : [];
+        Database::tx(function () use ($gSeries, $members, $post) {
+            foreach ($members as $mid) {
+                if ($gSeries) {
+                    Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id IN (' . Scope::in($gSeries) . ')', array_merge([$mid], $gSeries));
+                }
+                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('intval', $post[$mid])) : [];
+                foreach ($picked as $sid) {
+                    if (in_array($sid, $gSeries, true)) {
+                        Database::exec('INSERT INTO member_series (member_id, series_id) VALUES (?, ?)', [$mid, $sid]);
+                    }
+                }
+            }
+        });
+        audit('UPDATE', 'groups', (int) $group['id'], 'trainingsdagen per lid');
+        flash('success', 'Trainingsdagen opgeslagen.');
+        redirect(url('group', ['id' => $group['id']]) . '#trainingsdagen');
     }
 
     public static function form(): void

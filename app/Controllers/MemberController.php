@@ -143,7 +143,19 @@ final class MemberController
             );
         }
 
+        $myDays = [];
+        foreach (Database::all(
+            'SELECT s.id, s.title FROM member_series ms JOIN activity_series s ON s.id = ms.series_id
+             JOIN activity_series_groups sg ON sg.series_id = s.id
+             JOIN group_memberships gm ON gm.group_id = sg.group_id AND gm.member_id = ms.member_id
+             WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title',
+            [$member['id']]
+        ) as $r) {
+            $myDays[] = $r['title'] . ' (' . SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$r['id']])) . ')';
+        }
+
         render('members/show', [
+            'myDays' => $myDays,
             'member' => $member,
             'isMinor' => Guardianship::isMinor($member['birth_date']),
             'guardianMissing' => $guardianMissing,

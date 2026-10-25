@@ -63,10 +63,69 @@ final class Scope
         if (!$gids) {
             return ["$a.audience = 'CLUB'", []];
         }
-        return [
-            "($a.audience = 'CLUB' OR EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = $a.id AND ag.group_id IN (" . self::in($gids) . ')))',
-            $gids,
-        ];
+        $sql = "($a.audience = 'CLUB' OR EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = $a.id AND ag.group_id IN (" . self::in($gids) . ')))';
+        $params = $gids;
+        // Zwemschool: leden die op een vaste trainingsdag zwemmen zien de trainingen van de andere dagen niet.
+        $hidden = self::hiddenSeriesIds();
+        if ($hidden) {
+            $sql .= " AND ($a.series_id IS NULL OR $a.series_id NOT IN (" . self::in($hidden) . '))';
+            $params = array_merge($params, $hidden);
+        }
+        return [$sql, $params];
+    }
+
+    /**
+     * Reeksen die voor deze gebruiker (als lid/ouder, niet als trainer) niet relevant zijn omdat al zijn leden
+     * in die groep aan een andere reeks (trainingsdag) gekoppeld zijn.
+     * @return int[]
+     */
+    public static function hiddenSeriesIds(): array
+    {
+        static $cache = [];
+        $u = Auth::user();
+        if (!$u || self::clubWide()) {
+            return [];
+        }
+        if (isset($cache[$u['id']])) {
+            return $cache[$u['id']];
+        }
+        $own = [];
+        if (Auth::hasRole('SWIMMER') && $u['member_id']) {
+            $own[] = (int) $u['member_id'];
+        }
+        if (Auth::hasRole('PARENT')) {
+            $own = array_merge($own, array_map('intval', array_column(Database::all('SELECT member_id FROM guardian_links WHERE user_id = ?', [$u['id']]), 'member_id')));
+        }
+        $own = array_values(array_unique($own));
+        if (!$own) {
+            return $cache[$u['id']] = [];
+        }
+        $trainerGroups = Auth::hasRole('TRAINER') ? array_map('intval', array_column(Database::all('SELECT group_id FROM group_trainers WHERE user_id = ?', [$u['id']]), 'group_id')) : [];
+        $hidden = [];
+        foreach (Database::all('SELECT DISTINCT group_id FROM group_memberships WHERE member_id IN (' . self::in($own) . ')', $own) as $g) {
+            $gid = (int) $g['group_id'];
+            if (in_array($gid, $trainerGroups, true)) {
+                continue;
+            }
+            $gSeries = array_map('intval', array_column(Database::all('SELECT series_id FROM activity_series_groups WHERE group_id = ?', [$gid]), 'series_id'));
+            if (!$gSeries) {
+                continue;
+            }
+            $visible = [];
+            $unrestricted = false;
+            foreach (Database::all('SELECT member_id FROM group_memberships WHERE group_id = ? AND member_id IN (' . self::in($own) . ')', array_merge([$gid], $own)) as $mm) {
+                $mine = array_map('intval', array_column(Database::all('SELECT series_id FROM member_series WHERE member_id = ? AND series_id IN (' . self::in($gSeries) . ')', array_merge([$mm['member_id']], $gSeries)), 'series_id'));
+                if (!$mine) {
+                    $unrestricted = true;
+                    break;
+                }
+                $visible = array_merge($visible, $mine);
+            }
+            if (!$unrestricted) {
+                $hidden = array_merge($hidden, array_diff($gSeries, $visible));
+            }
+        }
+        return $cache[$u['id']] = array_values(array_unique($hidden));
     }
 
     public static function findActivity(int $id): ?array
@@ -90,13 +149,19 @@ final class Scope
         if (!$groupIds) {
             return [];
         }
-        return Database::all(
-            "SELECT DISTINCT m.* FROM members m
+        $sql = "SELECT DISTINCT m.* FROM members m
              JOIN group_memberships gm ON gm.member_id = m.id
-             WHERE m.status = 'ACTIVE' AND gm.group_id IN (" . self::in($groupIds) . ')
-             ORDER BY m.last_name, m.first_name',
-            $groupIds
-        );
+             WHERE m.status = 'ACTIVE' AND gm.group_id IN (" . self::in($groupIds) . ')';
+        $params = $groupIds;
+        // Reekstraining: leden met een vaste trainingsdag (in hun groep) komen enkel op hun eigen reeks(en) voor.
+        if (!empty($activity['series_id'])) {
+            $sql .= ' AND (EXISTS (SELECT 1 FROM member_series ms WHERE ms.member_id = m.id AND ms.series_id = ?)
+                       OR NOT EXISTS (SELECT 1 FROM member_series ms2
+                            JOIN activity_series_groups asg ON asg.series_id = ms2.series_id
+                            WHERE ms2.member_id = m.id AND asg.group_id = gm.group_id))';
+            $params[] = (int) $activity['series_id'];
+        }
+        return Database::all($sql . ' ORDER BY m.last_name, m.first_name', $params);
     }
 
     /** Doelgroep ingeperkt tot de leden die de ingelogde gebruiker mag zien. */
