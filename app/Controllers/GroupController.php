@@ -83,9 +83,24 @@ final class GroupController
             ? Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 AND id != ? ORDER BY category, name', [$group['id']])
             : [];
 
+        $now = date('Y-m-d H:i:s');
+        $activities = Auth::can('activities.read') ? Database::all(
+            "SELECT a.id, a.title, a.starts_at, a.ends_at, a.location, a.status, t.name AS type_name
+             FROM activities a JOIN activity_groups ag ON ag.activity_id = a.id
+             JOIN activity_types t ON t.id = a.type_id
+             WHERE ag.group_id = ? AND a.ends_at >= ? ORDER BY a.starts_at LIMIT 15",
+            [$group['id'], $now]
+        ) : [];
+        $series = Auth::can('activities.write') ? Database::all(
+            'SELECT s.id, s.title, s.start_date, s.end_date, s.is_active FROM activity_series s
+             JOIN activity_series_groups sg ON sg.series_id = s.id
+             WHERE sg.group_id = ? ORDER BY s.is_active DESC, s.title',
+            [$group['id']]
+        ) : [];
+
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets'), $group['name']);
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series'), $group['name']);
     }
 
     public static function form(): void

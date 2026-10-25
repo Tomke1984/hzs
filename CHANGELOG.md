@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Activiteiten bij een groep:** de groepspagina toont de gekoppelde trainingsreeksen (met link, voor wie activiteiten mag beheren) en de eerstvolgende activiteiten van de groep, met geschrapte trainingen gemarkeerd en een link naar de kalender gefilterd op die groep.
 - **Trainers kiezen bij een groep:** in het formulier *Groep wijzigen* (en *Nieuwe groep*) vink je één of meerdere trainers aan; bij opslaan worden de trainers van de groep bijgewerkt. Enkel gebruikers met de rol Trainer verschijnen in de lijst.
 - **Geen Van/Tot meer bij trainers:** een trainer is gewoon aan groepen gekoppeld, zonder begin- en einddatum of historiek. Op de gebruikerspagina kies je een groep en klik je *Toewijzen*; *Verwijderen* haalt de trainer uit de groep. Bestaande databases worden opgeruimd (afgesloten en dubbele koppelingen verdwijnen).
 - **Publieke website (start):** wie niet is aangemeld ziet nu een publieke startpagina in plaats van het inlogscherm (aanmelden staat in het menu). Bevat: nieuws (enkel op de startpagina, volledige berichten met paginering; geen aparte nieuwspagina; het bestuur ziet concepten er gemarkeerd), vrije pagina's met menu en subpagina's, publieke kalender, trainingsuren per groep en een link naar inschrijven. Een pagina met adres `home` verschijnt als introtekst.

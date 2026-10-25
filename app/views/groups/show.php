@@ -23,6 +23,43 @@
   <?php endif; ?>
 </section>
 
+<?php if (Auth::can('activities.read')): ?>
+<section class="card">
+  <h2>Activiteiten</h2>
+  <?php if ($series): ?>
+    <p class="muted small">Trainingsreeksen</p>
+    <ul>
+    <?php foreach ($series as $s): ?>
+      <li><a href="<?= e(url('series_show', ['id' => $s['id']])) ?>"><?= e($s['title']) ?></a>
+        <span class="muted small">(<?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?>)</span>
+        <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?></li>
+    <?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
+  <?php if (!$activities): ?>
+    <p class="muted">Geen komende activiteiten voor deze groep.</p>
+  <?php else: ?>
+    <p class="muted small">Eerstvolgende activiteiten</p>
+    <div class="table-wrap">
+    <table class="table">
+      <tbody>
+      <?php foreach ($activities as $a): ?>
+        <tr class="<?= $a['status'] === 'CANCELLED' ? 'is-off' : '' ?>">
+          <td><?= e(fmt_dt($a['starts_at'])) ?></td>
+          <td><a href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e($a['title']) ?></a>
+            <?php if ($a['status'] === 'CANCELLED'): ?><span class="chip off">Geschrapt</span><?php endif; ?></td>
+          <td class="muted"><?= e($a['type_name']) ?></td>
+          <td class="muted"><?= e((string) $a['location']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    </div>
+  <?php endif; ?>
+  <p><a href="<?= e(url('calendar', ['g' => $group['id']])) ?>">Naar de kalender</a></p>
+</section>
+<?php endif; ?>
+
 <section class="card">
   <h2>Leden</h2>
   <?php if (!$memberships): ?>
