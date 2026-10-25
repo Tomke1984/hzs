@@ -12,6 +12,21 @@ final class Markup
         if ($text === '') {
             return '';
         }
+        // Tolerant bij plakken: koppen staan altijd op een eigen blok en een opsomming start ook na een gewone regel.
+        $prev = '';
+        $norm = [];
+        foreach (explode("\n", $text) as $line) {
+            $isHead = (bool) preg_match('/^#{2,3}\s+\S/', $line);
+            $isItem = (bool) preg_match('/^[-*]\s+\S/', $line);
+            $prevHead = (bool) preg_match('/^#{2,3}\s+\S/', $prev);
+            $prevItem = (bool) preg_match('/^[-*]\s+\S/', $prev);
+            if (trim($prev) !== '' && trim($line) !== '' && ($isHead || $prevHead || ($isItem && !$prevItem))) {
+                $norm[] = '';
+            }
+            $norm[] = $line;
+            $prev = $line;
+        }
+        $text = implode("\n", $norm);
         $out = [];
         foreach (preg_split("/\n{2,}/", $text) as $block) {
             $lines = explode("\n", trim($block));
