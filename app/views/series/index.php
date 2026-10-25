@@ -15,7 +15,6 @@
 </div>
 <?php endif; ?>
 <form class="filters" method="get" action="">
-  <input type="hidden" name="r" value="series">
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>
   <button class="btn btn-small" type="submit">Filteren</button>
   <?php if ($cat !== '' || $gid): ?><a href="<?= e(url('series')) ?>">Wis filter</a><?php endif; ?>

@@ -24,7 +24,7 @@ final class Invites
 
     public static function link(string $token): string
     {
-        return self::baseUrl() . '/?' . http_build_query(['r' => 'activate', 'token' => $token]);
+        return self::baseUrl() . '/activeren?' . http_build_query(['token' => $token]);
     }
 
     public static function isPending(array $user): bool

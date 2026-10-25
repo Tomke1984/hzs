@@ -31,9 +31,27 @@ function base_path(): string
 }
 
 /** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
-const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden'];
+const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten'];
+/** Routes die bewust op ?r= blijven (bevestigingslinks in mails, formulierdoel). */
+const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news'];
+/**
+ * Leesbare adressen voor de beheer-app (onder /app): route => [adres met id, adres zonder id (nieuw)].
+ * Alle andere app-routes (vooral POST-acties) krijgen /app/<route-met-streepjes>.
+ */
+const APP_PATHS = [
+    'dashboard' => ['app'],
+    'members' => ['app/leden'], 'member' => ['app/leden/{id}'], 'member_form' => ['app/leden/{id}/wijzigen', 'app/leden/nieuw'],
+    'groups' => ['app/groepen'], 'group' => ['app/groepen/{id}'], 'group_form' => ['app/groepen/{id}/wijzigen', 'app/groepen/nieuw'],
+    'users' => ['app/gebruikers'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
+    'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
+    'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'],
+    'registrations' => ['app/inschrijvingen'], 'registration' => ['app/inschrijvingen/{id}'],
+    'swimtests' => ['app/wachtlijst'], 'swimtest_show' => ['app/wachtlijst/{id}'],
+    'messages' => ['app/berichten'],
+    'content' => ['app/website'], 'post_form' => ['app/website/berichten/{id}', 'app/website/berichten/nieuw'], 'page_form' => ['app/website/paginas/{id}', 'app/website/paginas/nieuw'],
+];
 /** Adressen die een pagina niet mag gebruiken (ze zijn al in gebruik door de app of de server). */
-const RESERVED_SLUGS = ['kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
+const RESERVED_SLUGS = ['activeren', 'wachtwoord-vergeten', 'kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
 
 /**
  * Adres voor een route, relatief aan de basis (de layouts zetten <base href>), dus zonder voorloopslash.
@@ -56,7 +74,49 @@ function url(string $route = 'dashboard', array $params = []): string
     if ($path !== null) {
         return $path . ($params ? '?' . http_build_query($params) : '') ?: './';
     }
-    return '?' . http_build_query(array_merge(['r' => $route], $params));
+    if (in_array($route, PLAIN_ROUTES, true) || $route === 'home') {
+        return '?' . http_build_query(array_merge(['r' => $route], $params));
+    }
+    // beheer-app
+    if (isset(APP_PATHS[$route])) {
+        [$with, $without] = APP_PATHS[$route] + [1 => null];
+        if (str_contains($with, '{id}')) {
+            $id = (int) ($params['id'] ?? 0);
+            unset($params['id']);
+            $path = $id > 0 ? str_replace('{id}', (string) $id, $with) : $without;
+            if ($path === null) {
+                return '?' . http_build_query(array_merge(['r' => $route], $params, $id ? ['id' => $id] : []));
+            }
+        } else {
+            $path = $with;
+        }
+    } else {
+        $path = 'app/' . str_replace('_', '-', $route);
+    }
+    return $path . ($params ? '?' . http_build_query($params) : '');
+}
+
+/** Zoekt bij een pad onder /app de route (en eventuele id). @return array{0:string,1:array}|null */
+function app_route_from_path(string $path, array $routes): ?array
+{
+    if ($path === 'app') {
+        return ['dashboard', []];
+    }
+    foreach (APP_PATHS as $route => $paths) {
+        foreach ($paths as $i => $pattern) {
+            $rx = '#^' . str_replace('\\{id\\}', '(\d+)', preg_quote($pattern, '#')) . '$#';
+            if (preg_match($rx, $path, $m)) {
+                return [$route, isset($m[1]) ? ['id' => $m[1]] : []];
+            }
+        }
+    }
+    if (preg_match('#^app/([a-z0-9-]+)$#', $path, $m)) {
+        $route = str_replace('-', '_', $m[1]);
+        if (isset($routes[$route]) && !isset(APP_PATHS[$route]) && !isset(PRETTY_ROUTES[$route]) && !in_array($route, PLAIN_ROUTES, true)) {
+            return [$route, []];
+        }
+    }
+    return null;
 }
 
 /** Adres van de huidige pagina (voor #anker-links, omdat <base> die anders naar de startpagina zou sturen). */

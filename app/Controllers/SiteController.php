@@ -105,7 +105,7 @@ final class SiteController
                 $to,
                 'Bericht via de website: ' . self::TOPICS[$old['topic']],
                 "Van: {$old['first_name']} {$old['last_name']} <{$old['email']}>\nOnderwerp: " . self::TOPICS[$old['topic']] . "\n\n{$old['message']}\n\n"
-                . "Antwoord rechtstreeks op dit adres: {$old['email']}\nIn de app: " . Invites::baseUrl() . '/?r=messages'
+                . "Antwoord rechtstreeks op dit adres: {$old['email']}\nIn de app: " . Invites::baseUrl() . '/app/berichten'
             );
             Database::exec('UPDATE contact_messages SET mail_sent = ? WHERE id = ?', [$sent ? 1 : 0, $id]);
         }

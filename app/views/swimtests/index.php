@@ -1,7 +1,7 @@
 <div class="row-between">
   <h1>Zwemtest</h1>
 </div>
-<p class="muted">Aanvragen voor de zwemtest van de zwemschool, via <code><?= e(Invites::baseUrl()) ?>/?r=swimtest</code>. Op de wachtlijst staan de aanvragen in volgorde van bevestiging. Na de test zet je een kind door naar een gewone inschrijving.</p>
+<p class="muted">Aanvragen voor de zwemtest van de zwemschool, via <code><?= e(Invites::baseUrl()) ?>/zwemtest</code>. Op de wachtlijst staan de aanvragen in volgorde van bevestiging. Na de test zet je een kind door naar een gewone inschrijving.</p>
 
 <nav class="tabs" aria-label="Status">
   <?php foreach (SwimTestController::STATUSES as $code => $label): ?>

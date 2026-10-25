@@ -1,7 +1,7 @@
 <div class="row-between">
   <h1>Inschrijvingen</h1>
 </div>
-<p class="muted">Aanvragen via de inschrijfpagina. Pas bij goedkeuring worden leden en een account aangemaakt. Deelnemers delen de link naar <code><?= e(Invites::baseUrl()) ?>/?r=register</code>.</p>
+<p class="muted">Aanvragen via de inschrijfpagina. Pas bij goedkeuring worden leden en een account aangemaakt. Deelnemers delen de link naar <code><?= e(Invites::baseUrl()) ?>/inschrijven</code>.</p>
 
 <nav class="tabs" aria-label="Soort inschrijvingen">
   <a href="<?= e(url('registrations', ['tab' => 'new'])) ?>" <?= $tab === 'new' ? 'aria-current="page"' : '' ?>>Te beoordelen <span class="chip <?= $counts['new'] ? 'warn' : '' ?>"><?= (int) $counts['new'] ?></span></a>

@@ -13,7 +13,6 @@
 <?php endif; ?>
 
 <form class="filters" method="get" action="">
-  <input type="hidden" name="r" value="members">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam">
   <select name="status" aria-label="Status">
     <option value="ACTIVE" <?= $status === 'ACTIVE' ? 'selected' : '' ?>>Actieve leden</option>

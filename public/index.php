@@ -118,6 +118,13 @@ if (!isset($_GET['r'])) {
         } elseif (preg_match('#^nieuws/([a-z0-9-]+)$#', $path, $m)) {
             $_GET['r'] = 'post';
             $_GET['slug'] = $m[1];
+        } elseif ($path === 'app' || str_starts_with($path, 'app/')) {
+            $hit = app_route_from_path($path, $routes);
+            if (!$hit) {
+                abort(404, 'Deze pagina bestaat niet.');
+            }
+            $_GET['r'] = $hit[0];
+            $_GET += $hit[1];
         } elseif (preg_match('#^[a-z0-9-]+$#', $path)) {
             $_GET['r'] = 'page';
             $_GET['slug'] = $path;

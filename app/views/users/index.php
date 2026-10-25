@@ -13,7 +13,6 @@
 </nav>
 
 <form class="filters" method="get" action="">
-  <input type="hidden" name="r" value="users">
   <input type="hidden" name="tab" value="<?= e($tab) ?>">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam of e-mail">
   <button class="btn btn-small" type="submit">Zoeken</button>

@@ -46,7 +46,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van khzs.be) en de **ledenapp** voor het beheer. Eén PHP-monoliet, één database.
 
 ### Publieke website (zonder login)
-- **Leesbare adressen:** `/zwemschool`, `/kalender`, `/trainingsuren`, `/zwemtest`, `/inschrijven`, `/aanmelden`, `/nieuws/<bericht>`; pagina's staan op `/<naam>` (de naam volgt de titel en is aanpasbaar bij *Adres*). De beheer-app gebruikt `?r=…`. Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
+- **Leesbare adressen:** `/zwemschool`, `/kalender`, `/trainingsuren`, `/zwemtest`, `/inschrijven`, `/aanmelden`, `/nieuws/<bericht>`; pagina's staan op `/<naam>` (de naam volgt de titel en is aanpasbaar bij *Adres*). De beheer-app staat onder `/app` (`/app/leden/12`, `/app/groepen`, `/app/kalender`, `/app/website`, …); oude `?r=…`-adressen blijven werken. Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
 - Startpagina met introtekst, de vakken Zwemschool en Competitie, nieuws en *Komende activiteiten*.
 - Pagina's in een menu (hoofd- en subpagina's), nieuws, kalender en trainingsuren. Eigen vormgeving (`public/assets/site.css`, zelf gehoste lettertypen, geen externe verbindingen).
 - **Kalender en komende activiteiten: voor iedereen enkel wedstrijden en clubactiviteiten**, nooit trainingen of groepen. De persoonlijke kalender zit in de app.

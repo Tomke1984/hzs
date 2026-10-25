@@ -15,7 +15,6 @@ $todayStr = today();
 
 <?php $keep = array_filter(['cat' => $cat, 'g' => $gid ?: '']); ?>
 <form class="filters" method="get" action="">
-  <input type="hidden" name="r" value="calendar">
   <input type="hidden" name="m" value="<?= e($first->format('Y-m')) ?>">
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>
   <button class="btn btn-small" type="submit">Filteren</button>
