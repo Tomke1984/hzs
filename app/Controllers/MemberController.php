@@ -145,13 +145,18 @@ final class MemberController
 
         $myDays = [];
         foreach (Database::all(
-            'SELECT s.id, s.title FROM member_series ms JOIN activity_series s ON s.id = ms.series_id
+            'SELECT s.id, s.title, ms.weekday FROM member_series ms JOIN activity_series s ON s.id = ms.series_id
              JOIN activity_series_groups sg ON sg.series_id = s.id
              JOIN group_memberships gm ON gm.group_id = sg.group_id AND gm.member_id = ms.member_id
-             WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title',
+             WHERE ms.member_id = ? AND s.is_active = 1 ORDER BY s.title, ms.weekday',
             [$member['id']]
         ) as $r) {
-            $myDays[] = $r['title'] . ' (' . SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$r['id']])) . ')';
+            if ((int) $r['weekday'] > 0) {
+                $sl = Database::one('SELECT start_time, end_time FROM activity_series_slots WHERE series_id = ? AND weekday = ?', [$r['id'], $r['weekday']]);
+                $myDays[] = $r['title'] . ' (' . SeriesService::DAYS[(int) $r['weekday']] . ($sl ? ' ' . $sl['start_time'] . '–' . $sl['end_time'] : '') . ')';
+            } else {
+                $myDays[] = $r['title'];
+            }
         }
 
         render('members/show', [

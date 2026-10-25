@@ -100,28 +100,32 @@ final class GroupController
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        // Trainingsdag per lid (zwemschool): enkel actieve reeksen van de groep.
-        $daySeries = [];
+        // Trainingsdag per lid (zwemschool): elk trainingsmoment (reeks + weekdag) van de actieve reeksen van de groep.
+        $daySlots = [];
         $assigned = [];
         if (Auth::can('activities.read')) {
-            $daySeries = Database::all(
-                'SELECT s.id, s.title FROM activity_series s JOIN activity_series_groups sg ON sg.series_id = s.id
-                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY s.title',
+            foreach (Database::all(
+                'SELECT s.id, s.title, sl.weekday, sl.start_time, sl.end_time FROM activity_series s
+                 JOIN activity_series_groups sg ON sg.series_id = s.id JOIN activity_series_slots sl ON sl.series_id = s.id
+                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY s.title, sl.weekday',
                 [$group['id'], today()]
-            );
-            foreach ($daySeries as &$ds) {
-                $ds['summary'] = SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$ds['id']]));
+            ) as $r) {
+                $daySlots[] = ['key' => $r['id'] . ':' . $r['weekday'], 'series_id' => (int) $r['id'], 'weekday' => (int) $r['weekday'],
+                    'label' => $r['title'], 'when' => SeriesService::DAYS[(int) $r['weekday']] . ' ' . $r['start_time'] . '–' . $r['end_time']];
             }
-            unset($ds);
-            if ($daySeries) {
-                $ids = array_map('intval', array_column($daySeries, 'id'));
-                foreach (Database::all('SELECT member_id, series_id FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
-                    $assigned[(int) $r['member_id']][(int) $r['series_id']] = true;
+            if ($daySlots) {
+                $ids = array_values(array_unique(array_column($daySlots, 'series_id')));
+                foreach (Database::all('SELECT member_id, series_id, weekday FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
+                    foreach ($daySlots as $sl) {
+                        if ($sl['series_id'] === (int) $r['series_id'] && ((int) $r['weekday'] === 0 || (int) $r['weekday'] === $sl['weekday'])) {
+                            $assigned[(int) $r['member_id']][$sl['key']] = true;
+                        }
+                    }
                 }
             }
         }
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySeries', 'assigned'), $group['name']);
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySlots', 'assigned'), $group['name']);
     }
 
     /** Trainingsdag(en) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
@@ -139,10 +143,11 @@ final class GroupController
                 if ($gSeries) {
                     Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id IN (' . Scope::in($gSeries) . ')', array_merge([$mid], $gSeries));
                 }
-                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('intval', $post[$mid])) : [];
-                foreach ($picked as $sid) {
-                    if (in_array($sid, $gSeries, true)) {
-                        Database::exec('INSERT INTO member_series (member_id, series_id) VALUES (?, ?)', [$mid, $sid]);
+                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('strval', $post[$mid])) : [];
+                foreach ($picked as $key) {
+                    [$sid, $day] = array_map('intval', explode(':', $key . ':0'));
+                    if (in_array($sid, $gSeries, true) && $day >= 1 && $day <= 7) {
+                        Database::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, ?)', [$mid, $sid, $day]);
                     }
                 }
             }

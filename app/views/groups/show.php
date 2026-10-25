@@ -68,21 +68,24 @@
 </section>
 <?php endif; ?>
 
-<?php if (Auth::can('activities.write') && count($daySeries) > 1 && $memberships): ?>
+<?php if (Auth::can('activities.write') && $memberships): ?>
 <section class="card" id="trainingsdagen">
   <h2>Trainingsdag per lid</h2>
-  <p class="muted small">Zwemmen niet alle leden van deze groep op dezelfde dag? Vink per lid aan op welke reeks(en) hij zwemt. Niets aangevinkt betekent: alle trainingen van de groep. Aanwezigheidslijsten en de persoonlijke kalender van het lid volgen deze keuze.</p>
+  <?php if (count($daySlots) < 2): ?>
+    <p class="muted small">Zwemmen niet alle leden van deze groep op dezelfde dag? Maak eerst minstens twee trainingsmomenten voor deze groep (één reeks met meerdere weekdagen, of meerdere reeksen); dan kies je hier per lid op welke dag hij zwemt.</p>
+  <?php else: ?>
+  <p class="muted small">Zwemmen niet alle leden van deze groep op dezelfde dag? Vink per lid aan op welke dag(en) hij zwemt. Niets aangevinkt betekent: alle trainingen van de groep. Aanwezigheidslijsten en de persoonlijke kalender van het lid volgen deze keuze.</p>
   <form method="post" action="<?= e(url('member_days')) ?>">
     <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Lid</th><?php foreach ($daySeries as $ds): ?><th><?= e($ds['title']) ?><br><span class="muted small"><?= e($ds['summary']) ?></span></th><?php endforeach; ?></tr></thead>
+      <thead><tr><th>Lid</th><?php foreach ($daySlots as $ds): ?><th><?= e($ds['label']) ?><br><span class="muted small"><?= e($ds['when']) ?></span></th><?php endforeach; ?></tr></thead>
       <tbody>
       <?php foreach ($memberships as $m): ?>
         <tr>
           <td><?= e($m['last_name'] . ' ' . $m['first_name']) ?></td>
-          <?php foreach ($daySeries as $ds): ?>
-            <td data-label="<?= e($ds['title'] . ' ' . $ds['summary']) ?>"><input type="checkbox" name="days[<?= (int) $m['id'] ?>][]" value="<?= (int) $ds['id'] ?>" <?= !empty($assigned[(int) $m['id']][(int) $ds['id']]) ? 'checked' : '' ?> aria-label="<?= e($m['first_name'] . ' ' . $m['last_name'] . ': ' . $ds['title'] . ' ' . $ds['summary']) ?>"></td>
+          <?php foreach ($daySlots as $ds): ?>
+            <td data-label="<?= e($ds['label'] . ' ' . $ds['when']) ?>"><input type="checkbox" name="days[<?= (int) $m['id'] ?>][]" value="<?= e($ds['key']) ?>" <?= !empty($assigned[(int) $m['id']][$ds['key']]) ? 'checked' : '' ?> aria-label="<?= e($m['first_name'] . ' ' . $m['last_name'] . ': ' . $ds['label'] . ' ' . $ds['when']) ?>"></td>
           <?php endforeach; ?>
         </tr>
       <?php endforeach; ?>
@@ -91,6 +94,7 @@
     </div>
     <div class="actions"><button class="btn" type="submit">Trainingsdagen opslaan</button></div>
   </form>
+  <?php endif; ?>
 </section>
 <?php endif; ?>
 

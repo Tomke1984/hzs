@@ -114,6 +114,15 @@ final class Installer
         }
         ensure_group_colors();
         try {
+            Database::val('SELECT weekday FROM member_series LIMIT 1');
+        } catch (Throwable $e) {
+            try {
+                Database::exec('DROP TABLE member_series'); // nieuw, nog ongebruikt: opnieuw aanmaken met weekdag per keuze
+            } catch (Throwable $e2) {
+            }
+            self::createSchema();
+        }
+        try {
             Database::val('SELECT is_public FROM activities LIMIT 1');
         } catch (Throwable $e) {
             Database::exec('ALTER TABLE activities ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');

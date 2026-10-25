@@ -279,7 +279,8 @@ CREATE TABLE IF NOT EXISTS activity_series_groups (
 CREATE TABLE IF NOT EXISTS member_series (
   member_id INT NOT NULL,
   series_id INT NOT NULL,
-  PRIMARY KEY (member_id, series_id),
+  weekday INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (member_id, series_id, weekday),
   FOREIGN KEY (member_id) REFERENCES members(id),
   FOREIGN KEY (series_id) REFERENCES activity_series(id)
 ){{ENGINE}};
