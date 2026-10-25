@@ -38,7 +38,7 @@
         <?php if ((int) $o['is_custom']): ?><span class="chip off">aangepast</span><?php endif; ?>
         <?php if ($cancelled): ?><span class="chip off">Geschrapt<?= $o['status_note'] ? ': ' . e($o['status_note']) : '' ?></span><?php endif; ?>
       </div>
-      <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form">
+      <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $cancelled ? '' : 'data-confirm="Deze activiteit annuleren en verwijderen? Dit kan niet ongedaan worden gemaakt."' ?>>
         <?= csrf_field() ?>
         <input type="hidden" name="activity_id" value="<?= (int) $o['id'] ?>">
         <input type="hidden" name="back" value="series">
@@ -47,8 +47,7 @@
           <button class="btn btn-small btn-ghost" type="submit">Herstellen</button>
         <?php else: ?>
           <input type="hidden" name="do" value="cancel">
-          <input name="reason" placeholder="Reden" maxlength="200">
-          <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
+                    <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
         <?php endif; ?>
       </form>
     </div>

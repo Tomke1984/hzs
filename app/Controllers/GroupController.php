@@ -283,6 +283,7 @@ final class GroupController
                 }
                 Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$sid]);
                 Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$sid]);
+                Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$sid]);
                 Database::exec('DELETE FROM activity_series WHERE id = ?', [$sid]);
             }
             Database::exec('DELETE FROM group_memberships WHERE group_id = ?', [$id]);

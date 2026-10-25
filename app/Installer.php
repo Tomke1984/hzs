@@ -49,7 +49,7 @@ final class Installer
     /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages', 'login_attempts'] as $table) {
+        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages', 'login_attempts', 'activity_series_skips'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {

@@ -26,7 +26,7 @@
   </dl>
   <?php if ($activity['description']): ?><p><?= nl2br(e($activity['description'])) ?></p><?php endif; ?>
   <?php if (Auth::can('activities.write')): ?>
-  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form">
+  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $activity['status'] === 'CANCELLED' ? '' : 'data-confirm="Deze activiteit annuleren en verwijderen? Dit kan niet ongedaan worden gemaakt."' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
     <?php if ($activity['status'] === 'CANCELLED'): ?>
@@ -34,8 +34,7 @@
       <button class="btn btn-small btn-ghost" type="submit">Herstellen</button>
     <?php else: ?>
       <input type="hidden" name="do" value="cancel">
-      <input name="reason" placeholder="Reden (bv. vakantie)" maxlength="200">
-      <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
+            <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
     <?php endif; ?>
   </form>
   <?php endif; ?>

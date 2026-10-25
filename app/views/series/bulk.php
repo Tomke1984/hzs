@@ -1,9 +1,9 @@
 <h1>Activiteiten schrappen of verplaatsen</h1>
-<p class="muted">Voor vakantie, een gesloten zwembad of een tijdelijk andere locatie. Kies één dag (van = tot en met) of een periode.</p>
+<p class="muted">Schrappen verwijdert de activiteiten definitief (met geregistreerde aanwezigheden blijven ze geannuleerd bewaard). Voor vakantie, een gesloten zwembad of een tijdelijk andere locatie. Kies één dag (van = tot en met) of een periode.</p>
 <?php if ($errors): ?>
   <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
-<form class="card form" method="post" action="<?= e(url('series_bulk')) ?>">
+<form class="card form" method="post" action="<?= e(url('series_bulk')) ?>" data-confirm="Zeker? Bij &quot;Schrappen&quot; worden de activiteiten definitief verwijderd.">
   <?= csrf_field() ?>
   <div class="grid2">
     <label>Van *<input type="date" name="from" value="<?= e($v['from']) ?>" required></label>
@@ -16,11 +16,10 @@
   </fieldset>
   <fieldset>
     <legend>Actie *</legend>
-    <label class="check"><input type="radio" name="do" value="cancel" <?= $v['do'] === 'cancel' ? 'checked' : '' ?>> Schrappen</label>
+    <label class="check"><input type="radio" name="do" value="cancel" <?= $v['do'] === 'cancel' ? 'checked' : '' ?>> Schrappen (annuleren en verwijderen)</label>
     <label class="check"><input type="radio" name="do" value="restore" <?= $v['do'] === 'restore' ? 'checked' : '' ?>> Geschrapte activiteiten herstellen</label>
     <label class="check"><input type="radio" name="do" value="location" <?= $v['do'] === 'location' ? 'checked' : '' ?>> Locatie wijzigen</label>
   </fieldset>
-  <label>Reden (bij schrappen)<input name="reason" value="<?= e($v['reason']) ?>" maxlength="200" placeholder="bv. Krokusvakantie"></label>
   <label>Nieuwe locatie (bij locatie wijzigen)<input name="location" value="<?= e($v['location']) ?>" maxlength="150"></label>
   <fieldset>
     <legend>Voor *</legend>

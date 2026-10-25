@@ -81,7 +81,7 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 
 ### Kalender, trainingsreeksen en aanwezigheid
 - **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op zwemschool/competitie en groep.
-- **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen met reden, herstellen; **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
+- **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen = annuleren en verwijderen (met aanwezigheden blijft ze geannuleerd bewaard); **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
 - **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per reeks en in bulk **op de website tonen of verbergen**.
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.

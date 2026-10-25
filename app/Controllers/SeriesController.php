@@ -210,7 +210,10 @@ final class SeriesController
         }
         $reason = mb_substr(input('reason'), 0, 200);
         if ($do === 'cancel') {
-            Database::exec("UPDATE activities SET status='CANCELLED', status_note=? WHERE id=?", [$reason === '' ? null : $reason, $a['id']]);
+            $res = SeriesService::erase((int) $a['id'], $reason);
+            audit('DELETE', 'activity', (int) $a['id'], $res === 'kept' ? 'geannuleerd (aanwezigheden bewaard)' : 'geschrapt en verwijderd');
+            flash('success', $res === 'kept' ? 'Activiteit geannuleerd. Ze blijft bewaard omdat er aanwezigheden geregistreerd zijn.' : 'Activiteit geschrapt en verwijderd.');
+            redirect($res === 'kept' ? url('activity', ['id' => $a['id']]) : ($a['series_id'] && input('back') === 'series' ? url('series_show', ['id' => $a['series_id']]) : url('calendar')));
         } else {
             Database::exec("UPDATE activities SET status='PLANNED', status_note=NULL WHERE id=?", [$a['id']]);
         }
@@ -259,8 +262,12 @@ final class SeriesController
             $p = array_merge($p, $sel);
         }
         if ($v['do'] === 'cancel') {
-            $n = Database::exec("UPDATE activities SET status='CANCELLED', status_note=? WHERE status='PLANNED' AND $sql", array_merge([$v['reason'] === '' ? null : $v['reason']], $p));
-            $msg = '%d activiteiten geschrapt.';
+            $n = 0;
+            foreach (Database::all("SELECT id FROM activities WHERE status='PLANNED' AND $sql", $p) as $row) {
+                SeriesService::erase((int) $row['id'], $v['reason']);
+                $n++;
+            }
+            $msg = '%d activiteiten geschrapt en verwijderd.';
         } elseif ($v['do'] === 'restore') {
             $n = Database::exec("UPDATE activities SET status='PLANNED', status_note=NULL WHERE status='CANCELLED' AND $sql", $p);
             $msg = '%d activiteiten hersteld.';
@@ -295,6 +302,7 @@ final class SeriesController
             }
             Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
             Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$s['id']]);
+            Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$s['id']]);
             Database::exec('DELETE FROM activity_series WHERE id = ?', [$s['id']]);
         });
         audit('DELETE', 'activity_series', (int) $s['id'], $s['title'] . ": $removed trainingen verwijderd, $kept bewaard");

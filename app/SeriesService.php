@@ -23,6 +23,35 @@ final class SeriesService
      * Brengt de komende trainingen in lijn met de reeks en vult het verleden aan vóór de eerste bestaande training.
      * @return array{created:int,updated:int,removed:int,kept:int}
      */
+    /**
+     * Activiteit schrappen = annuleren en verwijderen. Met geregistreerde aanwezigheden blijft ze (geannuleerd) bewaard.
+     * Een training uit een reeks komt niet terug bij het bijwerken van de reeks. Geeft 'deleted' of 'kept'.
+     */
+    public static function erase(int $activityId, string $reason = ''): string
+    {
+        $a = Database::one('SELECT id, series_id, starts_at FROM activities WHERE id = ?', [$activityId]);
+        if (!$a) {
+            return 'deleted';
+        }
+        $marked = (int) Database::val("SELECT COUNT(*) FROM attendance WHERE activity_id = ? AND status <> 'UNKNOWN'", [$activityId]);
+        if ($marked > 0) {
+            Database::exec("UPDATE activities SET status='CANCELLED', status_note=? WHERE id=?", [$reason === '' ? null : $reason, $activityId]);
+            return 'kept';
+        }
+        Database::tx(function () use ($a) {
+            if ($a['series_id']) {
+                $day = substr($a['starts_at'], 0, 10);
+                if (!Database::val('SELECT COUNT(*) FROM activity_series_skips WHERE series_id = ? AND day = ?', [$a['series_id'], $day])) {
+                    Database::exec('INSERT INTO activity_series_skips (series_id, day) VALUES (?, ?)', [$a['series_id'], $day]);
+                }
+            }
+            Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$a['id']]);
+            Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+            Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
+        });
+        return 'deleted';
+    }
+
     public static function sync(int $seriesId): array
     {
         $s = Database::one('SELECT * FROM activity_series WHERE id = ?', [$seriesId]);
@@ -49,6 +78,11 @@ final class SeriesService
                     $desired[$d->format('Y-m-d')] = $slots[$n];
                 }
             }
+        }
+
+        // Bewust geschrapte (verwijderde) dagen komen niet terug.
+        foreach (Database::all('SELECT day FROM activity_series_skips WHERE series_id = ?', [$seriesId]) as $sk) {
+            unset($desired[$sk['day']]);
         }
 
         $existing = [];
