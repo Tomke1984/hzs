@@ -59,6 +59,30 @@
     syncSwimmer();
   }
 
+  // Inschrijfformulier: standaard 1 kind, extra kinderen via knop (zonder JS zijn alle velden zichtbaar)
+  var addChild = document.getElementById('add-child');
+  if (addChild) {
+    var extras = Array.prototype.slice.call(document.querySelectorAll('fieldset.child-extra'));
+    var refresh = function () {
+      var hiddenOnes = extras.filter(function (f) { return f.classList.contains('is-collapsed'); });
+      addChild.hidden = hiddenOnes.length === 0;
+    };
+    extras.forEach(function (f) {
+      var filled = Array.prototype.some.call(f.querySelectorAll('input, select'), function (el) { return el.value !== ''; });
+      if (!filled) { f.classList.add('is-collapsed'); }
+    });
+    addChild.addEventListener('click', function () {
+      var next = extras.filter(function (f) { return f.classList.contains('is-collapsed'); })[0];
+      if (next) {
+        next.classList.remove('is-collapsed');
+        var first = next.querySelector('input');
+        if (first) { first.focus(); }
+      }
+      refresh();
+    });
+    refresh();
+  }
+
   // Groepenkeuze enkel tonen bij doelgroep "Specifieke groepen"
   var picks = document.getElementById('group-picks');
   if (picks) {

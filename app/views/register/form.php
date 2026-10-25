@@ -18,8 +18,8 @@
     </fieldset>
 
     <?php for ($i = 0; $i < $max; $i++): $p = $old['persons'][$i]; ?>
-      <fieldset <?= $i > 0 ? 'data-show-for="PARENT"' : '' ?>>
-        <legend><span data-show-for="PARENT">Kind <?= $i + 1 ?></span><span data-show-for="SELF" hidden>Jouw gegevens</span><?= $i > 0 ? ' <span class="muted small">(optioneel)</span>' : '' ?></legend>
+      <fieldset class="<?= $i > 0 ? 'child-extra' : '' ?>" <?= $i > 0 ? 'data-show-for="PARENT"' : '' ?>>
+        <legend><span data-show-for="PARENT">Kind <?= $i + 1 ?></span><span data-show-for="SELF" hidden>Jouw gegevens</span></legend>
         <div class="grid2">
           <label>Voornaam<?= $i === 0 ? ' *' : '' ?>
             <input name="persons[<?= $i ?>][first_name]" value="<?= e($p['first_name']) ?>" maxlength="80" <?= $i === 0 ? 'required' : '' ?> autocomplete="<?= $i === 0 ? 'given-name' : 'off' ?>">
@@ -43,6 +43,7 @@
         </div>
       </fieldset>
     <?php endfor; ?>
+    <div data-show-for="PARENT"><button type="button" class="btn btn-ghost" id="add-child" hidden>+ Nog een kind inschrijven</button></div>
 
     <fieldset>
       <legend>Contactgegevens</legend>

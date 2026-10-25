@@ -250,3 +250,5 @@ legend { font-weight: 600; padding: 0 6px; }
 .slot-row { display: grid; grid-template-columns: 120px 110px 110px 1fr; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line, #e3e7ea); }
 .slot-row input { margin: 0; }
 @media (max-width: 640px) { .slot-row { grid-template-columns: 1fr 1fr; } .slot-row .slot-day { grid-column: 1 / -1; } .slot-row .slot-loc { grid-column: 1 / -1; } }
+
+fieldset.child-extra.is-collapsed { display: none; }

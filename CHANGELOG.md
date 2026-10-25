@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `main` en `dev` zijn gelijk._
+- **Inschrijfformulier:** standaard enkel velden voor 1 kind; met de knop *+ Nog een kind inschrijven* verschijnt telkens een extra kind (zonder JavaScript blijven alle velden zichtbaar).
 
 ## Op main
 
