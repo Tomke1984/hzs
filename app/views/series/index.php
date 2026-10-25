@@ -29,7 +29,9 @@
 <div class="cards">
 <?php foreach ($series as $s): ?>
   <a class="card card-link <?= (int) $s['is_active'] ? '' : 'is-off' ?>" href="<?= e(url('series_show', ['id' => $s['id']])) ?>">
-    <h2><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?></h2>
+    <h2><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
+      <?php if (!(int) $s['is_public']): ?><span class="chip warn" title="Niet zichtbaar op de website">Niet op website</span><?php endif; ?>
+      <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h2>
     <p><?= e(implode(', ', $s['groups'])) ?></p>
     <p class="muted"><?= e(SeriesService::summary($s['slots'])) ?></p>
     <p class="muted small"><?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?> · <?= (int) $s['upcoming'] ?> komende trainingen</p>

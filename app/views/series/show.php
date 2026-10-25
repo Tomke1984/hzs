@@ -1,5 +1,7 @@
 <div class="row-between">
-  <h1><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?></h1>
+  <h1><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
+    <?php if (!(int) $s['is_public']): ?><span class="chip warn">Niet op website</span><?php endif; ?>
+    <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h1>
   <span class="actions-inline">
     <a class="btn btn-ghost" href="<?= e(url('series_bulk')) ?>">Schrappen / verplaatsen</a>
     <a class="btn" href="<?= e(url('series_form', ['id' => $s['id']])) ?>">Reeks wijzigen</a>
