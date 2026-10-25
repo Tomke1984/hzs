@@ -35,6 +35,7 @@ $todayStr = today();
   <span class="chip type-training">Training</span>
   <span class="chip type-competition">Wedstrijd</span>
   <span class="chip type-club">Clubactiviteit</span>
+  <span class="chip off">Wedstrijd voor een andere groep</span>
 </div>
 
 <div class="cal-grid" role="grid">
@@ -57,11 +58,11 @@ $todayStr = today();
         <?php endif; ?>
       </div>
       <?php foreach ($events as $ev): ?>
-        <a class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
-           title="<?= e($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? '')) ?>"
-           href="<?= e(url('activity', ['id' => $ev['id']])) ?>">
+        <<?= $ev['open'] ? 'a' : 'span' ?> class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> <?= $ev['mine'] ? '' : 'other' ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
+           title="<?= e(($ev['mine'] ? '' : 'Niet voor jouw groep. ') . ($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? ''))) ?>"
+           <?= $ev['open'] ? 'href="' . e(url('activity', ['id' => $ev['id']])) . '"' : '' ?>>
           <span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?>
-        </a>
+        </<?= $ev['open'] ? 'a' : 'span' ?>>
       <?php endforeach; ?>
     </div>
   <?php endfor; ?>

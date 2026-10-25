@@ -159,6 +159,7 @@ legend { font-weight: 600; padding: 0 6px; }
 .cal-event.type-training { background: var(--training); }
 .cal-event.type-competition { background: var(--competition); }
 .cal-event.type-club { background: var(--club); }
+.cal-event.other { background: #c9d0d7; color: #4a5560; cursor: default; }
 .cal-event.cancelled { background: #8a97a3; text-decoration: line-through; }
 .cal-event .time { font-weight: 700; }
 

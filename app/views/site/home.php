@@ -44,12 +44,11 @@
     <?php if (!$events): ?><p class="empty">Er zijn geen activiteiten gepland.</p><?php endif; ?>
     <div class="tiles">
     <?php foreach ($events as $ev): $off = $ev['status'] === 'CANCELLED'; $d = new DateTimeImmutable(substr($ev['starts_at'], 0, 10)); ?>
-      <div class="tile <?= $ev['type_code'] === 'COMPETITION' ? ($ev['mine'] ? 'competition' : 'other') : ($ev['type_code'] === 'TRAINING' ? 'training' : '') ?> <?= $off ? 'is-off' : '' ?>">
+      <div class="tile <?= $ev['type_code'] === 'COMPETITION' ? 'competition' : '' ?> <?= $off ? 'is-off' : '' ?>">
         <div class="date"><b><?= e($d->format('j')) ?></b><i><?= e(mb_substr(MONTHS_NL[(int) $d->format('n')], 0, 3)) ?></i></div>
         <div>
           <h3 class="<?= $off ? 'cancelled-text' : '' ?>"><?= e($ev['title']) ?></h3>
           <p><?= e(fmt_time($ev['starts_at'])) ?><?= $ev['location'] ? ' · ' . e($ev['location']) : '' ?></p>
-          <?php if (!$ev['mine']): ?><span class="chip off">Niet voor jouw groep</span><?php endif; ?>
           <?php if ($off): ?><span class="chip off">Geschrapt</span><?php endif; ?>
         </div>
       </div>

@@ -11,6 +11,11 @@ final class ActivityController
         $next = $first->modify('+1 month');
 
         [$sql, $params] = Scope::activityFilter('a');
+        $clubWide = Scope::groupIds() === null;
+        if (!$clubWide) {
+            // Wedstrijden van andere groepen zijn zichtbaar (in grijs), de rest enkel voor de eigen groepen.
+            $sql = "($sql OR t.code = 'COMPETITION')";
+        }
         [$cat, $gid] = GroupController::readFilter();
         if ($cat !== '' || $gid) {
             // Activiteiten voor de hele club blijven altijd zichtbaar; groepsactiviteiten worden gefilterd.
@@ -26,15 +31,25 @@ final class ActivityController
             $sql .= '))';
         }
         $rows = Database::all(
-            "SELECT a.id, a.title, a.starts_at, a.ends_at, a.status, a.status_note, a.location, t.code AS type_code, t.name AS type_name
+            "SELECT a.id, a.title, a.audience, a.starts_at, a.ends_at, a.status, a.status_note, a.location, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
              WHERE a.starts_at >= ? AND a.starts_at < ? AND $sql
              ORDER BY a.starts_at",
             array_merge([$first->format('Y-m-d 00:00:00'), $next->format('Y-m-d 00:00:00')], $params)
         );
 
+        $mine = Scope::myGroupIds();
         $byDay = [];
         foreach ($rows as $r) {
+            // "mine": hoort bij jou (training/clubactiviteit altijd; wedstrijd enkel voor de eigen groepen)
+            $r['mine'] = true;
+            if ($r['type_code'] === 'COMPETITION' && $r['audience'] !== 'CLUB' && ($mine || !$clubWide)) {
+                $r['mine'] = $mine && (int) Database::val(
+                    'SELECT COUNT(*) FROM activity_groups WHERE activity_id = ? AND group_id IN (' . Scope::in($mine) . ')',
+                    array_merge([$r['id']], $mine)
+                ) > 0;
+            }
+            $r['open'] = $clubWide || $r['mine'] || $r['type_code'] !== 'COMPETITION';
             $byDay[substr($r['starts_at'], 0, 10)][] = $r;
         }
 

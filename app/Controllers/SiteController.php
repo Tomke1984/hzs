@@ -144,40 +144,19 @@ final class SiteController
         ], 'Kalender');
     }
 
-    /**
-     * Activiteiten voor de publieke site. Bezoekers zien enkel wedstrijden en clubactiviteiten.
-     * Wie aangemeld is, ziet ook de trainingen van de eigen groepen; wedstrijden voor andere groepen krijgen mine=false.
-     * @param string      $from  starts_at >= (of ends_at >= als $to null is)
-     */
+    /** Activiteiten voor de publieke site: voor iedereen enkel wedstrijden en clubactiviteiten (persoonlijke kalender = in de app). */
     private static function events(string $from, ?string $to, int $limit = 0): array
     {
-        $mine = Auth::user() ? Scope::myGroupIds() : [];
-        $in = $mine ? Scope::in($mine) : '';
-        $visible = "t.code IN ('COMPETITION', 'CLUB')";
-        $params = [];
-        if ($mine) {
-            $visible .= " OR (t.code = 'TRAINING' AND (a.audience = 'CLUB' OR EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = a.id AND ag.group_id IN ($in))))";
-            $params = $mine;
-        }
         $time = $to === null ? 'a.ends_at >= ?' : 'a.starts_at >= ? AND a.starts_at < ?';
-        $params[] = $from;
-        if ($to !== null) {
-            $params[] = $to;
-        }
+        $params = $to === null ? [$from] : [$from, $to];
         $rows = Database::all(
-            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, a.audience, t.code AS type_code, t.name AS type_name
+            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
-             WHERE ($visible) AND $time ORDER BY a.starts_at" . ($limit ? " LIMIT $limit" : ''),
+             WHERE t.code IN ('COMPETITION', 'CLUB') AND $time ORDER BY a.starts_at" . ($limit ? " LIMIT $limit" : ''),
             $params
         );
         foreach ($rows as &$r) {
             $r['mine'] = true;
-            if ($mine && $r['type_code'] === 'COMPETITION' && $r['audience'] !== 'CLUB') {
-                $r['mine'] = (bool) Database::val(
-                    "SELECT COUNT(*) FROM activity_groups WHERE activity_id = ? AND group_id IN ($in)",
-                    array_merge([$r['id']], $mine)
-                );
-            }
         }
         unset($r);
         return $rows;

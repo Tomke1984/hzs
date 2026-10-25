@@ -10,10 +10,10 @@
     <section class="day">
       <div class="tiles">
       <?php foreach ($events as $ev): $c = $ev['status'] === 'CANCELLED'; ?>
-        <div class="tile <?= $ev['type_code'] === 'COMPETITION' ? ($ev['mine'] ? 'competition' : 'other') : ($ev['type_code'] === 'TRAINING' ? 'training' : '') ?> <?= $c ? 'is-off' : '' ?>">
+        <div class="tile <?= $ev['type_code'] === 'COMPETITION' ? 'competition' : '' ?> <?= $c ? 'is-off' : '' ?>">
           <div class="date"><b><?= e($dt->format('j')) ?></b><i><?= e(mb_substr(MONTHS_NL[(int) $dt->format('n')], 0, 3)) ?></i></div>
           <div>
-            <h3 class="<?= $c ? 'cancelled-text' : '' ?>"><?= e($ev['title']) ?> <span class="chip"><?= e($ev['type_name']) ?></span><?php if (!$ev['mine']): ?> <span class="chip off">Niet voor jouw groep</span><?php endif; ?>
+            <h3 class="<?= $c ? 'cancelled-text' : '' ?>"><?= e($ev['title']) ?> <span class="chip"><?= e($ev['type_name']) ?></span>
               <?php if ($c): ?><span class="chip off">Geschrapt<?= $ev['status_note'] ? ': ' . e($ev['status_note']) : '' ?></span><?php endif; ?></h3>
             <p><?= e(SeriesService::DAYS[(int) $dt->format('N')]) ?> · <?= e(fmt_time($ev['starts_at'])) ?>–<?= e(fmt_time($ev['ends_at'])) ?><?= $ev['location'] ? ' · ' . e($ev['location']) : '' ?></p>
             <?php if ($ev['description']): ?><p><?= nl2br(e($ev['description'])) ?></p><?php endif; ?>
