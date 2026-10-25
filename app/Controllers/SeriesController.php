@@ -31,7 +31,7 @@ final class SeriesController
             $s['slots'] = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
         }
         unset($s);
-        render('series/index', ['series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
+        render('series/index', ['unassigned' => Auth::can('activities.write') ? SeriesService::unassignedSwimMembers() : [], 'series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
     /** Reeks(en) op de website tonen of verbergen (één reeks via id, meerdere via ids[]). */
@@ -55,6 +55,37 @@ final class SeriesController
         flash('success', $n ? sprintf('%d %s %s de website.', $n, $n === 1 ? 'reeks staat' : 'reeksen staan', $val ? 'nu op' : 'niet meer op') : 'Er was niets te wijzigen.');
         $back = (string) input('back', '');
         redirect(str_starts_with($back, '?r=series') ? $back : url('series'));
+    }
+
+    /** Leden aan een zwemblok koppelen (één of meer leden, vanuit het blok of vanuit de lijst 'nog niet ingedeeld'). */
+    public static function memberAdd(): void
+    {
+        $s = self::load((int) input('series_id', '0'));
+        $ids = array_filter(array_map('intval', (array) ($_POST['member_ids'] ?? [])));
+        if (($one = (int) input('member_id', '0')) > 0) {
+            $ids = [$one];
+        }
+        $n = 0;
+        foreach ($ids as $mid) {
+            if (SeriesService::assign($mid, (int) $s['id'])) {
+                $n++;
+            }
+        }
+        if ($n) {
+            audit('UPDATE', 'activity_series', (int) $s['id'], "$n leden ingedeeld");
+        }
+        flash($n ? 'success' : 'error', $n ? sprintf('%d %s ingedeeld in "%s".', $n, $n === 1 ? 'lid' : 'leden', $s['title']) : 'Niemand ingedeeld: kies een lid uit een groep die in dit blok mag zwemmen.');
+        $back = (string) input('back', '');
+        redirect(str_starts_with($back, '?r=series') ? $back : url('series_show', ['id' => $s['id']]) . '#leden');
+    }
+
+    public static function memberRemove(): void
+    {
+        $s = self::load((int) input('series_id', '0'));
+        Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id = ?', [(int) input('member_id', '0'), $s['id']]);
+        audit('UPDATE', 'activity_series', (int) $s['id'], 'lid uit blok gehaald');
+        flash('success', 'Lid uit het blok gehaald.');
+        redirect(url('series_show', ['id' => $s['id']]) . '#leden');
     }
 
     /** Reeks(en) verlengen tot een nieuwe einddatum; de extra trainingen worden meteen aangemaakt (geschrapte dagen blijven weg). */
@@ -100,7 +131,10 @@ final class SeriesController
             'SELECT id, starts_at, ends_at, location, status, status_note, is_custom FROM activities WHERE series_id = ? AND starts_at >= ? ORDER BY starts_at LIMIT 80',
             [$s['id'], today() . ' 00:00:00']
         );
-        render('series/show', compact('s', 'occ'), $s['title']);
+        $isSwim = SeriesService::isSwim((int) $s['id']);
+        $blockMembers = $isSwim ? SeriesService::blockMembers((int) $s['id']) : [];
+        $blockCandidates = $isSwim ? SeriesService::blockCandidates((int) $s['id']) : [];
+        render('series/show', compact('s', 'occ', 'isSwim', 'blockMembers', 'blockCandidates'), $s['title']);
     }
 
     public static function form(): void

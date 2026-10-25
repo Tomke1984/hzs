@@ -110,7 +110,7 @@ final class MemberController
         $member = self::loadVisible((int) ($_GET['id'] ?? 0));
 
         $memberships = Database::all(
-            'SELECT gm.*, g.name AS group_name FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
+            'SELECT gm.*, g.name AS group_name, g.category AS group_category FROM group_memberships gm JOIN `groups` g ON g.id = gm.group_id
              WHERE gm.member_id = ? ORDER BY gm.id DESC',
             [$member['id']]
         );

@@ -68,13 +68,13 @@
 </section>
 <?php endif; ?>
 
-<?php if (Auth::can('activities.write') && $memberships): ?>
+<?php if (Auth::can('activities.write') && $memberships && ($group['category'] ?? '') === 'SWIM_SCHOOL'): ?>
 <section class="card" id="trainingsmoment">
   <h2>Trainingsmoment per lid</h2>
   <?php if (count($daySlots) < 2): ?>
     <p class="muted small">Zwemmen niet alle leden van deze groep op dezelfde dag? Maak eerst minstens twee reeksen voor deze groep, één per trainingsmoment (dag + uur); dan kies je hier per lid welke reeks hij volgt.</p>
   <?php else: ?>
-  <p class="muted small">Zwemmen niet alle leden van deze groep op hetzelfde moment? Elke reeks is één trainingsmoment (dag en uur). Vink per lid aan welke reeks(en) hij volgt. Niets aangevinkt betekent: alle trainingen van de groep. Aanwezigheidslijsten en de persoonlijke kalender van het lid volgen deze keuze.</p>
+  <p class="muted small">Zwemmen niet alle leden van deze groep op hetzelfde moment? Elke reeks is één trainingsmoment (dag en uur). Vink per lid aan welke reeks(en) hij volgt. Niets aangevinkt betekent: nog niet ingedeeld (het lid staat dan op geen aanwezigheidslijst). Aanwezigheidslijsten en de persoonlijke kalender van het lid volgen deze keuze.</p>
   <form method="post" action="<?= e(url('member_days')) ?>">
     <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
     <div class="table-wrap">

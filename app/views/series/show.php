@@ -35,6 +35,39 @@
     <dt>Periode</dt><dd><?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?></dd>
   </dl>
 </section>
+<?php if ($isSwim && Auth::can('activities.write')): ?>
+<section class="card" id="leden">
+  <h2>Leden in dit blok <span class="muted small">(<?= count($blockMembers) ?>)</span></h2>
+  <?php if (!$blockMembers): ?>
+    <p class="muted">Nog niemand ingedeeld. Leden die niet ingedeeld zijn, staan op geen enkele aanwezigheidslijst van dit blok.</p>
+  <?php else: ?>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Lid</th><th>Groep</th><th></th></tr></thead>
+    <tbody>
+    <?php foreach ($blockMembers as $m): ?>
+      <tr>
+        <td><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name'] . ' ' . $m['first_name']) ?></a></td>
+        <td><?= group_chip($m['group_name']) ?></td>
+        <td><form method="post" action="<?= e(url('series_member_remove')) ?>"><?= csrf_field() ?><input type="hidden" name="series_id" value="<?= (int) $s['id'] ?>"><input type="hidden" name="member_id" value="<?= (int) $m['id'] ?>"><button class="btn btn-small btn-ghost" type="submit">Uit blok halen</button></form></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <?php endif; ?>
+  <?php if ($blockCandidates): ?>
+  <form method="post" action="<?= e(url('series_member_add')) ?>" class="mt-s">
+    <?= csrf_field() ?><input type="hidden" name="series_id" value="<?= (int) $s['id'] ?>">
+    <fieldset class="check-grid">
+      <legend>Leden toevoegen (uit de groepen van dit blok)</legend>
+      <?php foreach ($blockCandidates as $m): ?>
+        <label class="check"><input type="checkbox" name="member_ids[]" value="<?= (int) $m['id'] ?>"> <?= e($m['last_name'] . ' ' . $m['first_name']) ?> <span class="muted small">(<?= e($m['group_name']) ?>)</span></label>
+      <?php endforeach; ?>
+    </fieldset>
+    <div class="actions"><button class="btn" type="submit">Geselecteerde leden indelen</button></div>
+  </form>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
 <h2 class="section-title">Komende trainingen</h2>
 <?php if (!$occ): ?><p class="card muted">Geen komende trainingen.</p><?php endif; ?>
 <?php foreach ($occ as $o): $cancelled = $o['status'] === 'CANCELLED'; ?>

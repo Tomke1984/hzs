@@ -116,6 +116,7 @@ final class Scope
             }
             $visible = [];
             $unrestricted = false;
+            $swim = Database::val('SELECT category FROM `groups` WHERE id = ?', [$gid]) === 'SWIM_SCHOOL';
             foreach (Database::all('SELECT member_id FROM group_memberships WHERE group_id = ? AND member_id IN (' . self::in($own) . ')', array_merge([$gid], $own)) as $mm) {
                 $rows = Database::all('SELECT series_id, weekday FROM member_series WHERE member_id = ?', [$mm['member_id']]);
                 $mine = [];
@@ -127,6 +128,9 @@ final class Scope
                     }
                 }
                 if (!$mine) {
+                    if ($swim) {
+                        continue; // zwemschool: nog niet ingedeeld = geen enkel blok
+                    }
                     $unrestricted = true;
                     break;
                 }
@@ -166,14 +170,16 @@ final class Scope
         }
         $sql = "SELECT DISTINCT m.* FROM members m
              JOIN group_memberships gm ON gm.member_id = m.id
+             JOIN `groups` tg ON tg.id = gm.group_id
              WHERE m.status = 'ACTIVE' AND gm.group_id IN (" . self::in($groupIds) . ')';
         $params = $groupIds;
-        // Reekstraining: leden met een vaste trainingsdag (in hun groep) komen enkel op hun eigen reeks(en) voor.
+        // Reekstraining: zwemschoolleden staan enkel op de blokken waaraan ze gekoppeld zijn (niet-ingedeeld = nergens);
+        // bij de competitie volgt iedereen het vaste schema van de groep, tenzij er toch een eigen keuze is.
         if (!empty($activity['series_id'])) {
-            $sql .= ' AND (EXISTS (SELECT 1 FROM member_series ms WHERE ms.member_id = m.id AND ms.series_id = ? AND (ms.weekday = 0 OR ms.weekday = ?))
-                       OR NOT EXISTS (SELECT 1 FROM member_series ms2
+            $sql .= " AND (EXISTS (SELECT 1 FROM member_series ms WHERE ms.member_id = m.id AND ms.series_id = ? AND (ms.weekday = 0 OR ms.weekday = ?))
+                       OR (tg.category = 'COMPETITION' AND NOT EXISTS (SELECT 1 FROM member_series ms2
                             JOIN activity_series_groups asg ON asg.series_id = ms2.series_id
-                            WHERE ms2.member_id = m.id AND asg.group_id = gm.group_id))';
+                            WHERE ms2.member_id = m.id AND asg.group_id = gm.group_id)))";
             $params[] = (int) $activity['series_id'];
             $params[] = (int) date('N', strtotime(substr($activity['starts_at'], 0, 10)));
         }

@@ -16,6 +16,34 @@
 <?php elseif (!$series): ?>
   <p class="card muted">Nog geen reeksen. Maak er één aan, bv. “Zwemtraining” voor een groep op di, wo en za.</p>
 <?php endif; ?>
+<?php if (!empty($unassigned) && $cat === '' && !$gid): ?>
+<section class="card" id="niet-ingedeeld">
+  <h2>Nog niet ingedeeld <span class="muted small">(<?= count($unassigned) ?>)</span></h2>
+  <p class="muted small">Zwemschoolleden zonder zwemblok staan op geen enkele aanwezigheidslijst. Kies hier meteen een blok.</p>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Lid</th><th>Groep</th><th>Blok</th></tr></thead>
+    <tbody>
+    <?php foreach ($unassigned as $u): ?>
+      <tr>
+        <td><a href="<?= e(url('member', ['id' => $u['id']])) ?>"><?= e($u['last_name'] . ' ' . $u['first_name']) ?></a></td>
+        <td><?= group_chip($u['group_name']) ?></td>
+        <td>
+        <?php if ($u['blocks']): ?>
+          <form method="post" action="<?= e(url('series_member_add')) ?>" class="inline-form">
+            <?= csrf_field() ?><input type="hidden" name="member_id" value="<?= (int) $u['id'] ?>"><input type="hidden" name="back" value="?r=series">
+            <select name="series_id" aria-label="Blok voor <?= e($u['first_name'] . ' ' . $u['last_name']) ?>">
+              <?php foreach ($u['blocks'] as $b): ?><option value="<?= (int) $b['id'] ?>"><?= e($b['label']) ?></option><?php endforeach; ?>
+            </select>
+            <button class="btn btn-small" type="submit">Indelen</button>
+          </form>
+        <?php else: ?><span class="muted small">Geen blok voor deze groep: maak er een.</span><?php endif; ?>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+</section>
+<?php endif; ?>
 <?php $back = '?' . http_build_query(array_filter(['r' => 'series', 'cat' => $cat, 'g' => $gid])); ?>
 <?php if ($series): ?>
 <form class="card inline-form-card" method="post" action="<?= e(url('series_extend')) ?>" data-confirm="Alle getoonde reeksen verlengen?">

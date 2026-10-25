@@ -52,6 +52,104 @@ final class SeriesService
         return 'deleted';
     }
 
+    /** Is dit een zwemschoolblok? (minstens één van de groepen is een zwemschoolgroep) */
+    public static function isSwim(int $seriesId): bool
+    {
+        return (int) Database::val(
+            "SELECT COUNT(*) FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? AND g.category = 'SWIM_SCHOOL'",
+            [$seriesId]
+        ) > 0;
+    }
+
+    /** Leden die nu aan dit blok gekoppeld zijn (en nog in een toegelaten groep zitten). */
+    public static function blockMembers(int $seriesId): array
+    {
+        return Database::all(
+            "SELECT DISTINCT m.id, m.first_name, m.last_name, g.name AS group_name
+             FROM member_series ms
+             JOIN members m ON m.id = ms.member_id AND m.status = 'ACTIVE'
+             JOIN group_memberships gm ON gm.member_id = m.id
+             JOIN activity_series_groups asg ON asg.series_id = ms.series_id AND asg.group_id = gm.group_id
+             JOIN `groups` g ON g.id = gm.group_id
+             WHERE ms.series_id = ? ORDER BY m.last_name, m.first_name",
+            [$seriesId]
+        );
+    }
+
+    /** Actieve leden uit de toegelaten groepen die nog niet aan dit blok gekoppeld zijn. */
+    public static function blockCandidates(int $seriesId): array
+    {
+        return Database::all(
+            "SELECT DISTINCT m.id, m.first_name, m.last_name, g.name AS group_name
+             FROM members m
+             JOIN group_memberships gm ON gm.member_id = m.id
+             JOIN activity_series_groups asg ON asg.group_id = gm.group_id AND asg.series_id = ?
+             JOIN `groups` g ON g.id = gm.group_id
+             WHERE m.status = 'ACTIVE' AND NOT EXISTS (SELECT 1 FROM member_series ms WHERE ms.member_id = m.id AND ms.series_id = ?)
+             ORDER BY m.last_name, m.first_name",
+            [$seriesId, $seriesId]
+        );
+    }
+
+    /**
+     * Actieve leden van een zwemschoolgroep die nog aan geen enkel (lopend) blok van hun groep gekoppeld zijn.
+     * @return array<int, array{id:int,first_name:string,last_name:string,group_id:int,group_name:string,blocks:array}>
+     */
+    public static function unassignedSwimMembers(): array
+    {
+        $rows = Database::all(
+            "SELECT m.id, m.first_name, m.last_name, g.id AS group_id, g.name AS group_name
+             FROM members m JOIN group_memberships gm ON gm.member_id = m.id JOIN `groups` g ON g.id = gm.group_id
+             WHERE m.status = 'ACTIVE' AND g.is_active = 1 AND g.category = 'SWIM_SCHOOL'
+               AND NOT EXISTS (
+                 SELECT 1 FROM member_series ms
+                 JOIN activity_series s ON s.id = ms.series_id AND s.is_active = 1 AND s.end_date >= ?
+                 JOIN activity_series_groups asg ON asg.series_id = ms.series_id AND asg.group_id = gm.group_id
+                 WHERE ms.member_id = m.id)
+             ORDER BY g.name, m.last_name, m.first_name",
+            [today()]
+        );
+        $blocks = [];
+        foreach ($rows as &$r) {
+            $gid = (int) $r['group_id'];
+            if (!isset($blocks[$gid])) {
+                $blocks[$gid] = [];
+                foreach (Database::all(
+                    'SELECT s.id, s.title FROM activity_series s JOIN activity_series_groups sg ON sg.series_id = s.id WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ? ORDER BY s.title',
+                    [$gid, today()]
+                ) as $b) {
+                    $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$b['id']]);
+                    $blocks[$gid][] = ['id' => (int) $b['id'], 'label' => ucfirst(self::summary($slots)) . ' · ' . $b['title']];
+                }
+            }
+            $r['blocks'] = $blocks[$gid];
+        }
+        unset($r);
+        return $rows;
+    }
+
+    /** Lid koppelt aan een blok (enkel als de huidige groep van het lid in het blok is toegelaten). */
+    public static function assign(int $memberId, int $seriesId): bool
+    {
+        $ok = (int) Database::val(
+            'SELECT COUNT(*) FROM group_memberships gm JOIN activity_series_groups asg ON asg.group_id = gm.group_id AND asg.series_id = ? WHERE gm.member_id = ?',
+            [$seriesId, $memberId]
+        ) > 0;
+        if (!$ok) {
+            return false;
+        }
+        if (!Database::val('SELECT COUNT(*) FROM member_series WHERE member_id = ? AND series_id = ? AND weekday = 0', [$memberId, $seriesId])) {
+            Database::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, 0)', [$memberId, $seriesId]);
+        }
+        return true;
+    }
+
+    /** Alle blok-indelingen van een lid wissen (bij een groepswissel krijgt het lid een nieuwe indeling). */
+    public static function clearMemberBlocks(int $memberId): void
+    {
+        Database::exec('DELETE FROM member_series WHERE member_id = ?', [$memberId]);
+    }
+
     public static function sync(int $seriesId): array
     {
         $s = Database::one('SELECT * FROM activity_series WHERE id = ?', [$seriesId]);

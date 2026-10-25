@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Zwemblokken (zwemschool):** een zwemschoolreeks (dag + uur) is een *blok*. Op de blokpagina staat de sectie **Leden in dit blok** (leden toevoegen uit de toegelaten groepen, of uit het blok halen); op *Trainingsreeksen* staat de lijst **Nog niet ingedeeld** met een keuzelijst per lid. Een lid mag in meerdere blokken, leden van verschillende groepen mogen samen in één blok, geen capaciteitslimiet. **Nieuwe regel:** een zwemschoollid zonder blok staat op geen enkele aanwezigheidslijst en ziet (ouder/zwemmer) geen trainingen van die groep tot het is ingedeeld; competitie blijft ongewijzigd (vast schema per groep). Verandert een lid van groep (of wordt het uit de groep gehaald/verplaatst), dan vervalt zijn indeling en komt hij terug in *Nog niet ingedeeld*. Het rooster op de groepspagina verschijnt enkel voor zwemschoolgroepen. Bestaande zwemleden zonder indeling verdwijnen dus van de lijsten tot ze ingedeeld zijn.
 - **Trainingsmoment per lid = per reeks:** het rooster op de groepspagina heeft één kolom per reeks (een reeks is één trainingsmoment: dag + uur, bv. *ma 18:00–19:00*) in plaats van per weekdag binnen een reeks. Maak dus één reeks per trainingsmoment en vink per lid aan welke reeks(en) hij volgt. De ledenpagina toont de gekozen reeks(en) met hun dag en uur.
 
 ## Op main

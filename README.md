@@ -143,3 +143,6 @@ Optioneel: `'registration' => ['notify_email' => 'bestuur@jouwdomein.be']` mailt
 Berichten van het contactformulier gaan naar `'contact' => ['swimschool_email' => '…', 'competition_email' => '…', 'other_email' => '…']` (leeg = het meldadres van de inschrijvingen); ze staan altijd ook in de app onder *Berichten*. Geüploade afbeeldingen komen in `public/uploads/`: die map moet schrijfbaar zijn en in de back-up zitten.
 
 Lokaal testen: laat `driver` op `log` staan. Na een uitnodiging staat de activatielink in de melding en in `storage/mail/outbox.log`.
+
+### Zwemblokken (zwemschool)
+Een zwemschoolreeks (dag + uur) is een blok; `member_series` (weekday 0) koppelt leden aan blokken. Zwemschoolleden zonder blok staan op geen aanwezigheidslijst (`Scope::targetMembers`) en zien geen trainingen van hun groep (`Scope::hiddenSlots`); competitie volgt het vaste groepsschema. Beheer via `series_show` (Leden in dit blok), `series` (Nog niet ingedeeld) en routes `series_member_add` / `series_member_remove`. Groepswissel wist de indeling (`SeriesService::clearMemberBlocks`).

@@ -119,3 +119,6 @@ Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 7
 
 ## 13. Aanbevolen volgende stappen
 Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; MFA voor beheerders; schemaversie in plaats van migraties bij elke start; testsuite in de repository; geautomatiseerde back-up.
+
+### Zwemblokken (zwemschool)
+Een zwemschoolreeks (dag + uur) is een blok; `member_series` (weekday 0) koppelt leden aan blokken. Zwemschoolleden zonder blok staan op geen aanwezigheidslijst (`Scope::targetMembers`) en zien geen trainingen van hun groep (`Scope::hiddenSlots`); competitie volgt het vaste groepsschema. Beheer via `series_show` (Leden in dit blok), `series` (Nog niet ingedeeld) en routes `series_member_add` / `series_member_remove`. Groepswissel wist de indeling (`SeriesService::clearMemberBlocks`).

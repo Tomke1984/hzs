@@ -88,6 +88,8 @@ $routes = [
     'activity_form'    => ['GET' => ['ActivityController', 'form', 'activities.write']],
     'activity_save'    => ['POST' => ['ActivityController', 'save', 'activities.write']],
     'series'           => ['GET' => ['SeriesController', 'index', 'activities.write']],
+    'series_member_add'    => ['POST' => ['SeriesController', 'memberAdd', 'activities.write']],
+    'series_member_remove' => ['POST' => ['SeriesController', 'memberRemove', 'activities.write']],
     'series_extend'    => ['POST' => ['SeriesController', 'extend', 'activities.write']],
     'series_public'    => ['POST' => ['SeriesController', 'setPublic', 'activities.write']],
     'series_show'      => ['GET' => ['SeriesController', 'show', 'activities.write']],

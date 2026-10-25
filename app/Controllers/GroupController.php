@@ -273,6 +273,7 @@ final class GroupController
             abort(404, 'Lid niet gevonden.');
         }
         if ($groupId === 0) {
+            SeriesService::clearMemberBlocks($memberId);
             Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
             audit('DELETE', 'group_membership', null, "member=$memberId");
             flash('success', 'Lid zit nu in geen enkele groep.');
@@ -308,6 +309,7 @@ final class GroupController
             return 'Dit lid zit al in de groep "' . $current['name'] . '". Een lid kan maar in één groep zitten: verplaats het lid naar de nieuwe groep.';
         }
         Database::tx(function () use ($memberId, $groupId) {
+            SeriesService::clearMemberBlocks($memberId);
             Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
             $id = Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$memberId, $groupId, today()]);
             audit('CREATE', 'group_membership', $id);
@@ -393,6 +395,7 @@ final class GroupController
             if (!$ms) {
                 continue;
             }
+            SeriesService::clearMemberBlocks((int) $ms['member_id']);
             Database::exec('UPDATE group_memberships SET group_id = ? WHERE id = ?', [$to, $ms['id']]);
             audit('MOVE', 'group_membership', (int) $ms['id'], json_encode(['from' => $from, 'to' => $to]));
             $moved++;
@@ -411,6 +414,7 @@ final class GroupController
         if (!$row) {
             abort(404, 'Dit lid zit niet in een groep.');
         }
+        SeriesService::clearMemberBlocks((int) $row['member_id']);
         Database::exec('DELETE FROM group_memberships WHERE id = ?', [$row['id']]);
         audit('DELETE', 'group_membership', (int) $row['id']);
         flash('success', 'Lid uit de groep gehaald.');
