@@ -10,31 +10,33 @@
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/app.js" defer></script>
 </head>
-<body>
+<body class="<?= Auth::user() ? 'has-sidebar' : 'guest' ?>">
 <?php $user = Auth::user(); ?>
-<header class="topbar">
-  <div class="wrap bar">
-    <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
-    <?php if ($user): ?>
-    <nav class="nav">
-      <a href="<?= e(url('dashboard')) ?>">Overzicht</a>
-      <?php if (Auth::can('activities.read')): ?><a href="<?= e(url('calendar')) ?>">Kalender</a><?php endif; ?>
-      <?php if (Auth::can('members.read')): ?><a href="<?= e(url('members')) ?>"><?= e(members_label()) ?></a><?php endif; ?>
-      <?php if (Auth::can('groups.read')): ?><a href="<?= e(url('groups')) ?>">Groepen</a><?php endif; ?>
-      <?php if (Auth::can('registrations.manage')): $nReg = (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'"); ?><a href="<?= e(url('registrations')) ?>">Inschrijvingen<?= $nReg ? ' <span class="badge">' . $nReg . '</span>' : '' ?></a><?php endif; ?>
-      <?php if (Auth::can('registrations.manage')): $nWait = (int) Database::val("SELECT COUNT(*) FROM swimtest_requests WHERE status = 'WAITING'"); ?><a href="<?= e(url('swimtests')) ?>">Zwemtest<?= $nWait ? ' <span class="badge">' . $nWait . '</span>' : '' ?></a><?php endif; ?>
-      <?php if (Auth::can('registrations.manage')): $nMsg = (int) Database::val('SELECT COUNT(*) FROM contact_messages WHERE handled_at IS NULL'); ?><a href="<?= e(url('messages')) ?>">Berichten<?= $nMsg ? ' <span class="badge">' . $nMsg . '</span>' : '' ?></a><?php endif; ?>
-      <?php if (Auth::can('content.manage')): ?><a href="<?= e(url('content')) ?>">Website</a><?php endif; ?>
-      <?php if (Auth::can('users.manage')): ?><a href="<?= e(url('users')) ?>">Gebruikers</a><?php endif; ?>
-    </nav>
-    <form class="userbox" method="post" action="<?= e(url('logout')) ?>">
+<noscript><link rel="stylesheet" href="assets/nojs.css"></noscript>
+<?php if ($user): ?>
+<header class="app-topbar">
+  <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
+  <button class="app-menu-btn" type="button" aria-expanded="false" aria-controls="app-nav">Menu</button>
+</header>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand side-brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
+    <?php require __DIR__ . '/_nav.php'; ?>
+    <form class="side-user" method="post" action="<?= e(url('logout')) ?>">
       <?= csrf_field() ?>
-      <span class="who"><?= e($user['display_name']) ?></span>
+      <div class="side-who"><span class="avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $user['display_name'], 0, 1))) ?></span><span><?= e($user['display_name']) ?></span></div>
       <button class="btn btn-small btn-ghost" type="submit">Afmelden</button>
     </form>
-    <?php endif; ?>
+  </aside>
+  <div class="app-overlay" hidden></div>
+  <div class="app-content">
+<?php else: ?>
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="<?= e(url('home')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
   </div>
 </header>
+<?php endif; ?>
 <main class="wrap">
   <?php if ($user && (string) ($_GET['r'] ?? 'dashboard') !== 'dashboard'):
       $backHref = back_url((string) ($_GET['r'] ?? ''), $_GET); ?>
@@ -46,5 +48,9 @@
   <?= $content ?>
 </main>
 <footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp</footer>
+<?php if ($user): ?>
+  </div>
+</div>
+<?php endif; ?>
 </body>
 </html>

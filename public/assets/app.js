@@ -23,14 +23,21 @@
     syncType();
   }
 
-  // Actieve menu-link markeren en in beeld scrollen
-  var path = location.search;
-  document.querySelectorAll('.nav a').forEach(function (a) {
-    var r = (a.getAttribute('href').match(/r=([a-z_]+)/) || [])[1];
-    var cur = (path.match(/r=([a-z_]+)/) || [])[1] || 'dashboard';
-    var map = { member: 'members', member_form: 'members', group: 'groups', group_form: 'groups', activity: 'calendar', activity_form: 'calendar', user_form: 'users' };
-    if (r && (r === cur || r === map[cur])) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'center' }); }
-  });
+  // Beheer-app: menu als uitschuifbaar paneel op smalle schermen
+  var appBtn = document.querySelector('.app-menu-btn'), appOverlay = document.querySelector('.app-overlay');
+  if (appBtn) {
+    var setNav = function (open) {
+      document.body.classList.toggle('nav-open', open);
+      appBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (appOverlay) appOverlay.hidden = !open;
+      if (open) { var first = document.querySelector('#app-nav .side-link'); if (first) first.focus(); } else if (document.activeElement && document.activeElement.closest && document.activeElement.closest('#sidebar')) appBtn.focus();
+    };
+    appBtn.addEventListener('click', function () { setNav(!document.body.classList.contains('nav-open')); });
+    if (appOverlay) appOverlay.addEventListener('click', function () { setNav(false); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && document.body.classList.contains('nav-open')) setNav(false); });
+    document.querySelectorAll('#app-nav a').forEach(function (a) { a.addEventListener('click', function () { setNav(false); }); });
+    if (window.matchMedia) window.matchMedia('(min-width: 960px)').addEventListener('change', function (e) { if (e.matches) setNav(false); });
+  }
 
   // Bevestiging voor formulieren met data-confirm
   document.addEventListener('submit', function (ev) {

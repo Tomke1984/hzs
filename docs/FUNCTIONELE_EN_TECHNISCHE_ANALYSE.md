@@ -61,6 +61,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - `app/Controllers/*`: use-cases per domein; `app/Scope.php`: centrale gegevensscope; `app/Auth.php`: sessie en permissies; `app/Markup.php`: veilige opmaak voor teksten (eerst escapen, dan een beperkte set opmaak en een whitelist voor links); `app/SeriesService.php`, `app/PageCheck.php`, `app/Mailer.php`, `app/Invites.php`, `app/Guardianship.php`.
 - **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}` (portable SQL, datums als tekst). `Installer::migrate()` draait bij elke start: ontbrekende tabellen aanmaken (nieuwe tabellen moeten in de probe-lijst staan), kolommen toevoegen, opruimmigraties (groepshistoriek, doelstellingen naar de groep, inhoudscorrecties) en referentiedata (rollen/permissies) synchroniseren. Bestaande databases worden dus automatisch bijgewerkt.
 - **Publieke vormgeving:** `layout_public.php` + `public/assets/site.css`, zelf gehoste lettertypen; de beheer-app gebruikt `layout.php` + `style.css`.
+- **Menu van de app:** vaste zijbalk (`app/views/_nav.php`) met secties Club, Planning, Aanvragen (met tellers) en Website, gefilterd op rechten; onder 960 px een uitschuifbaar menu via een *Menu*-knop (`app.js`), zonder JavaScript altijd zichtbaar (`nojs.css`).
 - **Navigatie:** de knop *← Terug* gaat naar de bovenliggende pagina via `back_url()` (geen browsergeschiedenis).
 - **Mail:** driver `log` (lokaal, `storage/mail/outbox.log`), `smtp` of PHP `mail()`. Links in mails gebruiken `app_url`.
 - **Uploads:** `public/uploads/` (enkel afbeeldingen, type- en groottecontrole).
@@ -97,7 +98,7 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 Er is geen PHPUnit-suite; de levering werd getest met end-to-end shellscripts tegen `php -S` (installatie met demodata, aanmelden met de demo-accounts, formulieren posten en resultaten controleren in HTML en database). Dekking: authenticatie en CSRF, autorisatie per rol, ledenregels (minderjarigen, één groep), groepsbeheer en verwijderen, trainingsreeksen (aanmaken, schrappen, verplaatsen, verwijderen, tonen/verbergen), uitnodigingen en mails, inschrijven en goedkeuren, zwemtestwachtlijst, contactformulier, publieke site en kalender (wat bezoekers wel/niet zien), websitebeheer, paginacontrole, automatische pagina's, terugknop en migraties van bestaande databases. Aanbeveling: deze scripts omzetten naar een bewaarde suite in de repository (bv. `tests/`).
 
 ## 10b. Responsive
-Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 768, 820, 1024, 1180, 1366 en 1920 px (geen horizontale scroll). Menu klapt in onder 1180 px; onder 820 px blijft in de header enkel het logo; tabellen worden kaarten op telefoon (elke tabel heeft een `thead` voor de labels); formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
+Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 768, 820, 1024, 1180, 1366 en 1920 px (geen horizontale scroll). Publiek menu klapt in onder 1180 px, het app-menu onder 960 px; onder 820 px blijft in de header enkel het logo; tabellen worden kaarten op telefoon (elke tabel heeft een `thead` voor de labels); formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
 
 ## 11. Deployment en exploitatie
 - Apart subdomein of de hoofddomeinnaam met HTTPS; webroot naar `public/`.

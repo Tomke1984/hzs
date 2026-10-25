@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Nieuw menu in de beheer-app:** een vaste zijbalk links (donkerblauw) in plaats van de lange rij links bovenaan. Het menu is gegroepeerd in *Overzicht*, **Club** (Leden, Groepen, Gebruikers), **Planning** (Kalender, Trainingsreeksen), **Aanvragen** (Inschrijvingen, Zwemtest, Berichten, met teller van openstaande items) en **Website** (Beheren, Website bekijken). Elk item heeft een icoon, de actieve pagina is duidelijk gemarkeerd en je ziet enkel wat je rol mag. Onderaan staat wie is aangemeld met *Afmelden*. Op telefoon en tablet (< 960 px) staat bovenaan het logo met een *Menu*-knop; het menu schuift dan over het scherm (sluit met overlay, Esc of een klik op een link). Zonder JavaScript blijft het menu gewoon zichtbaar. Technisch: `app/views/_nav.php`, `public/assets/nojs.css`.
 - **Imports uit de app gehaald:** de knoppen *Inhoud van khzs.be importeren* (Website → Pagina's) en *Competitie-uren overnemen* (Trainingsreeksen) zijn verwijderd, samen met hun routes. De reeds geïmporteerde pagina's, groepen en reeksen blijven gewoon bestaan. Voor ontwikkeling en tests blijft de commandoregel `php tools/seed-site.php [pages] [competition]`.
 
 ## Op main
