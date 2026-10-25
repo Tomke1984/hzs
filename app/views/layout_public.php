@@ -43,7 +43,6 @@ $curSlug = (string) ($_GET['slug'] ?? '');
           <?php endif; ?>
         </span>
       <?php endforeach; ?>
-      <a href="<?= e(url('trainingstimes')) ?>" <?= $cur === 'trainingstimes' ? 'aria-current="page"' : '' ?>>Trainingsuren</a>
       <a href="<?= e(url('agenda')) ?>" <?= $cur === 'agenda' ? 'aria-current="page"' : '' ?>>Kalender</a>
       <a class="nav-login" href="<?= e(url($user ? 'dashboard' : 'login')) ?>"><?= $user ? 'Mijn Clubapp' : 'Aanmelden' ?></a>
       <a class="nav-cta" href="<?= e(url('swimtest')) ?>">Zwemtest aanvragen</a>
