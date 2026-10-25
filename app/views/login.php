@@ -1,5 +1,6 @@
 <div class="card narrow">
-  <h1>Aanmelden</h1>
+  <img class="login-logo" src="assets/logo.png" alt="Hasseltse Zwemvereniging Spartacus" width="109" height="96">
+  <h1 class="center">Aanmelden</h1>
   <form method="post" action="<?= e(url('login')) ?>" autocomplete="on">
     <?= csrf_field() ?>
     <label>E-mailadres

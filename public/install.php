@@ -20,8 +20,8 @@ function installer_blocked(): bool
 function page(string $title, string $body): void
 {
     echo '<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-        . '<title>' . e($title) . ' · HZS Clubapp</title><link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>'
-        . '<header class="topbar"><div class="wrap bar"><span class="brand"><span class="wave">≈</span> HZS Clubapp · Installatie</span></div></header>'
+        . '<title>' . e($title) . ' · HZS Clubapp</title><link rel="icon" type="image/png" href="assets/logo.png"><link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>'
+        . '<header class="topbar"><div class="wrap bar"><span class="brand"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp · Installatie</span></span></div></header>'
         . '<main class="wrap">' . $body . '</main></body></html>';
     exit;
 }

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title ? $title . ' · ' : '') ?><?= e(config('app_name', 'HZS Clubapp')) ?></title>
+<link rel="icon" type="image/png" href="assets/logo.png">
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/app.js" defer></script>
 </head>
@@ -11,7 +12,7 @@
 <?php $user = Auth::user(); ?>
 <header class="topbar">
   <div class="wrap bar">
-    <a class="brand" href="<?= e(url('dashboard')) ?>"><span class="wave">≈</span> <?= e(config('app_name', 'HZS Clubapp')) ?></a>
+    <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
     <?php if ($user): ?>
     <nav class="nav">
       <a href="<?= e(url('dashboard')) ?>">Overzicht</a>
