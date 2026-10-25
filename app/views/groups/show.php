@@ -23,6 +23,13 @@
   <?php endif; ?>
 </section>
 
+<?php if (!empty($group['goals'])): ?>
+<section class="card">
+  <h2>Doelstellingen</h2>
+  <div class="prose"><?= Markup::render((string) $group['goals']) ?></div>
+</section>
+<?php endif; ?>
+
 <?php if (Auth::can('activities.read')): ?>
 <section class="card">
   <h2>Activiteiten</h2>

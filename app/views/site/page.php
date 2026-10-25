@@ -14,5 +14,16 @@
   <article>
     <?php if ($p['status'] !== 'PUBLISHED'): ?><p class="alert alert-warning">Concept: deze pagina is nog niet publiek.</p><?php endif; ?>
     <div class="prose"><?= Markup::render((string) $p['body']) ?></div>
+    <?php if ($goalGroups): ?>
+      <nav class="goal-jump" aria-label="Groepen">
+        <?php foreach ($goalGroups as $g): ?><a href="#groep-<?= (int) $g['id'] ?>"><?= e($g['name']) ?></a><?php endforeach; ?>
+      </nav>
+      <?php foreach ($goalGroups as $g): ?>
+        <section class="goal" id="groep-<?= (int) $g['id'] ?>">
+          <h2><?= e($g['name']) ?></h2>
+          <div class="prose"><?= Markup::render((string) $g['goals']) ?></div>
+        </section>
+      <?php endforeach; ?>
+    <?php endif; ?>
   </article>
 </div>

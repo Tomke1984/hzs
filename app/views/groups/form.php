@@ -20,6 +20,10 @@
   <label>Omschrijving
     <input name="description" value="<?= e($group['description']) ?>" maxlength="255">
   </label>
+  <label>Doelstellingen (voor de website)
+    <textarea class="editor" name="goals" rows="9" maxlength="8000"><?= e((string) ($group['goals'] ?? '')) ?></textarea>
+    <span class="muted small">Verschijnen op de pagina Doelstellingen van de zwemschool (enkel voor actieve groepen van de zwemschool). Een lijst maak je met <code>- </code> voor elke regel; <code>**vet**</code> kan ook.</span>
+  </label>
   <label class="check">
     <input type="checkbox" name="is_active" value="1" <?= (int) $group['is_active'] ? 'checked' : '' ?>>
     Groep is actief

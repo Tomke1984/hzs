@@ -52,7 +52,10 @@ final class SiteController
             ? Database::all("SELECT title, slug FROM pages WHERE parent_id = ? AND status = 'PUBLISHED' AND in_menu = 1 ORDER BY sort_order, title", [$p['parent_id']])
             : $children;
         $side = $items ? ['title' => $root['title'], 'slug' => $root['slug'], 'items' => $items] : null;
-        render_public('site/page', compact('p', 'parent', 'side'), $p['title']);
+        $goalGroups = $p['slug'] === 'doelstellingen'
+            ? Database::all("SELECT id, name, goals FROM `groups` WHERE is_active = 1 AND category = 'SWIM_SCHOOL' AND goals IS NOT NULL AND goals <> '' ORDER BY id")
+            : [];
+        render_public('site/page', compact('p', 'parent', 'side', 'goalGroups'), $p['title']);
     }
 
     public static function agenda(): void

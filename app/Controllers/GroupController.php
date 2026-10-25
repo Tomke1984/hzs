@@ -106,7 +106,7 @@ final class GroupController
     public static function form(): void
     {
         $id = (int) ($_GET['id'] ?? 0);
-        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
+        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'goals' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
         $selected = $id ? array_map('intval', array_column(Database::all('SELECT user_id FROM group_trainers WHERE group_id = ?', [$id]), 'user_id')) : [];
         render('groups/form', ['group' => $group, 'errors' => [], 'trainerOptions' => self::trainerOptions($selected), 'selectedTrainers' => $selected], $id ? 'Groep wijzigen' : 'Nieuwe groep');
     }
@@ -146,6 +146,7 @@ final class GroupController
         $data = [
             'name' => input('name'),
             'description' => input('description'),
+            'goals' => input('goals'),
             'category' => input('category'),
             'is_active' => input('is_active') === '1' ? 1 : 0,
         ];
@@ -164,6 +165,9 @@ final class GroupController
         if (!array_key_exists($data['category'], group_categories())) {
             $errors[] = 'Kies zwemschool of competitie.';
         }
+        if (mb_strlen($data['goals']) > 8000) {
+            $errors[] = 'Doelstellingen zijn te lang (max. 8000 tekens).';
+        }
         if (mb_strlen($data['description']) > 255) {
             $errors[] = 'Omschrijving is te lang (max. 255 tekens).';
         }
@@ -176,12 +180,13 @@ final class GroupController
         }
 
         $desc = $data['description'] === '' ? null : $data['description'];
+        $goals = $data['goals'] === '' ? null : $data['goals'];
         if ($id) {
-            Database::exec('UPDATE `groups` SET name=?, description=?, category=?, is_active=? WHERE id=?', [$data['name'], $desc, $data['category'], $data['is_active'], $id]);
+            Database::exec('UPDATE `groups` SET name=?, description=?, category=?, is_active=?, goals=? WHERE id=?', [$data['name'], $desc, $data['category'], $data['is_active'], $goals, $id]);
             audit('UPDATE', 'group', $id);
             flash('success', 'Groep bijgewerkt.');
         } else {
-            $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active']]);
+            $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active, goals) VALUES (?,?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active'], $goals]);
             audit('CREATE', 'group', $id);
             flash('success', 'Groep aangemaakt.');
         }

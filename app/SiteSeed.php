@@ -54,182 +54,6 @@ Je kind komt automatisch op de wachtlijst. Je wordt uitgenodigd voor een zwemtes
 T],
             ['doelstellingen', 'Doelstellingen', 'zwemschool', 2, 1, <<<'T'
 Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.
-
-- [Startersgroep](?r=page&slug=doelstellingen-startersgroep)
-- [Groep 1 – Grijs](?r=page&slug=doelstellingen-groep-1-grijs)
-- [Groep 2 – Geel](?r=page&slug=doelstellingen-groep-2-geel)
-- [Groep 3 – Oranje](?r=page&slug=doelstellingen-groep-3-oranje)
-- [Groep 4 – Rood](?r=page&slug=doelstellingen-groep-4-rood)
-- [Groep 5 – Groen](?r=page&slug=doelstellingen-groep-5-groen)
-- [Recreatie (12+)](?r=page&slug=doelstellingen-recreatie)
-- [Pre-competitie 2](?r=page&slug=doelstellingen-pre-competitie-2)
-- [Pre-competitie 1](?r=page&slug=doelstellingen-pre-competitie-1)
-T],
-            ['doelstellingen-startersgroep', 'Doelstellingen – Startersgroep', 'zwemschool', 20, 0, <<<'T'
-Evaluatie elke twee maanden. We werken op 12,5 m.
-
-- Vijf seconden kunnen drijven op de rug
-- Vijf seconden kunnen drijven op de buik
-- Aquatisch ademhalen onder de knie hebben (door de neus)
-- Kunnen roteren rond de lengte- en de breedteas
-- Naar de bodem kunnen zwemmen met behulp van aquatisch ademhalen
-- Van de muur kunnen afduwen en een rechte ligging behouden, op de buik en op de rug
-- Onderwater van de muur kunnen afduwen en een rechte ligging behouden, op de buik en op de rug
-- Het water leren aanvoelen om naar een stuwende beweging toe te werken
-- Durven springen in het water
-T],
-            ['doelstellingen-groep-1-grijs', 'Doelstellingen – Groep 1 – Grijs', 'zwemschool', 21, 0, <<<'T'
-**Doel:** de zwemmer voert de vaardigheden goed uit over 12,5 meter.
-
-- Basisvaardigheden uit het startersgroepje verder ontwikkelen
-- De horizontale ligging op de rug onder controle houden, met een juiste hoofdhouding
-- Zich op de rug voortbewegen met een soepele beenslag vanuit de heupen, met gestrekte voeten (12,5 m)
-- De armbeweging van de grove rugslag aanleren bij de afslag
-- Zich op de buik voortbewegen met een soepele beenslag vanuit de heupen, met gestrekte voeten (12,5 m)
-- Zijwaarts ademhalen op de buik beheersen
-- Zich voortbewegen met een vlinderbeenslag vanuit de heupen (12,5 m)
-- Afzetten tegen de muur in pijlvorm, op de rug en op de buik, met behoud van de gestrekte vorm
-- In het water springen via een potloodsprong, met behoud van de gestrekte vorm
-T],
-            ['doelstellingen-groep-2-geel', 'Doelstellingen – Groep 2 – Geel', 'zwemschool', 22, 0, <<<'T'
-**Doel:** correcte uitvoering over 25 meter.
-
-- Basisvaardigheden verder ontwikkelen, aangevuld met de doelen van groep 1
-- Een soepele rugslagarmbeweging met gestrekte onderwaterbeweging beheersen
-- Een ruwe crawlarmbeweging met gestrekte armen beheersen
-- De vlinderbeenslag beheersen, vertrekkend vanuit de heupen
-- Een ruwe schoolslagbeenbeweging beheersen
-- Het crawl-keerpunt tegen de muur beheersen
-- Duiken vanaf de lage kant van de zwembadrand, met behoud van de vormspanning
-T],
-            ['doelstellingen-groep-3-oranje', 'Doelstellingen – Groep 3 – Oranje', 'zwemschool', 23, 0, <<<'T'
-**Doel:** goede uitvoering over 25 meter.
-
-- De basisvaardigheden en doelen van groep 1 en 2 verder ontwikkelen
-- Een vloeiende rugslagarmbeweging beheersen, met een stuwende onderwaterbeweging (geplooid)
-- De crawlarmbeweging verfijnen, met een hoge elleboog en een afgewerkte duwfase
-- De schoolslagbeenbeweging verfijnen
-- Bij de vlinderslag de hoofdpositie tijdens de beenslag beheersen
-- Het crawl-keerpunt beheersen
-- Het rugslag-keerpunt beheersen
-- Duiken vanaf de hoge zwembadrand en daarbij de lichaamsspanning behouden
-T],
-            ['doelstellingen-groep-4-rood', 'Doelstellingen – Groep 4 – Rood', 'zwemschool', 24, 0, <<<'T'
-**Doel:** goed zwemmen over 50 meter.
-
-- Verdere ontwikkeling van de basisvaardigheden en de doelen van groep 1, 2 en 3
-- Een soepele rugslag over 50 m onder de knie hebben
-- Een vloeiende crawl over 50 m zwemmen
-- De armbeweging van de schoolslag beheersen, samen met de ademhaling
-- De armbeweging van de vlinderslag in de afzet beheersen, samen met de ademhaling
-- Het keerpunt van de schoolslag beheersen
-- Vanaf de startblok duiken en de vormspanning behouden
-T],
-            ['doelstellingen-groep-5-groen', 'Doelstellingen – Groep 5 – Groen', 'zwemschool', 25, 0, <<<'T'
-**Doel:** zwemmen over 100 meter verloopt vlot en correct.
-
-- Verder bouwen op de basisvaardigheden en de doelen van groep 1 tot en met 4
-- Een soepele rugslag over 100 m onder de knie hebben
-- Een vloeiende crawl over 100 m kunnen zwemmen
-- Een vlotte schoolslag over 50 m zwemmen
-- De armbeweging van de vlinderslag verfijnen
-- De vlinderslag over 25 m beheersen
-- Alle keerpunten correct kunnen uitvoeren
-- Vanaf de startblok duiken en daarbij een strakke lichaamshouding bewaren
-T],
-            ['doelstellingen-recreatie', 'Doelstellingen – Recreatie (12+)', 'zwemschool', 26, 0, <<<'T'
-- Voortzetting en verfijning van de genormeerde zwemslagen
-- Verfijnen van de keerpunten
-- Verfijnen van de startduik
-- Kennismaking met andere watersporten, zoals waterpolo, duiken en reddend zwemmen
-- Werken aan het uithoudingsvermogen
-T],
-            ['doelstellingen-pre-competitie-2', 'Doelstellingen – Pre-competitie 2', 'zwemschool', 27, 0, <<<'T'
-Basistechniek aanpakken, nog niet verfijnen. De ruwe vorm van elke slag goed beheersen en 100 m kunnen zwemmen.
-
-## Vormspanning
-- Correct afduwen in de juiste pijl, in de juiste slag (rug op de rug, crawl op de buik), met vlinderbenen
-
-## Schoolslag
-- Grove armbeweging
-- Beenslag, en beenslag combineren met ademhaling
-- Neutrale hoofdpositie in de pijl
-
-## Rugslag
-- Neutrale hoofdpositie
-- 4 tot 6 beentakten combineren met de armen: 25 m zwemmen
-- Armwisseling correct uitvoeren, zonder afslag
-- Duim uit en pink insteken
-- Initiatie rolbewegingen (oefeningen)
-
-## Vlinderslag
-- Grove, golvende beweging, snoeken
-- Golvende beweging met benen samen en pijlen
-- Vormspanning
-
-## Crawl
-- Hoofdpositie neutraal, naar beneden, en horizontale ligging
-- 4 tot 6 beentakten combineren met de armen: 25 m zwemmen
-- Armwisseling correct uitvoeren, zonder ruwe afslag
-- Zijwaartse ademhaling, niet draaien op de zij of rug, niet naar het plafond kijken
-- Ademen om de 3 slagen
-- Armen insteken op schouderhoogte en -breedte, handpalm naar beneden
-
-## Start
-- Vormspanning en correcte sprongbeweging
-- Stroomlijnen onder water
-
-## Keerpunten
-- Tuimelen, en tuimelen tegen de muur: inschatten hoe ver je van de muur moet zijn
-
-## Benaming
-- Benaming van de meters gebruiken, combinatie van meters en lengtes gebruiken
-T],
-            ['doelstellingen-pre-competitie-1', 'Doelstellingen – Pre-competitie 1', 'zwemschool', 28, 0, <<<'T'
-## Vormspanning
-- Bij het begin van elke oefening correct afduwen in een pijlhouding
-
-## Crawl
-- Hoofd neutraal naar beneden, lichaam horizontaal
-- 50 m zwemmen met een 6-takt beenslag gecombineerd met de armbewegingen
-- Armwissel correct uitvoeren, zonder ruwe afslag
-- Zijwaarts ademen op het juiste moment en met juiste timing, na elke 3 slagen
-- Uitduwen tot het einde en overhaalbeweging onder een hoek van 90°
-- Rollen
-- Armen insteken op schouderbreedte, wanneer de handpalm bijna het water raakt, en dan doorrollen
-
-## Rugslag
-- Hoofd neutraal houden
-- 50 m zwemmen met een 6-takt beenslag gecombineerd met de armbewegingen
-- Armwissel correct uitvoeren, zonder afslag; duim en pink zijn geen doel
-- Rollen vanuit de heupen
-- Onder water uitduwen onder een hoek van 90°
-- Watergevoel ontwikkelen
-
-## Schoolslag
-- Armbeweging: water vatten voor de schouders, versneld naar voren
-- Pijlhouding na de armbeweging
-- Ademhaling afstemmen op de armbeweging
-- Hoofd in lijn met de rug houden, niet "eend" zwemmen
-
-## Vlinderslag
-- Beenbeweging in een golvende, continue beweging
-- Ademen bij de zachte neerwaartse beweging
-- Beginselen van de armbeweging aanleren
-
-## Starten
-- Vormspanning en correcte sprongbeweging
-- Gestroomlijnd onder water blijven
-- Correcte startpositie op de blok en lichaam opspannen
-
-## Keerpunten
-- Tegen de muur tuimelen: afstand goed inschatten en in de juiste positie afduwen in een pijl
-- Tuimeling snel uitvoeren
-- Met twee armen tegen de muur aantikken
-- Benen onderin draaien tegen de muur, met juiste ademhaling
-
-## Benaming
-- De benaming van meters en lengtes samen gebruiken
 T],
             ['vakantieperiodes', 'Vakantieperiodes', 'zwemschool', 3, 1, <<<'T'
 ## Groepen 1 t/m 6
@@ -486,8 +310,184 @@ T],
     }
 
     /** Voegt ontbrekende pagina's toe (bestaande adressen blijven ongemoeid). @return array{added:int,skipped:int} */
+    /** Doelstellingen per groep (naam => tekst); worden enkel ingevuld bij groepen waar nog niets staat. */
+    public static function goals(): array
+    {
+        return [
+            'Startersgroep' => <<<'T'
+Evaluatie elke twee maanden. We werken op 12,5 m.
+
+- Vijf seconden kunnen drijven op de rug
+- Vijf seconden kunnen drijven op de buik
+- Aquatisch ademhalen onder de knie hebben (door de neus)
+- Kunnen roteren rond de lengte- en de breedteas
+- Naar de bodem kunnen zwemmen met behulp van aquatisch ademhalen
+- Van de muur kunnen afduwen en een rechte ligging behouden, op de buik en op de rug
+- Onderwater van de muur kunnen afduwen en een rechte ligging behouden, op de buik en op de rug
+- Het water leren aanvoelen om naar een stuwende beweging toe te werken
+- Durven springen in het water
+T,
+            'Groep 1 – Grijs' => <<<'T'
+**Doel:** de zwemmer voert de vaardigheden goed uit over 12,5 meter.
+
+- Basisvaardigheden uit het startersgroepje verder ontwikkelen
+- De horizontale ligging op de rug onder controle houden, met een juiste hoofdhouding
+- Zich op de rug voortbewegen met een soepele beenslag vanuit de heupen, met gestrekte voeten (12,5 m)
+- De armbeweging van de grove rugslag aanleren bij de afslag
+- Zich op de buik voortbewegen met een soepele beenslag vanuit de heupen, met gestrekte voeten (12,5 m)
+- Zijwaarts ademhalen op de buik beheersen
+- Zich voortbewegen met een vlinderbeenslag vanuit de heupen (12,5 m)
+- Afzetten tegen de muur in pijlvorm, op de rug en op de buik, met behoud van de gestrekte vorm
+- In het water springen via een potloodsprong, met behoud van de gestrekte vorm
+T,
+            'Groep 2 – Geel' => <<<'T'
+**Doel:** correcte uitvoering over 25 meter.
+
+- Basisvaardigheden verder ontwikkelen, aangevuld met de doelen van groep 1
+- Een soepele rugslagarmbeweging met gestrekte onderwaterbeweging beheersen
+- Een ruwe crawlarmbeweging met gestrekte armen beheersen
+- De vlinderbeenslag beheersen, vertrekkend vanuit de heupen
+- Een ruwe schoolslagbeenbeweging beheersen
+- Het crawl-keerpunt tegen de muur beheersen
+- Duiken vanaf de lage kant van de zwembadrand, met behoud van de vormspanning
+T,
+            'Groep 3 – Oranje' => <<<'T'
+**Doel:** goede uitvoering over 25 meter.
+
+- De basisvaardigheden en doelen van groep 1 en 2 verder ontwikkelen
+- Een vloeiende rugslagarmbeweging beheersen, met een stuwende onderwaterbeweging (geplooid)
+- De crawlarmbeweging verfijnen, met een hoge elleboog en een afgewerkte duwfase
+- De schoolslagbeenbeweging verfijnen
+- Bij de vlinderslag de hoofdpositie tijdens de beenslag beheersen
+- Het crawl-keerpunt beheersen
+- Het rugslag-keerpunt beheersen
+- Duiken vanaf de hoge zwembadrand en daarbij de lichaamsspanning behouden
+T,
+            'Groep 4 – Rood' => <<<'T'
+**Doel:** goed zwemmen over 50 meter.
+
+- Verdere ontwikkeling van de basisvaardigheden en de doelen van groep 1, 2 en 3
+- Een soepele rugslag over 50 m onder de knie hebben
+- Een vloeiende crawl over 50 m zwemmen
+- De armbeweging van de schoolslag beheersen, samen met de ademhaling
+- De armbeweging van de vlinderslag in de afzet beheersen, samen met de ademhaling
+- Het keerpunt van de schoolslag beheersen
+- Vanaf de startblok duiken en de vormspanning behouden
+T,
+            'Groep 5 – Groen' => <<<'T'
+**Doel:** zwemmen over 100 meter verloopt vlot en correct.
+
+- Verder bouwen op de basisvaardigheden en de doelen van groep 1 tot en met 4
+- Een soepele rugslag over 100 m onder de knie hebben
+- Een vloeiende crawl over 100 m kunnen zwemmen
+- Een vlotte schoolslag over 50 m zwemmen
+- De armbeweging van de vlinderslag verfijnen
+- De vlinderslag over 25 m beheersen
+- Alle keerpunten correct kunnen uitvoeren
+- Vanaf de startblok duiken en daarbij een strakke lichaamshouding bewaren
+T,
+            'Recreatie (12+)' => <<<'T'
+- Voortzetting en verfijning van de genormeerde zwemslagen
+- Verfijnen van de keerpunten
+- Verfijnen van de startduik
+- Kennismaking met andere watersporten, zoals waterpolo, duiken en reddend zwemmen
+- Werken aan het uithoudingsvermogen
+T,
+            'Pre-competitie 2' => <<<'T'
+Basistechniek aanpakken, nog niet verfijnen. De ruwe vorm van elke slag goed beheersen en 100 m kunnen zwemmen.
+
+## Vormspanning
+- Correct afduwen in de juiste pijl, in de juiste slag (rug op de rug, crawl op de buik), met vlinderbenen
+
+## Schoolslag
+- Grove armbeweging
+- Beenslag, en beenslag combineren met ademhaling
+- Neutrale hoofdpositie in de pijl
+
+## Rugslag
+- Neutrale hoofdpositie
+- 4 tot 6 beentakten combineren met de armen: 25 m zwemmen
+- Armwisseling correct uitvoeren, zonder afslag
+- Duim uit en pink insteken
+- Initiatie rolbewegingen (oefeningen)
+
+## Vlinderslag
+- Grove, golvende beweging, snoeken
+- Golvende beweging met benen samen en pijlen
+- Vormspanning
+
+## Crawl
+- Hoofdpositie neutraal, naar beneden, en horizontale ligging
+- 4 tot 6 beentakten combineren met de armen: 25 m zwemmen
+- Armwisseling correct uitvoeren, zonder ruwe afslag
+- Zijwaartse ademhaling, niet draaien op de zij of rug, niet naar het plafond kijken
+- Ademen om de 3 slagen
+- Armen insteken op schouderhoogte en -breedte, handpalm naar beneden
+
+## Start
+- Vormspanning en correcte sprongbeweging
+- Stroomlijnen onder water
+
+## Keerpunten
+- Tuimelen, en tuimelen tegen de muur: inschatten hoe ver je van de muur moet zijn
+
+## Benaming
+- Benaming van de meters gebruiken, combinatie van meters en lengtes gebruiken
+T,
+            'Pre-competitie 1' => <<<'T'
+## Vormspanning
+- Bij het begin van elke oefening correct afduwen in een pijlhouding
+
+## Crawl
+- Hoofd neutraal naar beneden, lichaam horizontaal
+- 50 m zwemmen met een 6-takt beenslag gecombineerd met de armbewegingen
+- Armwissel correct uitvoeren, zonder ruwe afslag
+- Zijwaarts ademen op het juiste moment en met juiste timing, na elke 3 slagen
+- Uitduwen tot het einde en overhaalbeweging onder een hoek van 90°
+- Rollen
+- Armen insteken op schouderbreedte, wanneer de handpalm bijna het water raakt, en dan doorrollen
+
+## Rugslag
+- Hoofd neutraal houden
+- 50 m zwemmen met een 6-takt beenslag gecombineerd met de armbewegingen
+- Armwissel correct uitvoeren, zonder afslag; duim en pink zijn geen doel
+- Rollen vanuit de heupen
+- Onder water uitduwen onder een hoek van 90°
+- Watergevoel ontwikkelen
+
+## Schoolslag
+- Armbeweging: water vatten voor de schouders, versneld naar voren
+- Pijlhouding na de armbeweging
+- Ademhaling afstemmen op de armbeweging
+- Hoofd in lijn met de rug houden, niet "eend" zwemmen
+
+## Vlinderslag
+- Beenbeweging in een golvende, continue beweging
+- Ademen bij de zachte neerwaartse beweging
+- Beginselen van de armbeweging aanleren
+
+## Starten
+- Vormspanning en correcte sprongbeweging
+- Gestroomlijnd onder water blijven
+- Correcte startpositie op de blok en lichaam opspannen
+
+## Keerpunten
+- Tegen de muur tuimelen: afstand goed inschatten en in de juiste positie afduwen in een pijl
+- Tuimeling snel uitvoeren
+- Met twee armen tegen de muur aantikken
+- Benen onderin draaien tegen de muur, met juiste ademhaling
+
+## Benaming
+- De benaming van meters en lengtes samen gebruiken
+T,
+        ];
+    }
+
     public static function import(): array
     {
+        foreach (self::goals() as $name => $text) {
+            Database::exec("UPDATE `groups` SET goals = ? WHERE name = ? AND (goals IS NULL OR goals = '')", [trim($text), $name]);
+        }
         $added = $skipped = 0;
         $ids = [];
         foreach (self::pages() as [$slug, $title, $parent, $sort, $menu, $body]) {

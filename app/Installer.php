@@ -64,6 +64,26 @@ final class Installer
             Database::exec('ALTER TABLE activities ADD COLUMN is_custom TINYINT NOT NULL DEFAULT 0');
             Database::exec('ALTER TABLE activities ADD COLUMN status_note VARCHAR(200) NULL');
         }
+        try {
+            Database::val('SELECT goals FROM `groups` LIMIT 1');
+        } catch (Throwable $e) {
+            Database::exec('ALTER TABLE `groups` ADD COLUMN goals TEXT NULL');
+        }
+        // Doelstellingen horen bij de groep: de losse pagina's "Doelstellingen – <groep>" verhuizen naar de groep zelf.
+        foreach (Database::all("SELECT id, title, body FROM pages WHERE slug LIKE 'doelstellingen-%'") as $dp) {
+            $name = trim((string) preg_replace('/^Doelstellingen\s*[–-]\s*/u', '', (string) $dp['title']));
+            $g = Database::one('SELECT id, goals FROM `groups` WHERE name = ?', [$name]);
+            if ($g) {
+                if ($g['goals'] === null || $g['goals'] === '') {
+                    Database::exec('UPDATE `groups` SET goals = ? WHERE id = ?', [$dp['body'], $g['id']]);
+                }
+                Database::exec('DELETE FROM pages WHERE id = ?', [$dp['id']]);
+            }
+        }
+        if (!Database::val("SELECT COUNT(*) FROM pages WHERE slug LIKE 'doelstellingen-%'")) {
+            $intro = 'Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.';
+            Database::exec("UPDATE pages SET body = ? WHERE slug = 'doelstellingen' AND body LIKE '%doelstellingen-%'", [$intro]);
+        }
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
         if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
             Database::exec('DELETE FROM group_memberships WHERE end_date IS NOT NULL');
