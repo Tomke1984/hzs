@@ -161,6 +161,18 @@ final class Installer
             Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Beginners'], '2025-09-01']);
             Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Gevorderden'], '2025-09-01']);
 
+            // De demo-trainer zwemt zelf ook mee in de Wedstrijdploeg: rollen Trainer + Zwemmer, gekoppeld aan een eigen lid.
+            $trainerMember = Database::insert(
+                "INSERT INTO members (member_no, first_name, last_name, birth_date, email, status, created_at) VALUES ('HZS-098','Tina','Trainer','1988-04-12','tina@voorbeeld.be','ACTIVE',?)",
+                [$ts]
+            );
+            Database::exec('UPDATE users SET member_id = ? WHERE id = ?', [$trainerMember, $trainer]);
+            Database::exec(
+                'INSERT INTO user_roles (user_id, role_id) VALUES (?, (SELECT id FROM roles WHERE code = ?))',
+                [$trainer, 'SWIMMER']
+            );
+            Database::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$trainerMember, $groups['Wedstrijdploeg'], '2025-09-01']);
+
             self::createUser('zwemmer@demo.local', 'Demo1234!', 'Emma Peeters', 'SWIMMER', $memberIds[0]);
             $parent = self::createUser('ouder@demo.local', 'Demo1234!', 'Ouder van Lucas', 'PARENT');
             Database::exec('INSERT INTO guardian_links (user_id, member_id, relationship) VALUES (?,?,?)', [$parent, $memberIds[1], 'ouder']);

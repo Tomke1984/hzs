@@ -24,7 +24,7 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 | Rol | Account | Wat je ziet |
 |---|---|---|
 | Beheerder | je eigen account | alles, clubbreed |
-| Trainer | `trainer@demo.local` | leden/activiteiten van Beginners en Gevorderden |
+| Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid) |
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
 | Ouder | `ouder@demo.local` | enkel het gekoppelde kind |
 
