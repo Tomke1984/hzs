@@ -20,7 +20,7 @@ $routes = [
 
     'home'             => ['GET' => ['SiteController', 'home', 'public']],
     'news'             => ['GET' => ['SiteController', 'news', 'public']],
-    'post'             => ['GET' => ['SiteController', 'post', 'public']],
+    'post'             => ['GET' => ['SiteController', 'news', 'public']],
     'page'             => ['GET' => ['SiteController', 'page', 'public']],
     'agenda'           => ['GET' => ['SiteController', 'agenda', 'public']],
     'trainingstimes'   => ['GET' => ['SiteController', 'trainingTimes', 'public']],

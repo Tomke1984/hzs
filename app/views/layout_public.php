@@ -31,7 +31,6 @@ $cur = (string) ($_GET['r'] ?? 'home');
     <button class="btn btn-small btn-ghost menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
     <nav class="nav site-nav" id="site-nav">
         <a href="<?= e(url('home')) ?>" <?= $cur === 'home' ? 'aria-current="page"' : '' ?>>Home</a>
-        <a href="<?= e(url('news')) ?>" <?= in_array($cur, ['news', 'post'], true) ? 'aria-current="page"' : '' ?>>Nieuws</a>
         <?php foreach ($top as $t): ?>
           <span class="nav-group">
             <a href="<?= e(url('page', ['slug' => $t['slug']])) ?>"><?= e($t['title']) ?></a>

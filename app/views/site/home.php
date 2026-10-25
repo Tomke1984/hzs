@@ -9,12 +9,24 @@
 
 <div class="home-cols">
   <section>
-    <h2 class="section-title">Nieuws</h2>
+    <h2 class="section-title" id="nieuws">Nieuws</h2>
     <?php if (!$posts): ?><p class="card muted">Nog geen nieuws.</p><?php endif; ?>
     <?php foreach ($posts as $p): ?>
-      <?php require __DIR__ . '/_post_card.php'; ?>
+      <article class="card article" id="bericht-<?= e($p['slug']) ?>">
+        <?php if ($p['status'] !== 'PUBLISHED'): ?><p class="alert alert-warning">Concept: dit bericht is nog niet publiek (enkel zichtbaar voor het bestuur).</p><?php endif; ?>
+        <h3><?= e($p['title']) ?></h3>
+        <p class="muted small"><?= e(fmt_date(substr((string) ($p['published_at'] ?: $p['created_at']), 0, 10))) ?></p>
+        <?php if ($p['image']): ?><img class="post-hero" src="<?= e($p['image']) ?>" alt=""><?php endif; ?>
+        <div class="prose"><?= Markup::render((string) $p['body']) ?></div>
+      </article>
     <?php endforeach; ?>
-    <?php if ($posts): ?><p><a href="<?= e(url('news')) ?>">Alle nieuws →</a></p><?php endif; ?>
+    <?php if ($pages > 1): ?>
+    <nav class="cal-nav">
+      <?php if ($page > 1): ?><a class="btn btn-small btn-ghost" href="<?= e(url('home', ['p' => $page - 1])) ?>#nieuws">← Nieuwer</a><?php else: ?><span></span><?php endif; ?>
+      <span class="muted">Pagina <?= (int) $page ?> van <?= (int) $pages ?></span>
+      <?php if ($page < $pages): ?><a class="btn btn-small btn-ghost" href="<?= e(url('home', ['p' => $page + 1])) ?>#nieuws">Ouder →</a><?php else: ?><span></span><?php endif; ?>
+    </nav>
+    <?php endif; ?>
   </section>
   <section>
     <h2 class="section-title">Komende activiteiten</h2>
