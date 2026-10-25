@@ -20,6 +20,7 @@
     <?php for ($i = 0; $i < $max; $i++): $p = $old['persons'][$i]; ?>
       <fieldset class="<?= $i > 0 ? 'child-extra' : '' ?>" <?= $i > 0 ? 'data-show-for="PARENT"' : '' ?>>
         <legend><span data-show-for="PARENT">Kind <?= $i + 1 ?></span><span data-show-for="SELF" hidden>Jouw gegevens</span></legend>
+        <?php if ($i > 0): ?><button type="button" class="btn btn-small btn-ghost remove-child" hidden>Dit kind verwijderen</button><?php endif; ?>
         <div class="grid2">
           <label>Voornaam<?= $i === 0 ? ' *' : '' ?>
             <input name="persons[<?= $i ?>][first_name]" value="<?= e($p['first_name']) ?>" maxlength="80" <?= $i === 0 ? 'required' : '' ?> autocomplete="<?= $i === 0 ? 'given-name' : 'off' ?>">

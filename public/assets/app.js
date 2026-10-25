@@ -71,6 +71,18 @@
       var filled = Array.prototype.some.call(f.querySelectorAll('input, select'), function (el) { return el.value !== ''; });
       if (!filled) { f.classList.add('is-collapsed'); }
     });
+    extras.forEach(function (f) {
+      var rm = f.querySelector('.remove-child');
+      if (!rm) { return; }
+      rm.hidden = false;
+      rm.addEventListener('click', function () {
+        f.querySelectorAll('input').forEach(function (el) { el.value = ''; });
+        f.querySelectorAll('select').forEach(function (el) { el.selectedIndex = 0; });
+        f.classList.add('is-collapsed');
+        refresh();
+        addChild.focus();
+      });
+    });
     addChild.addEventListener('click', function () {
       var next = extras.filter(function (f) { return f.classList.contains('is-collapsed'); })[0];
       if (next) {
