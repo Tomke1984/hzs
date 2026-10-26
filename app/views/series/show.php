@@ -37,7 +37,8 @@
 </section>
 <?php if ($isSwim && Auth::can('activities.write')): ?>
 <section class="card" id="leden">
-  <h2>Leden in dit blok <span class="muted small">(<?= count($blockMembers) ?>)</span></h2>
+  <h2>Leden in dit blok <span class="muted small">(<?= count($blockMembers) ?><?= $s['capacity'] !== null ? ' van ' . (int) $s['capacity'] : '' ?>)</span>
+    <?php if ($s['capacity'] !== null && count($blockMembers) >= (int) $s['capacity']): ?><span class="chip <?= count($blockMembers) > (int) $s['capacity'] ? 'warn' : 'off' ?>"><?= count($blockMembers) > (int) $s['capacity'] ? 'Over capaciteit' : 'Volzet' ?></span><?php endif; ?></h2>
   <?php if (!$blockMembers): ?>
     <p class="muted">Nog niemand ingedeeld. Leden die niet ingedeeld zijn, staan op geen enkele aanwezigheidslijst van dit blok.</p>
   <?php else: ?>

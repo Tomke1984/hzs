@@ -49,7 +49,7 @@ const APP_PATHS = [
     'swimtests' => ['app/wachtlijst'], 'swimtest_show' => ['app/wachtlijst/{id}'],
     'messages' => ['app/berichten'], 'stats' => ['app/statistieken'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
-    'export' => ['app/exporteren'], 'account' => ['app/account'],
+    'export' => ['app/exporteren'], 'account' => ['app/account'], 'fees' => ['app/lidgeld'], 'season_rollover' => ['app/seizoensovergang'],
     'content' => ['app/website'], 'post_form' => ['app/website/berichten/{id}', 'app/website/berichten/nieuw'], 'page_form' => ['app/website/paginas/{id}', 'app/website/paginas/nieuw'],
 ];
 /** Adressen die een pagina niet mag gebruiken (ze zijn al in gebruik door de app of de server). */
@@ -387,7 +387,7 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
 }
 
 /** Hoofdpagina's uit het menu: daar is geen "Terug" nodig. */
-const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees', 'waitlist', 'results'];
+const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees'];
 
 /** Onthoudt de laatst bekeken filters/maand/tab van een lijstpagina, zodat "Terug" er precies naar terugkeert. */
 function remember_list_context(string $route, array $get): void

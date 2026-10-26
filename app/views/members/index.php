@@ -51,7 +51,7 @@
         </td>
         <td><?= e($m['email']) ?></td><td><?= e($m['phone']) ?></td>
       <?php endif; ?>
-      <td><span class="chip <?= $m['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $m['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span></td>
+      <td><span class="chip <?= $m['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $m['status'] === 'ACTIVE' ? 'Actief' : e($m['status_reason'] ?: 'Inactief') ?></span><?php if ($m['status'] !== 'ACTIVE' && $m['status_date']): ?> <span class="muted small"><?= e(fmt_date($m['status_date'])) ?></span><?php endif; ?></td>
     </tr>
   <?php endforeach; ?>
   </tbody>

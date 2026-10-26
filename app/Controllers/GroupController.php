@@ -123,7 +123,20 @@ final class GroupController
             }
         }
 
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySlots', 'assigned'), $group['name']);
+        $memberCount = (int) Database::val('SELECT COUNT(*) FROM group_memberships WHERE group_id = ?', [$group['id']]);
+        $waitlist = Auth::can('groups.write') ? Database::all(
+            "SELECT w.id, w.note, w.created_at, m.id AS member_id, m.first_name, m.last_name, m.birth_date FROM group_waitlist w JOIN members m ON m.id = w.member_id
+             WHERE w.group_id = ? AND m.status = 'ACTIVE' ORDER BY w.created_at, w.id",
+            [$group['id']]
+        ) : [];
+        $waitCandidates = Auth::can('groups.write') ? Database::all(
+            "SELECT m.id, m.first_name, m.last_name, m.birth_date FROM members m
+             WHERE m.status = 'ACTIVE' AND m.id NOT IN (SELECT member_id FROM group_waitlist WHERE group_id = ?) AND m.id NOT IN (SELECT member_id FROM group_memberships WHERE group_id = ?)
+             ORDER BY m.last_name, m.first_name",
+            [$group['id'], $group['id']]
+        ) : [];
+
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySlots', 'assigned', 'memberCount', 'waitlist', 'waitCandidates'), $group['name']);
     }
 
     /** Trainingsmoment(en) (dag + uur) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
@@ -157,9 +170,27 @@ final class GroupController
     public static function form(): void
     {
         $id = (int) ($_GET['id'] ?? 0);
-        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'goals' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
+        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'goals' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1, 'capacity' => null, 'fee_cents' => null, 'next_group_id' => null];
         $selected = $id ? array_map('intval', array_column(Database::all('SELECT user_id FROM group_trainers WHERE group_id = ?', [$id]), 'user_id')) : [];
-        render('groups/form', ['group' => $group, 'errors' => [], 'trainerOptions' => self::trainerOptions($selected), 'selectedTrainers' => $selected], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+        render('groups/form', ['group' => $group, 'errors' => [], 'trainerOptions' => self::trainerOptions($selected), 'selectedTrainers' => $selected, 'otherGroups' => self::otherGroups($id)], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+    }
+
+    private static function otherGroups(int $exceptId): array
+    {
+        return Database::all('SELECT id, name FROM `groups` WHERE id <> ? ORDER BY category, name', [$exceptId]);
+    }
+
+    /** "12,50" of "12.5" → 1250 (eurocent); leeg → null; ongeldig → false. @return int|null|false */
+    public static function parseMoney(string $v)
+    {
+        $v = trim(str_replace(['€', ' '], '', $v));
+        if ($v === '') {
+            return null;
+        }
+        if (!preg_match('/^\d{1,5}([.,]\d{1,2})?$/', $v)) {
+            return false;
+        }
+        return (int) round(((float) str_replace(',', '.', $v)) * 100);
     }
 
     /** Actieve trainers, plus reeds gekoppelde (ook indien nu inactief) zodat ze niet stilletjes verdwijnen. */
@@ -200,6 +231,9 @@ final class GroupController
             'goals' => input('goals'),
             'category' => input('category'),
             'is_active' => input('is_active') === '1' ? 1 : 0,
+            'capacity' => input('capacity'),
+            'fee' => input('fee'),
+            'next_group_id' => (int) input('next_group_id', '0'),
         ];
 
         if ($data['category'] === '') {
@@ -222,22 +256,36 @@ final class GroupController
         if (mb_strlen($data['description']) > 255) {
             $errors[] = 'Omschrijving is te lang (max. 255 tekens).';
         }
+        $capacity = null;
+        if ($data['capacity'] !== '') {
+            if (!ctype_digit($data['capacity']) || (int) $data['capacity'] < 1 || (int) $data['capacity'] > 999) {
+                $errors[] = 'Capaciteit moet een getal tussen 1 en 999 zijn (of leeg).';
+            } else {
+                $capacity = (int) $data['capacity'];
+            }
+        }
+        $fee = self::parseMoney($data['fee']);
+        if ($fee === false) {
+            $errors[] = 'Lidgeld is ongeldig. Gebruik bv. 125 of 125,50.';
+            $fee = null;
+        }
+        $next = $data['next_group_id'] > 0 && $data['next_group_id'] !== $id && Database::val('SELECT COUNT(*) FROM `groups` WHERE id = ?', [$data['next_group_id']]) ? $data['next_group_id'] : null;
 
         if ($errors) {
             http_response_code(422);
             $sel = array_map('intval', (array) ($_POST['trainers'] ?? []));
-            render('groups/form', ['group' => array_merge(['id' => $id], $data), 'errors' => $errors, 'trainerOptions' => self::trainerOptions($sel), 'selectedTrainers' => $sel], $id ? 'Groep wijzigen' : 'Nieuwe groep');
+            render('groups/form', ['group' => array_merge(['id' => $id, 'fee_cents' => null], $data, ['next_group_id' => $next]), 'errors' => $errors, 'trainerOptions' => self::trainerOptions($sel), 'selectedTrainers' => $sel, 'otherGroups' => self::otherGroups($id)], $id ? 'Groep wijzigen' : 'Nieuwe groep');
             return;
         }
 
         $desc = $data['description'] === '' ? null : $data['description'];
         $goals = $data['goals'] === '' ? null : $data['goals'];
         if ($id) {
-            Database::exec('UPDATE `groups` SET name=?, description=?, category=?, is_active=?, goals=? WHERE id=?', [$data['name'], $desc, $data['category'], $data['is_active'], $goals, $id]);
+            Database::exec('UPDATE `groups` SET name=?, description=?, category=?, is_active=?, goals=?, capacity=?, fee_cents=?, next_group_id=? WHERE id=?', [$data['name'], $desc, $data['category'], $data['is_active'], $goals, $capacity, $fee, $next, $id]);
             audit('UPDATE', 'group', $id);
             flash('success', 'Groep bijgewerkt.');
         } else {
-            $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active, goals) VALUES (?,?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active'], $goals]);
+            $id = Database::insert('INSERT INTO `groups` (name, description, category, is_active, goals, capacity, fee_cents, next_group_id) VALUES (?,?,?,?,?,?,?,?)', [$data['name'], $desc, $data['category'], $data['is_active'], $goals, $capacity, $fee, $next]);
             ensure_group_colors();
             audit('CREATE', 'group', $id);
             flash('success', 'Groep aangemaakt.');
@@ -259,6 +307,9 @@ final class GroupController
             flash('error', $error);
         } else {
             flash('success', 'Lid in de groep geplaatst.');
+            if (self::$notice) {
+                flash('warning', self::$notice);
+            }
         }
         redirect($back);
     }
@@ -281,11 +332,28 @@ final class GroupController
         }
         $error = self::placeMember($memberId, $groupId, true);
         flash($error ? 'error' : 'success', $error ?: 'Groep van het lid bijgewerkt.');
+        if (!$error && self::$notice) {
+            flash('warning', self::$notice);
+        }
         redirect($back);
     }
 
+    /** Waarschuwing na het plaatsen van een lid (bv. groep over capaciteit); de aanroeper toont ze. */
+    public static ?string $notice = null;
+
+    /** Geeft een waarschuwing als de groep meer leden heeft dan de capaciteit. */
+    public static function capacityNotice(int $groupId): ?string
+    {
+        $g = Database::one('SELECT name, capacity FROM `groups` WHERE id = ?', [$groupId]);
+        if (!$g || $g['capacity'] === null) {
+            return null;
+        }
+        $n = (int) Database::val('SELECT COUNT(*) FROM group_memberships WHERE group_id = ?', [$groupId]);
+        return $n > (int) $g['capacity'] ? 'Let op: "' . $g['name'] . '" heeft nu ' . $n . ' leden bij een capaciteit van ' . (int) $g['capacity'] . '.' : null;
+    }
+
     /** @return ?string foutmelding, of null bij succes */
-    private static function placeMember(int $memberId, int $groupId, bool $replace): ?string
+    public static function placeMember(int $memberId, int $groupId, bool $replace): ?string
     {
         $member = Database::one('SELECT id, status, birth_date FROM members WHERE id = ?', [$memberId]);
         $group = Database::one('SELECT id, is_active FROM `groups` WHERE id = ?', [$groupId]);
@@ -312,8 +380,10 @@ final class GroupController
             SeriesService::clearMemberBlocks($memberId);
             Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
             $id = Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$memberId, $groupId, today()]);
+            Database::exec('DELETE FROM group_waitlist WHERE member_id = ? AND group_id = ?', [$memberId, $groupId]);
             audit('CREATE', 'group_membership', $id);
         });
+        self::$notice = self::capacityNotice($groupId);
         return null;
     }
 
@@ -401,6 +471,9 @@ final class GroupController
             $moved++;
         }
         $skipped = count($ids) - $moved;
+        if ($moved && ($cn = self::capacityNotice($to))) {
+            flash('warning', $cn);
+        }
         flash($moved ? 'success' : 'error', $moved
             ? $moved . ($moved === 1 ? ' lid' : ' leden') . ' verplaatst naar "' . $target['name'] . '"' . ($skipped ? ", $skipped overgeslagen" : '') . '.'
             : 'Geen enkel lid kon worden verplaatst.');
@@ -419,6 +492,71 @@ final class GroupController
         audit('DELETE', 'group_membership', (int) $row['id']);
         flash('success', 'Lid uit de groep gehaald.');
         redirect(input('return') === 'group' ? url('group', ['id' => $row['group_id']]) : url('member', ['id' => $row['member_id']]));
+    }
+
+    /** Lid op de wachtlijst van een groep zetten. */
+    public static function waitlistAdd(): void
+    {
+        $gid = (int) input('group_id', '0');
+        $mid = (int) input('member_id', '0');
+        $back = url('group', ['id' => $gid]) . '#wachtlijst';
+        $ok = Database::val('SELECT COUNT(*) FROM `groups` WHERE id = ? AND is_active = 1', [$gid]) && Database::val("SELECT COUNT(*) FROM members WHERE id = ? AND status = 'ACTIVE'", [$mid]);
+        if (!$ok) {
+            flash('error', 'Lid of groep bestaat niet (meer) of is niet actief.');
+        } elseif (Database::val('SELECT COUNT(*) FROM group_memberships WHERE member_id = ? AND group_id = ?', [$mid, $gid])) {
+            flash('error', 'Dit lid zit al in de groep.');
+        } elseif (!Database::val('SELECT 1 FROM group_waitlist WHERE member_id = ? AND group_id = ?', [$mid, $gid])) {
+            Database::exec('INSERT INTO group_waitlist (member_id, group_id, note, created_at) VALUES (?,?,?,?)', [$mid, $gid, mb_substr(input('note'), 0, 200) ?: null, now()]);
+            audit('CREATE', 'group_waitlist', $gid, "member=$mid");
+            flash('success', 'Lid op de wachtlijst gezet.');
+        }
+        redirect($back);
+    }
+
+    public static function waitlistRemove(): void
+    {
+        $w = Database::one('SELECT * FROM group_waitlist WHERE id = ?', [(int) input('id', '0')]);
+        if (!$w) {
+            abort(404, 'Deze wachtlijstplaats bestaat niet.');
+        }
+        Database::exec('DELETE FROM group_waitlist WHERE id = ?', [$w['id']]);
+        audit('DELETE', 'group_waitlist', (int) $w['group_id'], 'member=' . $w['member_id']);
+        flash('success', 'Van de wachtlijst gehaald.');
+        redirect(url('group', ['id' => $w['group_id']]) . '#wachtlijst');
+    }
+
+    /** Eerste (of gekozen) lid van de wachtlijst indelen in de groep, met een mail naar ouder of lid. */
+    public static function waitlistEnroll(): void
+    {
+        $w = Database::one('SELECT * FROM group_waitlist WHERE id = ?', [(int) input('id', '0')]);
+        if (!$w) {
+            abort(404, 'Deze wachtlijstplaats bestaat niet.');
+        }
+        $back = url('group', ['id' => $w['group_id']]) . '#wachtlijst';
+        $error = self::placeMember((int) $w['member_id'], (int) $w['group_id'], true);
+        if ($error) {
+            flash('error', $error);
+            redirect($back);
+        }
+        flash('success', 'Lid ingedeeld in de groep.');
+        if (self::$notice) {
+            flash('warning', self::$notice);
+        }
+        if (input('notify') === '1') {
+            $g = Database::one('SELECT name FROM `groups` WHERE id = ?', [$w['group_id']]);
+            $m = Database::one('SELECT first_name, last_name FROM members WHERE id = ?', [$w['member_id']]);
+            $mails = [];
+            foreach (Mailing::recipients([(int) $w['member_id']]) as $to => $name) {
+                $mails[] = [$to, 'Plaats in ' . $g['name'], "Dag $name,\n\nEr is een plaats vrij: {$m['first_name']} {$m['last_name']} is ingedeeld in de groep {$g['name']} van Hasseltse Zwemvereniging Spartacus.\nDe trainer of het bestuur laat je snel weten wanneer de eerstvolgende training is.\n\nSportieve groeten,\nHasseltse Zwemvereniging Spartacus"];
+            }
+            if ($mails) {
+                $res = Mailer::sendMany($mails);
+                flash('success', 'Een bericht is verstuurd naar ' . count(array_filter($res)) . ' ontvanger(s).');
+            } else {
+                flash('warning', 'Er is geen e-mailadres bekend om te verwittigen.');
+            }
+        }
+        redirect($back);
     }
 
     private static function loadVisible(int $id): array

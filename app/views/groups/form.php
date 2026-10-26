@@ -24,6 +24,21 @@
     <textarea class="editor" name="goals" rows="9" maxlength="8000"><?= e((string) ($group['goals'] ?? '')) ?></textarea>
     <span class="muted small">Verschijnen op de pagina Doelstellingen van de zwemschool (enkel voor actieve groepen van de zwemschool). Een lijst maak je met <code>- </code> voor elke regel; <code>**vet**</code> kan ook.</span>
   </label>
+  <div class="grid2">
+    <label>Capaciteit (max. aantal leden)
+      <input name="capacity" inputmode="numeric" value="<?= e((string) ($group['capacity'] ?? '')) ?>" maxlength="3" placeholder="onbeperkt">
+    </label>
+    <label>Lidgeld per seizoen (€)
+      <input name="fee" inputmode="decimal" value="<?= isset($group['fee']) ? e((string) $group['fee']) : (($group['fee_cents'] ?? null) !== null ? e(number_format($group['fee_cents'] / 100, 2, ',', '')) : '') ?>" maxlength="9" placeholder="bv. 125,00">
+    </label>
+  </div>
+  <label>Doorstroomgroep
+    <select name="next_group_id">
+      <option value="0">— geen —</option>
+      <?php foreach ($otherGroups as $og): ?><option value="<?= (int) $og['id'] ?>" <?= (int) ($group['next_group_id'] ?? 0) === (int) $og['id'] ? 'selected' : '' ?>><?= e($og['name']) ?></option><?php endforeach; ?>
+    </select>
+    <span class="muted small">De groep waar leden normaal naartoe doorstromen bij een nieuw seizoen.</span>
+  </label>
   <label class="check">
     <input type="checkbox" name="is_active" value="1" <?= (int) $group['is_active'] ? 'checked' : '' ?>>
     Groep is actief

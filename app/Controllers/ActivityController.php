@@ -116,7 +116,28 @@ final class ActivityController
             }
         }
 
-        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical'), $activity['title']);
+        $isMeet = $activity['type_code'] === 'COMPETITION';
+        $entries = [];
+        $meetResults = [];
+        if ($isMeet) {
+            foreach (Database::all('SELECT * FROM meet_entries WHERE activity_id = ?', [$activity['id']]) as $r) {
+                $entries[(int) $r['member_id']] = $r;
+            }
+            $vis = Scope::memberIds();
+            foreach (Database::all(
+                'SELECT r.*, m.first_name, m.last_name FROM results r JOIN members m ON m.id = r.member_id WHERE r.activity_id = ? ORDER BY m.last_name, m.first_name, r.event',
+                [$activity['id']]
+            ) as $r) {
+                if ($vis === null || in_array((int) $r['member_id'], $vis, true)) {
+                    $meetResults[] = $r;
+                }
+            }
+        }
+        $canMeetEdit = $isMeet && $activity['status'] === 'PLANNED' && $activity['starts_at'] > now();
+        $coachIds = Scope::coachMemberIds();
+        $canResults = $isMeet && Auth::can('attendance.write');
+
+        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'isMeet', 'entries', 'meetResults', 'canMeetEdit', 'coachIds', 'canResults'), $activity['title']);
     }
 
     /** Ouder of lid meldt vooraf af voor één activiteit (of trekt de afmelding in). */

@@ -1,6 +1,9 @@
 <?php
 final class MemberController
 {
+    /** Redenen waarom een lid inactief is. */
+    public const REASONS = ['Gestopt', 'Geschorst', 'Verhuisd', 'Overgestapt naar een andere club', 'Andere'];
+
     public static function index(): void
     {
         $q = trim((string) ($_GET['q'] ?? ''));
@@ -154,7 +157,21 @@ final class MemberController
             $myDays[] = ucfirst(SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']])));
         }
 
+        $canMoney = Auth::can('fees.manage') || in_array((int) $member['id'], Scope::ownMemberIds(), true);
+        $dues = $canMoney ? Database::all(
+            'SELECT d.*, s.name AS season_name FROM dues d JOIN seasons s ON s.id = d.season_id WHERE d.member_id = ? ORDER BY s.start_date DESC',
+            [$member['id']]
+        ) : [];
+        $waitlists = Auth::can('groups.write') ? Database::all(
+            'SELECT g.id, g.name FROM group_waitlist w JOIN `groups` g ON g.id = w.group_id WHERE w.member_id = ? ORDER BY w.created_at',
+            [$member['id']]
+        ) : [];
+        $results = Database::all('SELECT r.*, a.title AS activity_title FROM results r LEFT JOIN activities a ON a.id = r.activity_id WHERE r.member_id = ? ORDER BY r.swum_on DESC, r.id DESC LIMIT 50', [$member['id']]);
+
         render('members/show', [
+            'dues' => $dues, 'waitlists' => $waitlists, 'results' => $results, 'bests' => Results::bests((int) $member['id']),
+            'canResults' => Auth::can('attendance.write') && (Scope::coachMemberIds() === null || in_array((int) $member['id'], Scope::coachMemberIds(), true)),
+            'showMedical' => Auth::can('members.medical'),
             'myDays' => $myDays,
             'member' => $member,
             'isMinor' => Guardianship::isMinor($member['birth_date']),
@@ -174,8 +191,9 @@ final class MemberController
         $member = $id ? self::loadVisible($id) : [
             'id' => 0, 'first_name' => '', 'last_name' => '',
             'birth_date' => '', 'email' => '', 'phone' => '', 'street' => '', 'postal_code' => '', 'city' => '', 'status' => 'ACTIVE',
+            'status_reason' => '', 'emergency_name' => '', 'emergency_phone' => '', 'medical_note' => '', 'photo_consent' => 0,
         ];
-        render('members/form', ['member' => $member, 'errors' => []], $id ? 'Lid wijzigen' : 'Nieuw lid');
+        render('members/form', ['member' => $member, 'errors' => [], 'duplicates' => []], $id ? 'Lid wijzigen' : 'Nieuw lid');
     }
 
     public static function save(): void
@@ -193,6 +211,11 @@ final class MemberController
             'postal_code' => input('postal_code'),
             'city'       => input('city'),
             'status'     => input('status', 'ACTIVE'),
+            'status_reason' => input('status_reason'),
+            'emergency_name' => input('emergency_name'),
+            'emergency_phone' => input('emergency_phone'),
+            'medical_note' => input('medical_note'),
+            'photo_consent' => input('photo_consent') === '1' ? 1 : 0,
         ];
 
         $errors = [];
@@ -211,26 +234,57 @@ final class MemberController
         if (!in_array($data['status'], ['ACTIVE', 'INACTIVE'], true)) {
             $errors[] = 'Status is ongeldig.';
         }
+        if ($data['status_reason'] !== '' && !in_array($data['status_reason'], self::REASONS, true)) {
+            $errors[] = 'Reden is ongeldig.';
+        }
+        if (mb_strlen($data['emergency_name']) > 120 || mb_strlen($data['emergency_phone']) > 40 || mb_strlen($data['medical_note']) > 500) {
+            $errors[] = 'Noodcontact of medische opmerking is te lang (opmerking max. 500 tekens).';
+        }
+        // Dubbelcontrole bij een nieuw lid: zelfde naam en geboortedatum bestaat al.
+        $duplicates = [];
+        if (!$errors && !$existing && $data['birth_date'] !== '' && input('confirm_duplicate') !== '1') {
+            $duplicates = Database::all(
+                'SELECT id, first_name, last_name, birth_date, status FROM members WHERE LOWER(first_name) = ? AND LOWER(last_name) = ? AND birth_date = ?',
+                [mb_strtolower($data['first_name']), mb_strtolower($data['last_name']), $data['birth_date']]
+            );
+            if ($duplicates) {
+                $errors[] = 'Er bestaat al een lid met dezelfde naam en geboortedatum. Controleer dit eerst.';
+            }
+        }
 
         if ($errors) {
             http_response_code(422);
             $member = array_merge(['id' => $id], $data);
-            render('members/form', ['member' => $member, 'errors' => $errors], $id ? 'Lid wijzigen' : 'Nieuw lid');
+            render('members/form', ['member' => $member, 'errors' => $errors, 'duplicates' => $duplicates], $id ? 'Lid wijzigen' : 'Nieuw lid');
             return;
         }
+        // Status: reden en datum horen enkel bij inactieve leden; de datum is het moment van de wijziging.
+        $statusReason = $data['status'] === 'INACTIVE' ? ($data['status_reason'] !== '' ? $data['status_reason'] : 'Gestopt') : null;
+        $statusDate = $existing ? $existing['status_date'] : null;
+        if (!$existing || $existing['status'] !== $data['status']) {
+            $statusDate = today();
+        }
+        if ($data['status'] === 'ACTIVE') {
+            $statusDate = $existing && $existing['status'] === 'ACTIVE' ? $statusDate : null;
+        }
+        $canMedical = Auth::can('members.medical');
 
         $nullable = fn($v) => $v === '' ? null : $v;
         if ($existing) {
             Database::exec(
-                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, status=? WHERE id=?',
-                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $id]
+                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, status=?, status_reason=?, status_date=?, photo_consent=? WHERE id=?',
+                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $statusReason, $statusDate, $data['photo_consent'], $id]
             );
+            if ($canMedical) {
+                Database::exec('UPDATE members SET emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?', [$nullable($data['emergency_name']), $nullable($data['emergency_phone']), $nullable($data['medical_note']), $id]);
+            }
             audit('UPDATE', 'member', $id);
             flash('success', 'Lid bijgewerkt.');
         } else {
             $id = Database::insert(
-                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now()]
+                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at, status_reason, status_date, photo_consent, emergency_name, emergency_phone, medical_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now(), $statusReason, $data['status'] === 'INACTIVE' ? $statusDate : null, $data['photo_consent'],
+                    $canMedical ? $nullable($data['emergency_name']) : null, $canMedical ? $nullable($data['emergency_phone']) : null, $canMedical ? $nullable($data['medical_note']) : null]
             );
             audit('CREATE', 'member', $id);
             flash('success', Guardianship::isMinor($nullable($data['birth_date']))

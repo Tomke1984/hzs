@@ -119,6 +119,72 @@
 </section>
 <?php endif; ?>
 
+<?php if ($isMeet && $roster): ?>
+<section class="card" id="deelname">
+  <h2>Deelname aan de wedstrijd</h2>
+  <?php $cnt = ['YES' => 0, 'NO' => 0, 'MAYBE' => 0]; foreach ($roster as $m) { $x = $entries[(int) $m['id']]['answer'] ?? null; if ($x) { $cnt[$x]++; } } ?>
+  <p class="muted small"><?= (int) $cnt['YES'] ?> ja · <?= (int) $cnt['MAYBE'] ?> misschien · <?= (int) $cnt['NO'] ?> nee · <?= count($roster) - array_sum($cnt) ?> nog geen antwoord</p>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Lid</th><th>Antwoord</th><th>Afstanden</th><?php if ($canMeetEdit): ?><th></th><?php endif; ?></tr></thead>
+    <tbody>
+    <?php foreach ($roster as $m): $en = $entries[(int) $m['id']] ?? null;
+        $mayEdit = $canMeetEdit && (in_array((int) $m['id'], $ownIds, true) || ($canResults && ($coachIds === null || in_array((int) $m['id'], $coachIds, true)))); ?>
+      <tr>
+        <td><?= e($m['last_name'] . ' ' . $m['first_name']) ?></td>
+        <?php if ($mayEdit): ?>
+        <td colspan="3">
+          <form class="inline-form" method="post" action="<?= e(url('meet_answer')) ?>">
+            <?= csrf_field() ?><input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>"><input type="hidden" name="member_id" value="<?= (int) $m['id'] ?>">
+            <select name="answer" aria-label="Antwoord voor <?= e($m['first_name']) ?>">
+              <?php foreach (['YES' => 'Ja, doet mee', 'MAYBE' => 'Misschien', 'NO' => 'Nee'] as $k => $l): ?><option value="<?= $k ?>" <?= ($en['answer'] ?? '') === $k ? 'selected' : '' ?>><?= $l ?></option><?php endforeach; ?>
+            </select>
+            <input name="events" maxlength="200" value="<?= e((string) ($en['events'] ?? '')) ?>" placeholder="Afstanden (bv. 100 vrij, 50 rug)" aria-label="Afstanden">
+            <button class="btn btn-small" type="submit">Bewaren</button>
+          </form>
+        </td>
+        <?php else: ?>
+        <td><?= $en ? '<span class="chip ' . ($en['answer'] === 'YES' ? 'ok' : ($en['answer'] === 'MAYBE' ? 'warn' : 'off')) . '">' . e(['YES' => 'Ja', 'MAYBE' => 'Misschien', 'NO' => 'Nee'][$en['answer']]) . '</span>' : '<span class="muted">—</span>' ?></td>
+        <td class="muted"><?= e((string) ($en['events'] ?? '')) ?></td>
+        <?php if ($canMeetEdit): ?><td></td><?php endif; ?>
+        <?php endif; ?>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+</section>
+<?php endif; ?>
+
+<?php if ($isMeet && ($meetResults || $canResults)): ?>
+<section class="card" id="resultaten">
+  <h2>Resultaten</h2>
+  <?php if ($meetResults): ?>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Lid</th><th>Afstand</th><th>Tijd</th><th>Opmerking</th><?php if ($canResults): ?><th></th><?php endif; ?></tr></thead>
+    <tbody>
+    <?php foreach ($meetResults as $r): ?>
+      <tr><td><a href="<?= e(url('member', ['id' => $r['member_id']])) ?>#resultaten"><?= e($r['last_name'] . ' ' . $r['first_name']) ?></a></td><td><?= e($r['event']) ?></td><td><strong><?= e(Results::fmt((int) $r['time_cs'])) ?></strong></td><td class="muted small"><?= e((string) $r['note']) ?></td>
+        <?php if ($canResults): ?><td class="right"><?php if ($coachIds === null || in_array((int) $r['member_id'], $coachIds, true)): ?><form method="post" action="<?= e(url('result_delete')) ?>" data-confirm="Dit resultaat verwijderen?"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><button class="btn btn-small btn-ghost" type="submit">Verwijderen</button></form><?php endif; ?></td><?php endif; ?></tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <?php else: ?><p class="muted">Nog geen resultaten ingevoerd.</p><?php endif; ?>
+  <?php if ($canResults && $activity['starts_at'] <= now()): ?>
+  <form class="inline-form" method="post" action="<?= e(url('result_save')) ?>">
+    <?= csrf_field() ?><input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>"><input type="hidden" name="swum_on" value="<?= e(substr($activity['starts_at'], 0, 10)) ?>">
+    <label>Lid
+      <select name="member_id" required><option value="">— kies —</option>
+        <?php foreach ($roster as $m): if ($coachIds !== null && !in_array((int) $m['id'], $coachIds, true)) { continue; } ?><option value="<?= (int) $m['id'] ?>"><?= e($m['last_name'] . ' ' . $m['first_name']) ?></option><?php endforeach; ?></select>
+    </label>
+    <label>Afstand <input name="event" list="events" maxlength="40" required placeholder="100 vrij"></label>
+    <label>Tijd <input name="time" required placeholder="1:05,32" pattern="[0-9:.,]+" maxlength="9"></label>
+    <label>Opmerking <input name="note" maxlength="120"></label>
+    <button class="btn" type="submit">Resultaat toevoegen</button>
+    <datalist id="events"><?php foreach (Results::EVENTS as $ev): ?><option value="<?= e($ev) ?>"><?php endforeach; ?></datalist>
+  </form>
+  <?php elseif ($canResults): ?><p class="muted small">Resultaten kan je invoeren zodra de wedstrijd begonnen is.</p><?php endif; ?>
+</section>
+<?php endif; ?>
+
 <?php if ($medical): ?>
 <section class="card">
   <h2>Noodgegevens deelnemers</h2>

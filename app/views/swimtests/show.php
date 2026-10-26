@@ -58,10 +58,21 @@
     <label>Reden (bij weigeren, optioneel)
       <input name="decline_reason" maxlength="500" value="<?= e((string) $r['decline_reason']) ?>">
     </label>
-    <label class="check"><input type="checkbox" name="notify" value="1"> Verwittig de ouder per mail (bij “Uitgenodigd” of “Geweigerd”)</label>
+    <label class="check"><input type="checkbox" name="notify" value="1"> Verwittig de ouder per mail (bij “Uitgenodigd”, “Test gedaan” of “Geweigerd”)</label>
     <div class="actions"><button class="btn" type="submit">Status opslaan</button></div>
   </form>
 </section>
+
+<?php if (SwimTestController::canRemind($r)): ?>
+<section class="card">
+  <h2>Herinnering</h2>
+  <p class="muted"><?= (int) $r['reminder_count'] ? (int) $r['reminder_count'] . ' herinnering(en) verstuurd, laatst op ' . e(fmt_date((string) $r['reminder_at'])) . '. ' : '' ?>Stuur de ouder een vriendelijke herinnering, passend bij de status.</p>
+  <form method="post" action="<?= e(url('swimtest_remind')) ?>" data-confirm="Een herinnering mailen naar <?= e($r['contact_email']) ?>?">
+    <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+    <button class="btn btn-ghost" type="submit">Herinnering sturen</button>
+  </form>
+</section>
+<?php endif; ?>
 
 <?php if ($r['status'] !== 'DECLINED'): ?>
 <section class="card">

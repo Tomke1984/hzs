@@ -14,15 +14,78 @@
 
 <section class="card">
   <dl class="facts">
-    <dt>Status</dt><dd><span class="chip <?= $member['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $member['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span></dd>
+    <dt>Status</dt><dd><span class="chip <?= $member['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $member['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span>
+      <?php if ($member['status'] !== 'ACTIVE' && ($member['status_reason'] || $member['status_date'])): ?> <span class="muted"><?= e(trim((string) $member['status_reason'] . ($member['status_date'] ? ' sinds ' . fmt_date($member['status_date']) : ''))) ?></span><?php endif; ?></dd>
     <?php if ($member['birth_date']): ?><dt>Geboortedatum</dt><dd><?= e(fmt_date($member['birth_date'])) ?></dd><?php endif; ?>
     <?php if ($showContact): ?>
       <dt>E-mail</dt><dd><?= e($member['email']) ?: '—' ?></dd>
       <dt>Telefoon</dt><dd><?= e($member['phone']) ?: '—' ?></dd>
       <dt>Adres</dt><dd><?= e(trim(($member['street'] ?? '') . ', ' . trim(($member['postal_code'] ?? '') . ' ' . ($member['city'] ?? '')), ', ')) ?: '—' ?></dd>
+      <dt>Foto’s op website</dt><dd><?= !empty($member['photo_consent']) ? '<span class="chip ok">Toestemming</span>' : '<span class="chip off">Geen toestemming</span>' ?></dd>
+    <?php endif; ?>
+    <?php if ($showMedical && ($member['emergency_name'] || $member['emergency_phone'] || $member['medical_note'])): ?>
+      <dt>Noodcontact</dt><dd><?= e(trim((string) $member['emergency_name'] . ' ' . (string) $member['emergency_phone'])) ?: '—' ?></dd>
+      <dt>Medisch</dt><dd><?= e((string) $member['medical_note']) ?: '—' ?></dd>
     <?php endif; ?>
   </dl>
 </section>
+
+<?php if ($dues): ?>
+<section class="card" id="lidgeld">
+  <h2>Lidgeld</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Seizoen</th><th>Bedrag</th><th>Status</th><th>Mededeling</th></tr></thead>
+    <tbody>
+    <?php foreach ($dues as $d): ?>
+      <tr><td><?= e($d['season_name']) ?></td><td><?= Fees::money((int) $d['amount_cents']) ?></td>
+        <td><span class="chip <?= $d['status'] === 'PAID' ? 'ok' : ($d['status'] === 'OPEN' ? 'warn' : 'off') ?>"><?= e(Fees::statusLabel($d['status'])) ?></span><?= $d['paid_at'] ? ' <span class="muted small">' . e(fmt_date($d['paid_at'])) . '</span>' : '' ?></td>
+        <td><?php if ($d['status'] === 'OPEN'): ?><code><?= e(Fees::reference((int) $d['id'])) ?></code><?= $d['due_date'] ? ' <span class="muted small">voor ' . e(fmt_date($d['due_date'])) . '</span>' : '' ?><?php endif; ?></td></tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <?php if (Fees::payInfo() !== '' && array_filter($dues, fn($d) => $d['status'] === 'OPEN')): ?><p class="small muted"><?= e(Fees::payInfo()) ?>. Vermeld de gestructureerde mededeling bij je betaling.</p><?php endif; ?>
+</section>
+<?php endif; ?>
+
+<?php if ($bests || $canResults): ?>
+<section class="card" id="resultaten">
+  <h2>Wedstrijdresultaten</h2>
+  <?php if (!$bests): ?>
+    <p class="muted">Nog geen resultaten.</p>
+  <?php else: ?>
+    <p class="muted small">Persoonlijke records</p>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Afstand</th><th>Beste tijd</th><th>Gezwommen op</th></tr></thead>
+      <tbody>
+      <?php foreach ($bests as $ev => $b): ?><tr><td><?= e($ev) ?></td><td><strong><?= e(Results::fmt((int) $b['time_cs'])) ?></strong></td><td><?= e(fmt_date($b['swum_on'])) ?></td></tr><?php endforeach; ?>
+      </tbody>
+    </table></div>
+    <details><summary class="small">Alle resultaten (<?= count($results) ?>)</summary>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Datum</th><th>Afstand</th><th>Tijd</th><th>Wedstrijd</th><?php if ($canResults): ?><th></th><?php endif; ?></tr></thead>
+        <tbody>
+        <?php foreach ($results as $r): ?>
+          <tr><td><?= e(fmt_date($r['swum_on'])) ?></td><td><?= e($r['event']) ?></td><td><?= e(Results::fmt((int) $r['time_cs'])) ?><?= (int) $r['time_cs'] === (int) ($bests[$r['event']]['time_cs'] ?? -1) ? ' <span class="chip ok">PR</span>' : '' ?></td>
+            <td class="muted small"><?= $r['activity_id'] ? '<a href="' . e(url('activity', ['id' => $r['activity_id']])) . '">' . e((string) $r['activity_title']) . '</a>' : e((string) $r['note']) ?></td>
+            <?php if ($canResults): ?><td class="right"><form method="post" action="<?= e(url('result_delete')) ?>" data-confirm="Dit resultaat verwijderen?"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>"><button class="btn btn-small btn-ghost" type="submit">Verwijderen</button></form></td><?php endif; ?></tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table></div>
+    </details>
+  <?php endif; ?>
+  <?php if ($canResults): ?>
+  <form class="inline-form" method="post" action="<?= e(url('result_save')) ?>">
+    <?= csrf_field() ?><input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+    <label>Afstand <input name="event" list="events" maxlength="40" required placeholder="bv. 100 vrij"></label>
+    <label>Tijd <input name="time" required placeholder="1:05,32" pattern="[0-9:.,]+" maxlength="9"></label>
+    <label>Datum <input type="date" name="swum_on" value="<?= e(today()) ?>" max="<?= e(today()) ?>" required></label>
+    <label>Opmerking <input name="note" maxlength="120" placeholder="bv. clubkampioenschap"></label>
+    <button class="btn" type="submit">Resultaat toevoegen</button>
+    <datalist id="events"><?php foreach (Results::EVENTS as $ev): ?><option value="<?= e($ev) ?>"><?php endforeach; ?></datalist>
+  </form>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
 
 <?php if ($showContact): ?>
 <?php $collapseParents = !$isMinor && !$parents; ?>
@@ -218,6 +281,7 @@
 
 <section class="card">
   <h2>Groep</h2>
+  <?php foreach ($waitlists as $wl): ?><p class="small"><span class="chip warn">Wachtlijst</span> <a href="<?= e(url('group', ['id' => $wl['id']])) ?>#wachtlijst"><?= e($wl['name']) ?></a></p><?php endforeach; ?>
   <?php $cur = $memberships[0] ?? null; ?>
   <?php if (!$cur): ?>
     <p class="muted">Nog niet in een groep.</p>

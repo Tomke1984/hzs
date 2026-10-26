@@ -28,6 +28,9 @@
     <textarea name="description" rows="2"><?= e($s['description']) ?></textarea>
   </label>
 
+  <label>Capaciteit (max. aantal leden in dit blok)
+    <input name="capacity" inputmode="numeric" value="<?= e((string) ($s['capacity'] ?? '')) ?>" maxlength="3" placeholder="onbeperkt">
+  </label>
   <label class="check"><input type="checkbox" name="is_public" value="1" <?= !empty($s['is_public']) ? 'checked' : '' ?>> Tonen op de website (pagina Trainingsuren; trainingen staan nooit in de publieke kalender)</label>
 
   <fieldset>

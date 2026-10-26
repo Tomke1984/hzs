@@ -201,7 +201,64 @@ final class SwimTestController
         render('swimtests/index', [
             'rows' => $rows, 's' => $s, 'counts' => $counts,
             'unconfirmed' => (int) Database::val("SELECT COUNT(*) FROM swimtest_requests WHERE status = 'UNCONFIRMED'"),
+            'followUp' => self::followUp(),
         ], 'Zwemtest');
+    }
+
+    /** Dagen na de laatste statuswijziging waarna een aanvraag opvolging nodig heeft (uitgenodigd of getest, zonder vervolg). */
+    public const FOLLOW_UP_DAYS = ['INVITED' => 10, 'TESTED' => 7];
+
+    /** Kan er nog een herinnering gestuurd worden? (maximaal 3, minstens 7 dagen na de vorige) */
+    public static function canRemind(array $r): bool
+    {
+        return in_array($r['status'], ['WAITING', 'INVITED', 'TESTED'], true) && (int) ($r['reminder_count'] ?? 0) < 3
+            && (empty($r['reminder_at']) || strtotime($r['reminder_at']) < strtotime('-7 days'));
+    }
+
+    /** Aanvragen die te lang op een vervolg wachten. */
+    public static function followUp(): array
+    {
+        $out = [];
+        foreach (self::FOLLOW_UP_DAYS as $st => $days) {
+            foreach (Database::all(
+                'SELECT * FROM swimtest_requests WHERE status = ? AND COALESCE(status_changed_at, confirmed_at, created_at) < ? ORDER BY status_changed_at',
+                [$st, date('Y-m-d H:i:s', strtotime("-$days days"))]
+            ) as $r) {
+                $out[] = $r;
+            }
+        }
+        return $out;
+    }
+
+    /** Herinnering aan de ouder, passend bij de status (laat weten of het past / wil je inschrijven / ben je nog geïnteresseerd). */
+    public static function remind(): void
+    {
+        $r = self::load((int) input('id', '0'));
+        $back = url('swimtest_show', ['id' => $r['id']]);
+        if (!self::canRemind($r)) {
+            flash('error', 'Voor deze aanvraag kan nu geen herinnering verstuurd worden (max. 3, minstens 7 dagen na de vorige).');
+            redirect(input('return') === 'list' ? url('swimtests', ['s' => $r['status']]) : $back);
+        }
+        $child = $r['child_first_name'] . ' ' . $r['child_last_name'];
+        $intro = "Dag {$r['contact_name']},\n\n";
+        $outro = "\n\nAntwoord gerust op deze mail.\n\nHasseltse Zwemvereniging Spartacus";
+        if ($r['status'] === 'INVITED') {
+            $subject = 'Herinnering: zwemtest bij HZS';
+            $body = $intro . "We nodigden $child uit voor de zwemtest" . ($r['invite_info'] ? ":\n{$r['invite_info']}" : '.') . "\nLaat je ons weten of dit past?" . $outro;
+        } elseif ($r['status'] === 'TESTED') {
+            $subject = 'Inschrijven bij HZS?';
+            $body = $intro . "$child heeft de zwemtest gedaan. Wil je graag inschrijven? Dat kan via " . Invites::baseUrl() . '/inschrijven' . $outro;
+        } else {
+            $subject = 'Staat jullie aanvraag voor de zwemtest nog open?';
+            $body = $intro . "$child staat op onze wachtlijst voor de zwemtest. Is jullie interesse er nog? Laat het ons weten, dan houden we de aanvraag actief." . $outro;
+        }
+        $sent = Mailer::send($r['contact_email'], $subject, $body);
+        if ($sent) {
+            Database::exec('UPDATE swimtest_requests SET reminder_at = ?, reminder_count = reminder_count + 1 WHERE id = ?', [now(), $r['id']]);
+            audit('REMIND', 'swimtest', (int) $r['id'], $r['status']);
+        }
+        flash($sent ? 'success' : 'error', $sent ? 'Herinnering verstuurd naar ' . $r['contact_email'] . '.' : 'De herinnering kon niet verstuurd worden.');
+        redirect(input('return') === 'list' ? url('swimtests', ['s' => $r['status']]) : $back);
     }
 
     public static function show(): void
@@ -260,12 +317,14 @@ final class SwimTestController
 
         $msg = 'Status gewijzigd naar ' . mb_strtolower(self::STATUSES[$status]) . '.';
         $child = $r['child_first_name'] . ' ' . $r['child_last_name'];
-        if ($status !== $r['status'] && $notify && in_array($status, ['INVITED', 'DECLINED'], true)) {
-            $body = $status === 'INVITED'
+        if ($status !== $r['status'] && $notify && in_array($status, ['INVITED', 'DECLINED', 'TESTED'], true)) {
+            $body = $status === 'TESTED'
+                ? "Dag {$r['contact_name']},\n\nBedankt voor de zwemtest van $child bij Hasseltse Zwemvereniging Spartacus. Wil je graag inschrijven? Dat kan via " . Invites::baseUrl() . "/inschrijven\n\nVragen? Antwoord gerust op deze mail.\n\nHasseltse Zwemvereniging Spartacus"
+                : ($status === 'INVITED'
                 ? "Dag {$r['contact_name']},\n\n$child is uitgenodigd voor de zwemtest bij Hasseltse Zwemvereniging Spartacus.\n\n$info\n\nKan je kind niet komen? Laat het ons dan zo snel mogelijk weten.\n\nHasseltse Zwemvereniging Spartacus"
                 : "Dag {$r['contact_name']},\n\nHelaas kunnen we $child niet opnemen in de zwemschool van Hasseltse Zwemvereniging Spartacus."
-                    . ($reason !== '' ? "\n\nReden: $reason" : '') . "\n\nHeb je vragen? Neem gerust contact op met de club.\n\nHasseltse Zwemvereniging Spartacus";
-            $sent = Mailer::send($r['contact_email'], $status === 'INVITED' ? 'Uitnodiging voor de zwemtest bij HZS' : 'Je aanvraag voor de zwemtest bij HZS', $body);
+                    . ($reason !== '' ? "\n\nReden: $reason" : '') . "\n\nHeb je vragen? Neem gerust contact op met de club.\n\nHasseltse Zwemvereniging Spartacus");
+            $sent = Mailer::send($r['contact_email'], ['INVITED' => 'Uitnodiging voor de zwemtest bij HZS', 'TESTED' => 'Je zwemtest bij HZS: inschrijven?', 'DECLINED' => 'Je aanvraag voor de zwemtest bij HZS'][$status], $body);
             $msg .= $sent ? ' De ouder is verwittigd per mail.' : ' De mail aan de ouder kon niet verstuurd worden.';
         }
         flash('success', $msg);
