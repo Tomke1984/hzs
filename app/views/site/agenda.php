@@ -17,6 +17,9 @@
               <?php if ($c): ?><span class="chip off">Geschrapt<?= $ev['status_note'] ? ': ' . e($ev['status_note']) : '' ?></span><?php endif; ?></h3>
             <p><?= e(SeriesService::DAYS[(int) $dt->format('N')]) ?> · <?= e(fmt_time($ev['starts_at'])) ?>–<?= e(fmt_time($ev['ends_at'])) ?><?= $ev['location'] ? ' · ' . e($ev['location']) : '' ?></p>
             <?php if ($ev['description']): ?><p><?= nl2br(e($ev['description'])) ?></p><?php endif; ?>
+            <?php if ($ev['signup_capacity'] !== null && !$c && $ev['ends_at'] >= now()): $fr = EventController::free($ev); ?>
+              <p><?= $fr === 0 ? '<span class="chip off">Volzet</span>' : '<a class="btn btn-small" href="' . e(url('event', ['id' => $ev['id']])) . '">Schrijf je in</a>' . ($fr !== null ? ' <span class="muted small">' . (int) $fr . ' plaats(en) vrij</span>' : '') ?></p>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>

@@ -206,4 +206,8 @@
   <p><a class="btn btn-ghost btn-small" href="<?= e(url('mail', ['to' => 'a:' . $activity['id']])) ?>">✉ Bericht aan de deelnemers</a></p>
 <?php endif; ?>
 
+<?php if (Auth::can('activities.write') && ($activity['signup_capacity'] ?? null) !== null): ?>
+  <p><a class="btn btn-ghost btn-small" href="<?= e(url('event_signups', ['id' => $activity['id']])) ?>">Online inschrijvingen (<?= (int) EventController::taken((int) $activity['id']) ?> pers.)</a></p>
+<?php endif; ?>
+
 <p><a href="<?= e(url('calendar', ['m' => substr($activity['starts_at'], 0, 7)])) ?>">← Terug naar de kalender</a></p>

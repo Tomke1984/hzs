@@ -59,6 +59,15 @@
   </fieldset>
 
 
+  <fieldset>
+    <legend>Online inschrijven via de website</legend>
+    <label class="check"><input type="checkbox" name="signup_open" value="1" <?= $activity['signup_capacity'] !== null ? 'checked' : '' ?>> Bezoekers kunnen zich online inschrijven (bv. proeflessen, club-evenementen)</label>
+    <label>Aantal plaatsen
+      <input name="signup_capacity" inputmode="numeric" maxlength="4" value="<?= ($activity['signup_capacity'] ?? 0) > 0 ? (int) $activity['signup_capacity'] : '' ?>" placeholder="onbeperkt">
+    </label>
+    <span class="muted small">Het formulier verschijnt bij de activiteit in de publieke kalender. Telt het aantal personen, niet het aantal inschrijvingen.</span>
+  </fieldset>
+
   <?php if ($activity['id']): ?>
   <label>Status
     <select name="status">

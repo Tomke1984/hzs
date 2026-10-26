@@ -185,7 +185,7 @@ final class ActivityController
             $activity = [
                 'id' => 0, 'type_id' => $type, 'title' => '', 'description' => '', 'location' => '',
                 'starts_local' => $date . 'T18:00', 'ends_local' => $date . 'T19:00',
-                'audience' => 'GROUPS', 'status' => 'PLANNED', 'is_public' => 0,
+                'audience' => 'GROUPS', 'status' => 'PLANNED', 'is_public' => 0, 'signup_capacity' => null,
             ];
             $selected = [];
         }
@@ -210,7 +210,12 @@ final class ActivityController
             'audience' => input('audience'),
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
             'is_public' => input('is_public') === '1' ? 1 : 0,
+            'signup_capacity' => null,
         ];
+        if (input('signup_open') === '1') {
+            $cap = input('signup_capacity');
+            $activity['signup_capacity'] = $cap === '' ? 0 : (ctype_digit($cap) && (int) $cap <= 9999 ? (int) $cap : -1);
+        }
         $rawGroups = $_POST['group_ids'] ?? [];
         $selected = is_array($rawGroups) ? array_values(array_unique(array_map('intval', $rawGroups))) : [];
 
@@ -246,6 +251,9 @@ final class ActivityController
                 }
             }
         }
+        if ($activity['signup_capacity'] === -1) {
+            $errors[] = 'Het aantal plaatsen voor online inschrijving moet een getal zijn (leeg = onbeperkt).';
+        }
         if (!in_array($activity['status'], ['PLANNED', 'CANCELLED'], true)) {
             $errors[] = 'Status is ongeldig.';
         }
@@ -263,8 +271,8 @@ final class ActivityController
         $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds) {
             if ($id) {
                 Database::exec(
-                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=?, is_public=? WHERE id=?',
-                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], $activity['status'], $activity['is_public'], $id]
+                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=?, is_public=?, signup_capacity=? WHERE id=?',
+                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], $activity['status'], $activity['is_public'], $activity['signup_capacity'], $id]
                 );
                 Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$id]);
                 // Individueel gewijzigd: de reeks overschrijft deze training niet meer.
@@ -274,9 +282,9 @@ final class ActivityController
                 }
             } else {
                 $id = Database::insert(
-                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, is_public)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], 'PLANNED', Auth::user()['id'], now(), $activity['is_public']]
+                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, is_public, signup_capacity)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], 'PLANNED', Auth::user()['id'], now(), $activity['is_public'], $activity['signup_capacity']]
                 );
             }
             foreach ($groupIds as $gid) {

@@ -15,7 +15,7 @@ final class ContentController
         $tab = in_array($_GET['tab'] ?? '', ['news', 'pages', 'media'], true) ? $_GET['tab'] : 'news';
         $posts = Database::all('SELECT id, title, slug, status, published_at, updated_at FROM posts ORDER BY COALESCE(published_at, created_at) DESC, id DESC');
         $pages = Database::all('SELECT p.*, par.title AS parent_title FROM pages p LEFT JOIN pages par ON par.id = p.parent_id ORDER BY COALESCE(par.sort_order, p.sort_order), COALESCE(par.title, p.title), p.parent_id IS NOT NULL, p.sort_order, p.title');
-        $media = Database::all('SELECT * FROM media ORDER BY id DESC');
+        $media = Database::all('SELECT * FROM media WHERE id NOT IN (SELECT media_id FROM gallery_photos) ORDER BY id DESC');
         global $routes;
         $check = $tab === 'pages' ? PageCheck::run($routes) : ['issues' => [], 'removable' => []];
         render('content/index', compact('tab', 'posts', 'pages', 'media', 'check'), 'Website');
@@ -230,6 +230,10 @@ final class ContentController
         $m = Database::one('SELECT * FROM media WHERE id = ?', [(int) input('id', '0')]);
         if (!$m) {
             abort(404, 'Afbeelding niet gevonden.');
+        }
+        if (Database::val('SELECT 1 FROM gallery_photos WHERE media_id = ?', [$m['id']])) {
+            flash('error', 'Deze afbeelding hoort bij een fotoalbum. Verwijder ze via de fotogalerij.');
+            redirect(url('content', ['tab' => 'media']));
         }
         Database::exec('DELETE FROM media WHERE id = ?', [$m['id']]);
         Uploads::delete($m['path']);

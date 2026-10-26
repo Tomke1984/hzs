@@ -31,9 +31,9 @@ function base_path(): string
 }
 
 /** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
-const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten'];
+const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten', 'gallery' => 'fotos'];
 /** Routes die bewust op ?r= blijven (bevestigingslinks in mails, formulierdoel). */
-const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news'];
+const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news', 'event', 'event_signup', 'newsletter_subscribe', 'newsletter_confirm', 'newsletter_unsub'];
 /**
  * Leesbare adressen voor de beheer-app (onder /app): route => [adres met id, adres zonder id (nieuw)].
  * Alle andere app-routes (vooral POST-acties) krijgen /app/<route-met-streepjes>.
@@ -50,10 +50,11 @@ const APP_PATHS = [
     'messages' => ['app/berichten'], 'stats' => ['app/statistieken'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
     'export' => ['app/exporteren'], 'account' => ['app/account'], 'fees' => ['app/lidgeld'], 'season_rollover' => ['app/seizoensovergang'],
+    'event_signups' => ['app/activiteit-inschrijvingen'], 'newsletter' => ['app/nieuwsbrief'], 'gallery_admin' => ['app/fotogalerij'], 'gallery_album' => ['app/fotogalerij/{id}'],
     'content' => ['app/website'], 'post_form' => ['app/website/berichten/{id}', 'app/website/berichten/nieuw'], 'page_form' => ['app/website/paginas/{id}', 'app/website/paginas/nieuw'],
 ];
 /** Adressen die een pagina niet mag gebruiken (ze zijn al in gebruik door de app of de server). */
-const RESERVED_SLUGS = ['activeren', 'wachtwoord-vergeten', 'kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
+const RESERVED_SLUGS = ['activeren', 'wachtwoord-vergeten', 'kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'fotos', 'sitemap', 'robots', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
 
 /**
  * Adres voor een route, relatief aan de basis (de layouts zetten <base href>), dus zonder voorloopslash.
@@ -387,7 +388,7 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
 }
 
 /** Hoofdpagina's uit het menu: daar is geen "Terug" nodig. */
-const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees'];
+const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees', 'newsletter', 'gallery_admin'];
 
 /** Onthoudt de laatst bekeken filters/maand/tab van een lijstpagina, zodat "Terug" er precies naar terugkeert. */
 function remember_list_context(string $route, array $get): void

@@ -133,6 +133,26 @@ $routes = [
     'season_rollover'  => ['GET' => ['FeeController', 'rollover', 'fees.manage']],
     'season_rollover_apply' => ['POST' => ['FeeController', 'rolloverApply', 'fees.manage']],
     'ical'             => ['GET' => ['AccountController', 'ical', 'public']],
+    'sitemap'          => ['GET' => ['SeoController', 'sitemap', 'public']],
+    'robots'           => ['GET' => ['SeoController', 'robots', 'public']],
+    'event'            => ['GET' => ['EventController', 'show', 'public']],
+    'event_signup'     => ['POST' => ['EventController', 'signup', 'public']],
+    'event_signups'    => ['GET' => ['EventController', 'admin', 'activities.write']],
+    'event_signup_delete' => ['POST' => ['EventController', 'delete', 'activities.write']],
+    'newsletter_subscribe' => ['POST' => ['NewsletterController', 'subscribe', 'public']],
+    'newsletter_confirm'   => ['GET' => ['NewsletterController', 'confirm', 'public']],
+    'newsletter_unsub'     => ['GET' => ['NewsletterController', 'unsubscribe', 'public']],
+    'newsletter'       => ['GET' => ['NewsletterController', 'admin', 'content.manage']],
+    'newsletter_send'  => ['POST' => ['NewsletterController', 'send', 'content.manage']],
+    'gallery'          => ['GET' => ['GalleryController', 'publicIndex', 'public']],
+    'gallery_admin'    => ['GET' => ['GalleryController', 'admin', 'content.manage']],
+    'gallery_album'    => ['GET' => ['GalleryController', 'albumShow', 'content.manage']],
+    'gallery_album_save'   => ['POST' => ['GalleryController', 'albumSave', 'content.manage']],
+    'gallery_album_delete' => ['POST' => ['GalleryController', 'albumDelete', 'content.manage']],
+    'gallery_photo_upload' => ['POST' => ['GalleryController', 'photoUpload', 'content.manage']],
+    'gallery_photo_save'   => ['POST' => ['GalleryController', 'photoSave', 'content.manage']],
+    'gallery_photo_delete' => ['POST' => ['GalleryController', 'photoDelete', 'content.manage']],
+    'gallery_publish'      => ['POST' => ['GalleryController', 'publish', 'content.manage']],
 ];
 
 // Leesbare adressen: /zwemschool, /kalender, /nieuws/<bericht>, ... (zonder ?r= in de URL)
@@ -147,7 +167,9 @@ if (!isset($_GET['r'])) {
     }
     if ($path !== '') {
         $byPath = array_flip(PRETTY_ROUTES);
-        if (isset($byPath[$path])) {
+        if ($path === 'sitemap.xml' || $path === 'robots.txt') {
+            $_GET['r'] = $path === 'sitemap.xml' ? 'sitemap' : 'robots';
+        } elseif (isset($byPath[$path])) {
             $_GET['r'] = $byPath[$path];
         } elseif ($path === 'nieuws') {
             $_GET['r'] = 'home';

@@ -35,7 +35,8 @@ final class SiteController
         if (!$p || ($p['status'] !== 'PUBLISHED' && !Auth::can('content.manage'))) {
             abort(404, 'Dit bericht bestaat niet.');
         }
-        render_public('site/post', ['p' => $p], $p['title']);
+        $desc = trim((string) $p['summary']) !== '' ? (string) $p['summary'] : mb_substr(trim(strip_tags(Markup::render((string) $p['body']))), 0, 200);
+        render_public('site/post', ['p' => $p, 'metaDesc' => $desc, 'metaImage' => $p['image']], $p['title']);
     }
 
     public static function page(): void
@@ -126,7 +127,8 @@ final class SiteController
             ? Database::all("SELECT id, name, goals FROM `groups` WHERE is_active = 1 AND category = 'SWIM_SCHOOL' AND goals IS NOT NULL AND goals <> '' ORDER BY id")
             : [];
         $timetable = $p['slug'] === 'trainingsuren-competitie' ? (self::timetable()['COMPETITION'] ?? []) : [];
-        render_public('site/page', array_merge(compact('p', 'parent', 'side', 'goalGroups', 'timetable'), ['contact' => $p['slug'] === 'contact' ? $extra : null]), $p['title']);
+        $desc = mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags(Markup::render((string) $p['body'])))), 0, 200);
+        render_public('site/page', array_merge(compact('p', 'parent', 'side', 'goalGroups', 'timetable'), ['contact' => $p['slug'] === 'contact' ? $extra : null, 'metaDesc' => $desc]), $p['title']);
     }
 
     public static function agenda(): void
@@ -154,7 +156,7 @@ final class SiteController
         $time = $to === null ? 'a.ends_at >= ?' : 'a.starts_at >= ? AND a.starts_at < ?';
         $params = $to === null ? [$from] : [$from, $to];
         $rows = Database::all(
-            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, t.code AS type_code, t.name AS type_name
+            "SELECT a.id, a.title, a.description, a.starts_at, a.ends_at, a.location, a.status, a.status_note, a.signup_capacity, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
              WHERE t.code IN ('COMPETITION', 'CLUB') AND $time ORDER BY a.starts_at" . ($limit ? " LIMIT $limit" : ''),
             $params

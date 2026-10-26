@@ -453,3 +453,9 @@ progress.share-track::-moz-progress-bar{background:var(--blue);border-radius:99p
 .side-account:hover{text-decoration:underline}
 code.big{font-size:1.25rem;letter-spacing:.06em;background:#eef3fa;padding:8px 12px;border-radius:8px;display:inline-block;word-break:break-all}
 td progress.share-track{display:block;margin-top:4px;width:90px}
+
+/* v0.11 website: fotogalerij (beheer) */
+.photo-edit { display: grid; grid-template-columns: minmax(160px, 260px) 1fr; gap: 16px; align-items: start; }
+.photo-edit img { width: 100%; height: auto; border-radius: 10px; }
+.photo-edit form[data-confirm] { grid-column: 2; }
+@media (max-width: 640px) { .photo-edit { grid-template-columns: 1fr; } .photo-edit form[data-confirm] { grid-column: 1; } }

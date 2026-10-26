@@ -48,6 +48,8 @@ $menu = [
     ]],
     ['Website', [
         ['Beheren', 'content', 'globe', 'content.manage', ['content', 'post_form', 'post_save', 'post_delete', 'page_form', 'page_save', 'page_delete', 'page_cleanup', 'media_upload', 'media_delete'], 0],
+        ['Nieuwsbrief', 'newsletter', 'send', 'content.manage', ['newsletter', 'newsletter_send'], 0],
+        ['Fotogalerij', 'gallery_admin', 'globe', 'content.manage', ['gallery_admin', 'gallery_album', 'gallery_album_save', 'gallery_album_delete', 'gallery_photo_upload', 'gallery_photo_save', 'gallery_photo_delete', 'gallery_publish'], 0],
     ]],
 ];
 ?>
