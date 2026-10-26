@@ -5,7 +5,34 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_(niets nieuws sinds v0.10.4)_
+### v0.11.0 (dev) – grote functionele uitbreiding: 20 verbeteringen in 4 blokken
+**Blok A – dagelijks werk**
+- **Aanwezigheidsrapport** (`/app/aanwezigheidsrapport`) per groep en periode, met lijst *Nog in te vullen* (voorbije trainingen zonder aanwezigheidslijst).
+- **Bericht sturen** (`/app/bericht-sturen`) naar een groep, trainingsblok, deelnemers van een activiteit of de hele club; met voorbeeldscherm, maximum 400 ontvangers, een trainer bereikt enkel de eigen groepen; elke verzending staat in `broadcasts` (nieuwe permissie `mail.send`).
+- **Afmelden:** ouders en leden melden zich af voor een activiteit (“Kan niet komen”) met reden; trainers zien de afmeldingen en “Afgemeld”-labels op de lijst.
+- **Agenda-link (iCal):** persoonlijke, herroepbare link om de kalender in Google/Apple/Outlook te abonneren (`/app/account`).
+- **Exporteren** (`/app/exporteren`, `export.data`): leden, aanwezigheden, inschrijvingen, zwemtests, lidgeld en abonnees als CSV (UTF-8 met BOM, `;`, beveiligd tegen formule-injectie). Medische gegevens worden nooit geëxporteerd.
+- **Auditlog** (`/app/auditlog`, `audit.read`, enkel beheerders) met filter op actie en gebruiker.
+- **Globaal zoeken** (zoekveld in het menu): leden, groepen, activiteiten en gebruikers, binnen de eigen scope.
+- **Tweestapsverificatie (TOTP, RFC 6238)** voor elk account via `/app/account`; configuratie-optie `security.require_2fa_admin` verplicht ze voor beheerders. Een beheerder kan 2FA van een gebruiker uitzetten (auditlog `2FA_RESET`).
+**Blok B – administratie**
+- **Lidgeld:** seizoenen, bedrag per groep, rekeningen genereren, betaalstatus, Belgische gestructureerde mededeling (+++xxx/xxxx/xxxxx+++, modulo 97), herinneringen per mail (`fees.manage`; config `fees.iban`, `fees.beneficiary`).
+- **Seizoensovergang:** leden doorschuiven naar de doorstroomgroep van hun groep (voorbeeldscherm vóór toepassen).
+- **Capaciteit en wachtlijst** per groep en per trainingsblok, met melding “Er is plaats vrij” en inschrijven vanaf de wachtlijst (mail naar ouder).
+- **Wedstrijden:** deelname bevestigen of weigeren door ouders/leden; resultaten per lid en onderdeel (tijd `1:05,32`), persoonlijke records.
+- **Noodcontact en medische opmerking** op de ledenfiche (enkel zichtbaar met `members.medical`: bestuur en trainers van de eigen groep), noodgegevens op de deelnemerslijst, redenen bij stopzetting (`status_reason`).
+- **Dubbele leden:** waarschuwing bij een lid met dezelfde naam en geboortedatum (bevestigen om toch aan te maken).
+- **Zwemtest-opvolging:** herinneringen aan wachtenden (max. 3, 7 dagen tussen), lijst met aanvragen die te lang op vervolg wachten.
+**Blok C – dashboards**
+- Overzicht per rol: ouder/lid (open lidgeld, wedstrijden zonder antwoord), trainer (aanwezigheid nog in te vullen, afmeldingen), bestuur (inschrijvingen, berichten, zwemtest-opvolging, open lidgeld, groepen met wachtlijst) en melding als een beheerder/bestuurslid nog geen 2FA heeft.
+**Blok D – website**
+- **Online inschrijven voor activiteiten** (proeflessen, clubevenementen): per activiteit aan te zetten met aantal plaatsen, publiek formulier met bevestigingsmail, robotfilter en limiet per uur, overzicht + CSV voor het bestuur (`/app/activiteit-inschrijvingen`).
+- **Nieuwsbrief:** aanmelden onderaan de website met dubbele bevestiging, afmelden met één klik, een nieuwsbericht doorsturen naar alle abonnees (`/app/nieuwsbrief`), abonnees als CSV.
+- **SEO:** meta description, canonical, Open Graph, structured data (SportsClub), dynamische `sitemap.xml` en `robots.txt`.
+- **Fotogalerij** met toestemmingscontrole (`/fotos`, beheer `/app/fotogalerij`): een foto is enkel publiek als het album gepubliceerd is, de toestemming bevestigd is en alle getagde leden toestemming voor foto's hebben; trekt een lid de toestemming in, dan verdwijnt de foto meteen.
+- **Privacybeleid aangevuld** voor de nieuwe verwerkingen (lidgeld, wedstrijdresultaten, afmeldingen, noodcontact/medische opmerking, berichten, activiteitsinschrijvingen, nieuwsbrief, foto's, agenda-link, 2FA) met bewaartermijnen. Bestaande sites krijgen de nieuwe tekst automatisch **enkel als de pagina nog letterlijk de vorige tekst is**; een aangepaste tekst blijft staan (dan de nieuwe passages handmatig overnemen, of `php tools/seed-site.php privacy` om te overschrijven).
+- Nieuwe databasetabellen en -kolommen worden bij de eerste aanvraag automatisch aangemaakt (schema 11); bestaande gegevens blijven ongewijzigd.
+- Tests: reeksen v11a–v11d (360 controles) en alle oudere reeksen blijven groen.
 
 ## Op main
 

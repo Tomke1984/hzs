@@ -96,10 +96,19 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
+### Uitbreidingen v0.11
+- **Aanwezigheid en communicatie:** aanwezigheidsrapport per groep/periode met lijst *Nog in te vullen*; **bericht sturen** naar groep, trainingsblok, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
+- **Lidgeld en seizoen:** seizoenen, bedrag per groep, rekeningen met Belgische **gestructureerde mededeling**, betaalstatus, herinneringen, **seizoensovergang** naar de doorstroomgroep (`fees.manage`, config `fees`).
+- **Capaciteit en wachtlijst** per groep en blok; **wedstrijddeelname** bevestigen, **resultaten** en persoonlijke records; **noodcontact en medische opmerking** (enkel met `members.medical`, nooit in exports); reden bij stopzetting; waarschuwing bij **dubbele leden**; zwemtest-opvolging met herinneringen.
+- **Exporteren** (`export.data`) als CSV, **auditlog** (`audit.read`, enkel beheerders), **globaal zoeken** in het menu, **dashboards per rol**.
+- **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); `security.require_2fa_admin` verplicht ze voor beheerders; een beheerder kan 2FA van een gebruiker uitzetten.
+- **Website:** **online inschrijven** voor activiteiten (formulier, bevestigingsmail, overzicht en CSV), **nieuwsbrief** (dubbele opt-in, afmelden met één klik, nieuwsbericht verzenden), **SEO** (meta, Open Graph, structured data, `sitemap.xml`, `robots.txt`) en **fotogalerij** (`/fotos`, beheer `/app/fotogalerij`) die enkel foto's toont waarvoor de toestemming in orde is.
+- Beperkingen: geen QR-code voor 2FA; de seizoensovergang is één formulier (let op `max_input_vars` bij zeer grote clubs) en verlengt geen trainingsreeksen; privacytekst moet door het bestuur aangevuld worden voor de nieuwe verwerkingen (noodcontact/medisch, nieuwsbrief, foto's, agenda-link, 2FA).
+
 ### Mobiel en techniek
 Responsive (getest tot 320 px): tabellen worden kaarten, grote aanraakdoelen. Zie de analyse voor architectuur, datamodel en beveiliging.
 
-Nog niet aanwezig: MFA, betalingen, exports, documentenbeheer, CSV-import van bestaande leden, volledige audit-triggers.
+Nog niet aanwezig: online betalingen, documentenbeheer, CSV-import van bestaande leden.
 
 ## Structuur
 

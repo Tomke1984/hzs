@@ -189,6 +189,16 @@ final class Installer
                 Database::exec('ALTER TABLE ' . ($table === 'groups' ? '`groups`' : $table) . " ADD COLUMN $col $def");
             }
         }
+        // Privacytekst: enkel de ongewijzigde tekst van vóór v0.11 wordt aangevuld; een door de club aangepaste tekst blijft staan.
+        try {
+            $pg = Database::one("SELECT id, body FROM pages WHERE slug = 'privacybeleid'");
+            $norm = fn(string $t) => trim(str_replace("\r\n", "\n", $t));
+            if ($pg && $norm((string) $pg['body']) === $norm(SiteSeed::privacyBodyPrev())) {
+                Database::exec('UPDATE pages SET body = ?, updated_at = ? WHERE id = ?', [SiteSeed::privacyBody(), now(), $pg['id']]);
+            }
+        } catch (Throwable $e) {
+            // pagina's bestaan nog niet: niets te doen
+        }
         $_SESSION['schema'] = self::SCHEMA;
     }
 

@@ -6,7 +6,7 @@ Versie v0.10.4 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur
 HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
 
 ## 2. Scope
-### In scope (v0.10.4)
+### In scope (v0.11, dev)
 - Publieke website: startpagina, pagina's met menu, nieuws, kalender, trainingsuren, doelstellingen, contact, zwemtestformulier en inschrijfformulier.
 - Website-beheer: nieuws, pagina's, afbeeldingen, paginacontrole (de eenmalige import van khzs.be is uit de app gehaald; `tools/seed-site.php` blijft als ontwikkelhulp).
 - Authenticatie, rollen (Beheerder, Bestuur, Trainer, Zwemmer, Ouder), permissies, gegevensscope, uitnodigingen en wachtwoord vergeten per e-mail.
@@ -16,21 +16,22 @@ HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwe
 - Zwemblokken: zwemschoolreeksen als blokken (dag + uur) met indeling per lid, lijst *Nog niet ingedeeld* en weekoverzicht.
 - Bezoekersstatistieken voor website en app (enkel beheerders), cookieloos en zonder persoonsgegevens.
 - Privacybeleid (AVG) als pagina van de site, met een link in footer en formulieren.
+- **v0.11:** aanwezigheidsrapport, groepsmail, afmelden, iCal-link, CSV-export, auditlog, globaal zoeken, tweestapsverificatie (TOTP); lidgeld met gestructureerde mededeling en seizoensovergang, capaciteit en wachtlijst, wedstrijddeelname en resultaten, noodcontact/medische opmerking, dubbele-ledencontrole, zwemtest-opvolging; dashboards per rol; online inschrijven voor activiteiten, nieuwsbrief, SEO/sitemap en fotogalerij met toestemmingscontrole.
 
 ### Niet in scope / vervolgwerk
-MFA, betalingen, exports, documentenbeheer (upload van reglementen e.d.), CSV-import van bestaande leden (bewust uitgesteld), clubrecords als tabel, volledige audit-triggers, herhalende activiteiten buiten reeksen, restyling van login/app in de stijl van de site.
+Online betalingen, documentenbeheer (upload van reglementen e.d.), CSV-import van bestaande leden (bewust uitgesteld), clubrecords als tabel, volledige audit-triggers, herhalende activiteiten buiten reeksen, restyling van login/app in de stijl van de site.
 
 ## 3. Actoren en rechten
 | Rol | Rechten (permissies) | Zichtbaarheid |
 |---|---|---|
 | Beheerder | alle (`*`), ook `users.manage` en `stats.read` | clubbreed |
-| Bestuur | members.read/write/contact, groups.read/write, activities.read/write, attendance.read/write, registrations.manage, content.manage | clubbreed, geen gebruikersbeheer, geen statistieken |
-| Trainer | members.read, groups.read, activities.read, attendance.read/write | leden en groepen van zijn actieve groepen; aanwezigheid enkel voor groepen die hij traint |
+| Bestuur | members.read/write/contact, groups.read/write, activities.read/write, attendance.read/write, registrations.manage, content.manage, mail.send, export.data, fees.manage, members.medical | clubbreed, geen gebruikersbeheer, geen statistieken, geen auditlog |
+| Trainer | members.read, groups.read, activities.read, attendance.read/write, mail.send, members.medical | leden en groepen van zijn actieve groepen; aanwezigheid enkel voor groepen die hij traint |
 | Zwemmer | members.read, activities.read, attendance.read | zichzelf en de eigen groep |
 | Ouder | members.read, activities.read, attendance.read | gekoppelde kinderen en hun groepen |
 | Bezoeker | geen login | publieke site en de openbare formulieren |
 
-Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de rollen. `registrations.manage` dekt inschrijvingen, zwemtestwachtlijst en contactberichten; `content.manage` dekt het websitebeheer; `stats.read` (enkel Beheerder) dekt het statistiekendashboard.
+Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de rollen. `registrations.manage` dekt inschrijvingen, zwemtestwachtlijst en contactberichten; `content.manage` dekt het websitebeheer; `stats.read` (enkel Beheerder) dekt het statistiekendashboard. Nieuw in v0.11: `mail.send` (berichten sturen), `export.data` (CSV-exports), `fees.manage` (lidgeld en seizoensovergang), `members.medical` (noodcontact en medische opmerking), `audit.read` (auditlog, enkel Beheerder).
 
 ## 4. Kernflows
 1. **Zwemtest**: bezoeker vult het formulier in → bevestigt per e-mail (token) → staat op de wachtlijst (WAITING) → bestuur zet op INVITED / TESTED / DECLINED (optionele mails) → *Als lid inschrijven* maakt een gewone inschrijving (PENDING) die de goedkeuring volgt → ENROLLED.
@@ -57,6 +58,8 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - **Inschrijven:** `registrations` + `registration_persons` (PENDING/APPROVED/REJECTED, bevestigingstoken), `swimtest_requests` (UNCONFIRMED, WAITING, INVITED, TESTED, ENROLLED, DECLINED), `contact_messages` (onderwerp, afgehandeld).
 - **Website:** `posts` (nieuws), `pages` (hoofd- en subpagina's, max. één niveau, slug, menu, status), `media`.
 - **Statistieken:** `page_views` (dag, gebied SITE/APP of SKIP, route, pad zonder querystring, dagelijkse hash als bezoeker, apparaat, herkomsthost). Rijen met gebied SKIP zijn anonieme tellers van genegeerde bezoeken (reden in `route`: DNT, BOT, STAFF), zonder bezoeker of pad. Bewaartermijn 400 dagen.
+- **v0.11 – administratie:** `seasons`, `dues` (uniek per lid en seizoen, status OPEN/PAID/WAIVED, herinneringen), `group_waitlist`, `meet_entries` (deelname aan wedstrijden), `results` (tijden in honderdsten), `absence_reports` (afmeldingen), `broadcasts` (log van verzonden berichten en nieuwsbrieven); nieuwe kolommen o.a. `members.emergency_*`, `medical_note`, `photo_consent`, `status_reason`, `groups.capacity/fee_cents/next_group_id`, `users.ical_token/totp_*`.
+- **v0.11 – website:** `event_signups` (inschrijvingen op activiteiten met `activities.signup_capacity`; NULL = uit, 0 = onbeperkt), `subscribers` (nieuwsbrief, dubbele opt-in, token voor afmelden), `gallery_albums`, `gallery_photos` (`consent_ok`), `photo_members` (getagde leden).
 - **Audit:** `audit_log` wordt gevuld door `audit()` bij de belangrijkste mutaties (aanmaken, wijzigen, verwijderen, import, opruimen).
 
 ## 7. Architectuur
@@ -93,9 +96,12 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en worden gehasht bewaard.
 - **Privacy van de statistieken:** geen cookies, geen IP-adres, naam of gebruikers-id opgeslagen; dagelijks wisselende hash; DNT/GPC gerespecteerd; bewaartermijn 400 dagen; enkel toegankelijk voor `stats.read` (Beheerder). Mislukte aanmeldingen (e-mail + IP) worden na 24 uur gewist; onbevestigde aanvragen na 7 dagen.
 - Publieke site toont nooit persoonsgegevens: enkel wedstrijden/clubactiviteiten en de uren per groep met de naam van de trainers.
+- **Tweestapsverificatie (v0.11):** TOTP volgens RFC 6238 (eigen `Totp`-klasse, getest met de RFC-testvector); na het wachtwoord volgt de code (`pending_uid`, max. 10 minuten). Optie `security.require_2fa_admin` dwingt beheerders om ze aan te zetten; een beheerder kan 2FA van een gebruiker uitzetten (auditlog).
+- **Gevoelige gegevens:** medische opmerking en noodcontact enkel met `members.medical`; nooit in CSV-exports. CSV-cellen worden beschermd tegen formule-injectie; de agenda-link (iCal) is een herroepbare, willekeurige token.
+- **Foto's:** een foto is enkel publiek als het album gepubliceerd is, de toestemming bevestigd is en geen getagd lid `photo_consent = 0` heeft; de controle gebeurt bij elke weergave, zodat het intrekken van toestemming meteen werkt.
 - Installer vergrendelt zichzelf; laatste actieve beheerder kan niet uitgeschakeld worden.
 ### Voor productie nog te doen
-MFA voor beheerders, headers/HSTS ook op serverniveau, back-ups van database en `public/uploads/`, minimale databaserechten, logging en alerting. Privacy/AVG: het privacybeleid staat in de app; het bestuur moet nog concrete bewaartermijnen voor ledengegevens vastleggen, verwerkersovereenkomsten sluiten met hosting- en mailprovider, de punten over de federatie en foto's in het beleid bevestigen, en een proces voor inzage- en wisverzoeken afspreken.
+Afdwingen van 2FA voor beheerders (`security.require_2fa_admin`), headers/HSTS ook op serverniveau, back-ups van database en `public/uploads/`, minimale databaserechten, logging en alerting. Privacy/AVG: het privacybeleid staat in de app; het bestuur moet nog concrete bewaartermijnen voor ledengegevens vastleggen, verwerkersovereenkomsten sluiten met hosting- en mailprovider, de punten over de federatie en foto's in het beleid bevestigen, en een proces voor inzage- en wisverzoeken afspreken.
 ### MySQL-beperking
 Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe query op leden, groepen, activiteiten of aanwezigheid moet `Scope` gebruiken en getest worden met autorisatietests.
 
@@ -107,6 +113,9 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 - Reeks: één tijdslot per weekdag per reeks (een droogtraining op dezelfde dag is een aparte reeks).
 - Zichtbaarheid van een reeks op de site: `is_public = 1`, `is_active = 1` en einddatum niet verstreken (labels *Niet op website*, *Gestopt*, *Verlopen*).
 - Pagina's: max. één subniveau; automatische pagina's niet verwijderbaar.
+- Lidgeld: bedrag komt van de groep (`fee_cents`), één rekening per lid en seizoen; de gestructureerde mededeling is 10 cijfers + controlegetal modulo 97. Capaciteit en wachtlijst gelden per groep en blok; een wachtlijstplaats wordt pas ingevuld door het bestuur.
+- Online inschrijven: telt personen (niet inschrijvingen), één inschrijving per e-mailadres per activiteit, max. 5 per uur per e-mailadres en 200 per uur in totaal.
+- Nieuwsbrief: enkel bevestigde, niet-afgemelde abonnees; een bericht wordt niet twee keer verstuurd zonder “opnieuw versturen”; max. 400 ontvangers per verzending.
 - Zwemblok: een lid wordt enkel ingedeeld in een blok waarvoor zijn huidige groep is toegelaten; meerdere blokken per lid kan, geen capaciteitslimiet; wisselt de groep, dan vervalt de indeling. Een zwemschoollid zonder blok staat nergens op een lijst.
 - Statistieken: enkel GET-aanvragen met antwoord 200 tellen; het dashboard en bezoek van beheerders/bestuur op de site tellen niet.
 
@@ -123,12 +132,12 @@ Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 7
 - Mail instellen (smtp aanbevolen) en `contact`-adressen per onderwerp.
 - Dagelijkse back-up van de database en `public/uploads/`; restore testen. De map `storage/` moet schrijfbaar zijn (database, mail, `stats.salt`, `stats-error.log`); `storage/stats.salt` is geheim en per server verschillend.
 - Na een update: controleer onderaan het menu (beheerder) welke commit draait en of het privacybeleid op de site staat.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.10.4 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.11.0 staat op dev, nog niet op main). Migraties lopen automatisch bij de eerste aanvraag na een update.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).
-- **Middel:** geen MFA; audit enkel op de belangrijkste mutaties; end-to-end-scripts staan niet in de repository; migraties draaien bij elke start (nu ±6 ms; een schemaversie in de database zou netter zijn).
+- **Middel:** 2FA is optioneel (afdwingen voor beheerders via config) en zonder QR-code; audit enkel op de belangrijkste mutaties; end-to-end-scripts staan niet in de repository; migraties draaien bij elke start (nu ±6 ms; een schemaversie in de database zou netter zijn).
 - **Laag:** routering via queryparameter; geen offline modus of pushmeldingen.
 
 ## 13. Aanbevolen volgende stappen
-Bewaartermijnen en verwerkersovereenkomsten vastleggen en het privacybeleid laten nalezen; Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; MFA voor beheerders; schemaversie in plaats van migraties bij elke start; testsuite in de repository; geautomatiseerde back-up.
+Bewaartermijnen en verwerkersovereenkomsten vastleggen en het privacybeleid laten nalezen; Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; afdwingen van 2FA en QR-code; schemaversie in plaats van migraties bij elke start; testsuite in de repository; geautomatiseerde back-up.

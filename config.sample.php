@@ -32,6 +32,10 @@ return [
     // Statistieken: bezoek van ingelogde beheerders/bestuur op de website telt standaard niet mee. Zet op true om te testen.
     'stats' => ['count_staff' => false],
     'registration' => ['notify_email' => ''],
+    // Lidgeld: rekeningnummer en begunstigde die in de betaalinstructies verschijnen.
+    'fees' => ['iban' => '', 'beneficiary' => 'Hasseltse Zwemvereniging Spartacus'],
+    // Beveiliging: true verplicht beheerders om tweestapsverificatie aan te zetten.
+    'security' => ['require_2fa_admin' => false],
     // Naar welk adres gaan berichten van het contactformulier? Leeg = het adres bij 'registration' hierboven.
     'contact' => ['swimschool_email' => '', 'competition_email' => '', 'other_email' => ''],
 
