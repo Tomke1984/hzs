@@ -11,6 +11,7 @@ if (config('db') === null) {
  */
 $routes = [
     'login'            => ['GET' => ['AuthController', 'showLogin', 'public'], 'POST' => ['AuthController', 'login', 'public']],
+    'login_2fa'        => ['GET' => ['AuthController', 'showTwoFactor', 'public'], 'POST' => ['AuthController', 'twoFactor', 'public']],
     'forgot'           => ['GET' => ['AuthController', 'showForgot', 'public'], 'POST' => ['AuthController', 'forgot', 'public']],
     'activate'         => ['GET' => ['AuthController', 'showActivate', 'public'], 'POST' => ['AuthController', 'activate', 'public']],
     'register'         => ['GET' => ['RegistrationController', 'showForm', 'public'], 'POST' => ['RegistrationController', 'submit', 'public']],
@@ -101,6 +102,22 @@ $routes = [
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
     'stats'            => ['GET' => ['StatsController', 'index', 'stats.read']],
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
+    'absence'          => ['POST' => ['ActivityController', 'absence', 'activities.read']],
+    'attendance_report' => ['GET' => ['ReportController', 'attendance', 'attendance.read']],
+    'audit'            => ['GET' => ['ReportController', 'audit', 'audit.read']],
+    'search'           => ['GET' => ['ReportController', 'search', null]],
+    'mail'             => ['GET' => ['MailController', 'compose', 'mail.send']],
+    'mail_send'        => ['POST' => ['MailController', 'send', 'mail.send']],
+    'mail_edit'        => ['POST' => ['MailController', 'edit', 'mail.send']],
+    'export'           => ['GET' => ['ExportController', 'index', 'export.data']],
+    'export_csv'       => ['GET' => ['ExportController', 'download', 'export.data']],
+    'account'          => ['GET' => ['AccountController', 'index', null]],
+    'account_password' => ['POST' => ['AccountController', 'password', null]],
+    'account_ical'     => ['POST' => ['AccountController', 'icalReset', null]],
+    'account_2fa_start' => ['POST' => ['AccountController', 'twoFactorStart', null]],
+    'account_2fa_enable' => ['POST' => ['AccountController', 'twoFactorEnable', null]],
+    'account_2fa_disable' => ['POST' => ['AccountController', 'twoFactorDisable', null]],
+    'ical'             => ['GET' => ['AccountController', 'ical', 'public']],
 ];
 
 // Leesbare adressen: /zwemschool, /kalender, /nieuws/<bericht>, ... (zonder ?r= in de URL)
@@ -157,6 +174,10 @@ if ($permission !== 'public') {
     header('Cache-Control: no-store');
     header('X-Robots-Tag: noindex, nofollow');
     Auth::requireLogin();
+    if (Auth::mustEnableTwoFactor() && !in_array($route, ['account', 'account_2fa_start', 'account_2fa_enable', 'logout'], true)) {
+        flash('warning', 'Beheerders moeten eerst tweestapsverificatie aanzetten.');
+        redirect(url('account') . '#2fa');
+    }
     if ($permission !== null) {
         Auth::require($permission);
     }

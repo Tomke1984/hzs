@@ -11,6 +11,11 @@ $icons = [
     'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
     'mail' => '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/>',
     'chart' => '<path d="M4 20h17"/><path d="M6.5 20v-6M11.5 20V6M16.5 20v-9"/>',
+    'euro' => '<path d="M17.5 6.5A6.5 6.5 0 1 0 17.5 17.5"/><path d="M4 10h9M4 14h9"/>',
+    'download' => '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/>',
+    'shield' => '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6z"/><path d="m9 12 2.2 2.2L15 10"/>',
+    'send' => '<path d="M21 4 3 11l6.5 2.5L12 20z"/><path d="m9.5 13.5 11-9.5"/>',
+    'report' => '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     'globe' => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
 ];
 $nReg = Auth::can('registrations.manage') ? (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'") : 0;
@@ -26,10 +31,15 @@ $menu = [
         ['Groepen', 'groups', 'groups', 'groups.read', ['groups', 'group', 'group_form', 'group_save', 'group_delete'], 0],
         ['Gebruikers', 'users', 'key', 'users.manage', ['users', 'user_form', 'user_save', 'user_trainer_add', 'user_trainer_remove'], 0],
         ['Statistieken', 'stats', 'chart', 'stats.read', ['stats'], 0],
+        ['Lidgeld', 'fees', 'euro', 'fees.manage', ['fees', 'fee_status', 'fee_generate', 'fee_remind', 'season_save', 'season_rollover', 'season_rollover_apply'], 0],
+        ['Exporteren', 'export', 'download', 'export.data', ['export', 'export_csv'], 0],
+        ['Auditlog', 'audit', 'shield', 'audit.read', ['audit'], 0],
     ]],
     ['Planning', [
         ['Kalender', 'calendar', 'calendar', 'activities.read', ['calendar', 'activity', 'activity_form', 'activity_save', 'attendance_save'], 0],
         ['Trainingsreeksen', 'series', 'repeat', 'activities.write', ['series', 'series_show', 'series_form', 'series_save', 'series_bulk', 'series_delete', 'series_public', 'occurrence'], 0],
+        ['Aanwezigheden', 'attendance_report', 'report', 'attendance.read', ['attendance_report'], 0],
+        ['Bericht sturen', 'mail', 'send', 'mail.send', ['mail', 'mail_send', 'mail_edit'], 0],
     ]],
     ['Aanvragen', [
         ['Inschrijvingen', 'registrations', 'inbox', 'registrations.manage', ['registrations', 'registration', 'registration_approve', 'registration_reject', 'registration_resend'], $nReg],

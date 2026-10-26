@@ -66,14 +66,56 @@ final class Auth
         if (!$u || !$ok || (int) $u['is_active'] !== 1) {
             return false;
         }
-        session_regenerate_id(true);
         Database::exec('DELETE FROM login_attempts WHERE email = ?', [strtolower($email)]);
-        $_SESSION['uid'] = (int) $u['id'];
+        if ((int) ($u['totp_enabled'] ?? 0) === 1 && !empty($u['totp_secret'])) {
+            // Wachtwoord klopt, maar de tweede stap (code uit de authenticator-app) moet nog volgen.
+            $_SESSION['pending_uid'] = (int) $u['id'];
+            $_SESSION['pending_at'] = time();
+            return true;
+        }
+        self::completeLogin((int) $u['id']);
+        return true;
+    }
+
+    /** Rondt het aanmelden af: nieuwe sessie-id, gebruiker onthouden. */
+    public static function completeLogin(int $userId): void
+    {
+        session_regenerate_id(true);
+        unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
+        $_SESSION['uid'] = $userId;
         $_SESSION['last'] = time();
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
         self::$loaded = false;
         self::$roles = self::$perms = null;
-        return true;
+    }
+
+    /** Gebruiker die het wachtwoord al gaf maar nog de tweede stap moet doen (max. 10 minuten geldig). */
+    public static function pendingUserId(): ?int
+    {
+        $id = (int) ($_SESSION['pending_uid'] ?? 0);
+        if ($id && time() - (int) ($_SESSION['pending_at'] ?? 0) <= 600) {
+            return $id;
+        }
+        unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
+        return null;
+    }
+
+    /** Laat een verzoek zonder sessie (bv. een agenda-abonnement) onder de rechten van één gebruiker lopen. */
+    public static function actAs(array $user): void
+    {
+        self::$loaded = true;
+        self::$user = $user;
+        self::$roles = self::$perms = null;
+    }
+
+    /** Beheerders moeten tweestapsverificatie aanzetten als 'security.require_2fa_admin' aan staat. */
+    public static function mustEnableTwoFactor(): bool
+    {
+        $u = self::user();
+        if (!$u || !config('security.require_2fa_admin', false) || !self::hasRole('ADMIN')) {
+            return false;
+        }
+        return !(int) Database::val('SELECT totp_enabled FROM users WHERE id = ?', [$u['id']]);
     }
 
     public static function logout(): void

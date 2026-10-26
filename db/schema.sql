@@ -10,7 +10,13 @@ CREATE TABLE IF NOT EXISTS members (
   postal_code VARCHAR(10) NULL,
   city VARCHAR(80) NULL,
   status VARCHAR(10) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','INACTIVE')),
-  created_at VARCHAR(19) NOT NULL
+  created_at VARCHAR(19) NOT NULL,
+  status_reason VARCHAR(60) NULL,
+  status_date VARCHAR(10) NULL,
+  emergency_name VARCHAR(120) NULL,
+  emergency_phone VARCHAR(40) NULL,
+  medical_note VARCHAR(500) NULL,
+  photo_consent TINYINT NOT NULL DEFAULT 0
 ){{ENGINE}};
 
 CREATE TABLE IF NOT EXISTS users (
@@ -21,6 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
   member_id INT NULL,
   is_active TINYINT NOT NULL DEFAULT 1,
   created_at VARCHAR(19) NOT NULL,
+  ical_token VARCHAR(40) NULL,
+  totp_secret VARCHAR(64) NULL,
+  totp_enabled TINYINT NOT NULL DEFAULT 0,
   FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};
 
@@ -82,6 +91,9 @@ CREATE TABLE IF NOT EXISTS `groups` (
   is_active TINYINT NOT NULL DEFAULT 1,
   goals TEXT NULL,
   color INT NULL,
+  capacity INT NULL,
+  fee_cents INT NULL,
+  next_group_id INT NULL,
   CHECK (category IN ('SWIM_SCHOOL','COMPETITION'))
 ){{ENGINE}};
 
@@ -127,6 +139,7 @@ CREATE TABLE IF NOT EXISTS activities (
   is_custom TINYINT NOT NULL DEFAULT 0,
   status_note VARCHAR(200) NULL,
   is_public TINYINT NOT NULL DEFAULT 0,
+  signup_capacity INT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 ){{ENGINE}};
@@ -224,6 +237,8 @@ CREATE TABLE IF NOT EXISTS swimtest_requests (
   decline_reason VARCHAR(500) NULL,
   internal_note VARCHAR(500) NULL,
   registration_id INT NULL,
+  reminder_at VARCHAR(19) NULL,
+  reminder_count INT NOT NULL DEFAULT 0,
   CHECK (status IN ('UNCONFIRMED','WAITING','INVITED','TESTED','ENROLLED','DECLINED'))
 ){{ENGINE}};
 
@@ -253,6 +268,7 @@ CREATE TABLE IF NOT EXISTS activity_series (
   is_public TINYINT NOT NULL DEFAULT 0,
   created_by INT NULL,
   created_at VARCHAR(19) NOT NULL,
+  capacity INT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id)
 ){{ENGINE}};
 
@@ -303,7 +319,8 @@ CREATE TABLE IF NOT EXISTS posts (
   published_at VARCHAR(19) NULL,
   author_id INT NULL,
   created_at VARCHAR(19) NOT NULL,
-  updated_at VARCHAR(19) NOT NULL
+  updated_at VARCHAR(19) NOT NULL,
+  newsletter_sent_at VARCHAR(19) NULL
 ){{ENGINE}};
 
 CREATE TABLE IF NOT EXISTS pages (
@@ -343,4 +360,137 @@ CREATE TABLE IF NOT EXISTS page_views (
   visitor VARCHAR(16) NOT NULL,
   device VARCHAR(8) NOT NULL,
   referrer VARCHAR(120) NOT NULL DEFAULT ''
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS absence_reports (
+  id {{PK}},
+  activity_id INT NOT NULL,
+  member_id INT NOT NULL,
+  reported_by INT NULL,
+  reason VARCHAR(200) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  UNIQUE (activity_id, member_id),
+  FOREIGN KEY (activity_id) REFERENCES activities(id),
+  FOREIGN KEY (member_id) REFERENCES members(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS broadcasts (
+  id {{PK}},
+  kind VARCHAR(12) NOT NULL,
+  sender_id INT NULL,
+  subject VARCHAR(190) NOT NULL,
+  body TEXT NOT NULL,
+  audience VARCHAR(190) NOT NULL,
+  recipient_count INT NOT NULL DEFAULT 0,
+  created_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS seasons (
+  id {{PK}},
+  name VARCHAR(40) NOT NULL UNIQUE,
+  start_date VARCHAR(10) NOT NULL,
+  end_date VARCHAR(10) NOT NULL,
+  is_current TINYINT NOT NULL DEFAULT 0
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS dues (
+  id {{PK}},
+  member_id INT NOT NULL,
+  season_id INT NOT NULL,
+  amount_cents INT NOT NULL,
+  status VARCHAR(8) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','PAID','WAIVED')),
+  due_date VARCHAR(10) NULL,
+  paid_at VARCHAR(10) NULL,
+  reminder_at VARCHAR(19) NULL,
+  reminder_count INT NOT NULL DEFAULT 0,
+  note VARCHAR(200) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  UNIQUE (member_id, season_id),
+  FOREIGN KEY (member_id) REFERENCES members(id),
+  FOREIGN KEY (season_id) REFERENCES seasons(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS group_waitlist (
+  id {{PK}},
+  member_id INT NOT NULL,
+  group_id INT NOT NULL,
+  note VARCHAR(200) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  UNIQUE (member_id, group_id),
+  FOREIGN KEY (member_id) REFERENCES members(id),
+  FOREIGN KEY (group_id) REFERENCES `groups`(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS meet_entries (
+  activity_id INT NOT NULL,
+  member_id INT NOT NULL,
+  answer VARCHAR(5) NOT NULL CHECK (answer IN ('YES','NO','MAYBE')),
+  events VARCHAR(200) NULL,
+  answered_by INT NULL,
+  updated_at VARCHAR(19) NOT NULL,
+  PRIMARY KEY (activity_id, member_id),
+  FOREIGN KEY (activity_id) REFERENCES activities(id),
+  FOREIGN KEY (member_id) REFERENCES members(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS results (
+  id {{PK}},
+  member_id INT NOT NULL,
+  activity_id INT NULL,
+  event VARCHAR(40) NOT NULL,
+  time_cs INT NOT NULL,
+  swum_on VARCHAR(10) NOT NULL,
+  note VARCHAR(120) NULL,
+  created_by INT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  FOREIGN KEY (member_id) REFERENCES members(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS event_signups (
+  id {{PK}},
+  activity_id INT NOT NULL,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  phone VARCHAR(40) NULL,
+  persons INT NOT NULL DEFAULT 1,
+  note VARCHAR(300) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  FOREIGN KEY (activity_id) REFERENCES activities(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS subscribers (
+  id {{PK}},
+  email VARCHAR(190) NOT NULL UNIQUE,
+  name VARCHAR(120) NULL,
+  token VARCHAR(40) NOT NULL UNIQUE,
+  confirmed_at VARCHAR(19) NULL,
+  unsubscribed_at VARCHAR(19) NULL,
+  created_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS gallery_albums (
+  id {{PK}},
+  title VARCHAR(150) NOT NULL,
+  description VARCHAR(300) NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','PUBLISHED')),
+  created_at VARCHAR(19) NOT NULL
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS gallery_photos (
+  id {{PK}},
+  album_id INT NOT NULL,
+  media_id INT NOT NULL,
+  caption VARCHAR(200) NULL,
+  consent_ok TINYINT NOT NULL DEFAULT 0,
+  created_at VARCHAR(19) NOT NULL,
+  FOREIGN KEY (album_id) REFERENCES gallery_albums(id),
+  FOREIGN KEY (media_id) REFERENCES media(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS photo_members (
+  photo_id INT NOT NULL,
+  member_id INT NOT NULL,
+  PRIMARY KEY (photo_id, member_id),
+  FOREIGN KEY (photo_id) REFERENCES gallery_photos(id),
+  FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};

@@ -15,13 +15,19 @@ final class Installer
         'content.manage'  => 'Website beheren (nieuws, pagina\'s, afbeeldingen)',
         'stats.read'      => 'Statistieken over bezoekers en verkeer bekijken (enkel beheerders)',
         'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
+        'mail.send'       => 'Berichten sturen naar groepen, blokken of deelnemers (binnen scope)',
+        'export.data'     => 'Gegevens exporteren naar CSV (leden, aanwezigheden, aanmeldingen)',
+        'fees.manage'     => 'Lidgeld en seizoenen beheren',
+        'members.medical' => 'Noodcontact en medische opmerkingen zien (binnen scope)',
+        'audit.read'      => 'Auditlog bekijken (enkel beheerders)',
     ];
 
     public const ROLES = [
         'ADMIN'   => ['Beheerder', ['*']],
         'BOARD'   => ['Bestuur', ['members.read', 'members.write', 'members.contact', 'groups.read', 'groups.write',
-                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage', 'content.manage']],
-        'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write']],
+                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage', 'content.manage',
+                                  'mail.send', 'export.data', 'fees.manage', 'members.medical']],
+        'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write', 'mail.send', 'members.medical']],
         'SWIMMER' => ['Zwemmer', ['members.read', 'activities.read', 'attendance.read']],
         'PARENT'  => ['Ouder', ['members.read', 'activities.read', 'attendance.read']],
     ];
@@ -146,6 +152,44 @@ final class Installer
         } catch (Throwable $e) {
             Database::exec("ALTER TABLE `groups` ADD COLUMN category VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'");
         }
+        self::migrateV11();
+    }
+
+    /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
+    public const SCHEMA = 11;
+
+    /** Nieuwe tabellen en kolommen van v0.11 (rapporten, lidgeld, wachtlijst, resultaten, nieuwsbrief, galerij, 2FA). */
+    private static function migrateV11(): void
+    {
+        if ((int) ($_SESSION['schema'] ?? 0) >= self::SCHEMA) {
+            return;
+        }
+        foreach (['absence_reports', 'broadcasts', 'seasons', 'dues', 'group_waitlist', 'meet_entries', 'results', 'event_signups', 'subscribers', 'gallery_albums', 'gallery_photos', 'photo_members'] as $table) {
+            try {
+                Database::val("SELECT 1 FROM $table LIMIT 1");
+            } catch (Throwable $e) {
+                self::createSchema();
+                break;
+            }
+        }
+        $cols = [
+            ['users', 'ical_token', 'VARCHAR(40) NULL'], ['users', 'totp_secret', 'VARCHAR(64) NULL'], ['users', 'totp_enabled', 'TINYINT NOT NULL DEFAULT 0'],
+            ['members', 'status_reason', 'VARCHAR(60) NULL'], ['members', 'status_date', 'VARCHAR(10) NULL'],
+            ['members', 'emergency_name', 'VARCHAR(120) NULL'], ['members', 'emergency_phone', 'VARCHAR(40) NULL'],
+            ['members', 'medical_note', 'VARCHAR(500) NULL'], ['members', 'photo_consent', 'TINYINT NOT NULL DEFAULT 0'],
+            ['groups', 'capacity', 'INT NULL'], ['groups', 'fee_cents', 'INT NULL'], ['groups', 'next_group_id', 'INT NULL'],
+            ['activity_series', 'capacity', 'INT NULL'], ['activities', 'signup_capacity', 'INT NULL'],
+            ['posts', 'newsletter_sent_at', 'VARCHAR(19) NULL'],
+            ['swimtest_requests', 'reminder_at', 'VARCHAR(19) NULL'], ['swimtest_requests', 'reminder_count', 'INT NOT NULL DEFAULT 0'],
+        ];
+        foreach ($cols as [$table, $col, $def]) {
+            try {
+                Database::val("SELECT $col FROM " . ($table === 'groups' ? '`groups`' : $table) . ' LIMIT 1');
+            } catch (Throwable $e) {
+                Database::exec('ALTER TABLE ' . ($table === 'groups' ? '`groups`' : $table) . " ADD COLUMN $col $def");
+            }
+        }
+        $_SESSION['schema'] = self::SCHEMA;
     }
 
     public static function syncReferenceData(): void

@@ -101,7 +101,52 @@ final class ActivityController
         $canRegister = $registrable && $activity['status'] === 'PLANNED';
         $canSeeAttendance = Auth::can('attendance.read');
 
-        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable'), $activity['title']);
+        $absences = [];
+        foreach (Database::all('SELECT member_id, reason, created_at FROM absence_reports WHERE activity_id = ?', [$activity['id']]) as $r) {
+            $absences[(int) $r['member_id']] = $r;
+        }
+        $ownIds = Scope::ownMemberIds();
+        $canAbsence = $activity['status'] === 'PLANNED' && $activity['ends_at'] > now();
+        $medical = [];
+        if ($canRegister && Auth::can('members.medical')) {
+            foreach ($roster as $m) {
+                if (in_array((int) $m['id'], $registrable, true) && ($m['medical_note'] || $m['emergency_name'] || $m['emergency_phone'])) {
+                    $medical[] = $m;
+                }
+            }
+        }
+
+        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical'), $activity['title']);
+    }
+
+    /** Ouder of lid meldt vooraf af voor één activiteit (of trekt de afmelding in). */
+    public static function absence(): void
+    {
+        $activity = self::loadVisible((int) input('activity_id', '0'), true);
+        $mid = (int) input('member_id', '0');
+        $back = url('activity', ['id' => $activity['id']]);
+        $inRoster = in_array($mid, array_map('intval', array_column(Scope::targetMembers($activity), 'id')), true);
+        if (!in_array($mid, Scope::ownMemberIds(), true) || !$inRoster) {
+            abort(403, 'Je kan enkel afmelden voor jezelf of je eigen kinderen.');
+        }
+        if ($activity['status'] !== 'PLANNED' || $activity['ends_at'] <= now()) {
+            flash('error', 'Afmelden kan enkel voor een geplande activiteit die nog niet voorbij is.');
+            redirect($back);
+        }
+        if (input('do') === 'remove') {
+            Database::exec('DELETE FROM absence_reports WHERE activity_id = ? AND member_id = ?', [$activity['id'], $mid]);
+            flash('success', 'Afmelding ingetrokken.');
+            redirect($back);
+        }
+        $reason = mb_substr(input('reason'), 0, 200);
+        if (!Database::val('SELECT 1 FROM absence_reports WHERE activity_id = ? AND member_id = ?', [$activity['id'], $mid])) {
+            Database::exec(
+                'INSERT INTO absence_reports (activity_id, member_id, reported_by, reason, created_at) VALUES (?,?,?,?,?)',
+                [$activity['id'], $mid, Auth::user()['id'], $reason === '' ? null : $reason, now()]
+            );
+        }
+        flash('success', 'Afgemeld. De trainer ziet dit bij de aanwezigheden.');
+        redirect($back);
     }
 
     public static function form(): void

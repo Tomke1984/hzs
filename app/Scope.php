@@ -220,6 +220,23 @@ final class Scope
         return array_values(array_filter($members, fn($m) => in_array((int) $m['id'], $ids, true)));
     }
 
+    /** Leden die de gebruiker zelf is of waarvan hij ouder/voogd is (los van de trainersrol). @return int[] */
+    public static function ownMemberIds(): array
+    {
+        $u = Auth::user();
+        if (!$u) {
+            return [];
+        }
+        $own = [];
+        if ($u['member_id'] && Auth::hasRole('SWIMMER')) {
+            $own[] = (int) $u['member_id'];
+        }
+        if (Auth::hasRole('PARENT')) {
+            $own = array_merge($own, array_map('intval', array_column(Database::all('SELECT member_id FROM guardian_links WHERE user_id = ?', [$u['id']]), 'member_id')));
+        }
+        return array_values(array_unique($own));
+    }
+
     /** Groepen waar de ingelogde gebruiker zelf bij hoort (als trainer, als lid of via gekoppelde kinderen), ook voor beheerders. */
     public static function myGroupIds(): array
     {

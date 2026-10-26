@@ -443,3 +443,12 @@ progress.share-track::-moz-progress-bar{background:var(--blue);border-radius:99p
 @media (max-width:760px){.stat-cols{grid-template-columns:1fr}}
 
 .side-build{margin:0 12px 6px;font-size:.75rem;color:#8fa6c4;word-break:break-all}
+
+/* v0.11: zoeken, account, rapporten */
+.side-search{margin:0 8px 10px}
+.side-search input{width:100%;margin:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff}
+.side-search input::placeholder{color:#b9c9e0}
+.side-account{color:#fff;text-decoration:none}
+.side-account:hover{text-decoration:underline}
+code.big{font-size:1.25rem;letter-spacing:.06em;background:#eef3fa;padding:8px 12px;border-radius:8px;display:inline-block;word-break:break-all}
+td progress.share-track{display:block;margin-top:4px;width:90px}

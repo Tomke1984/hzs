@@ -58,7 +58,7 @@
         <?php foreach ($roster as $m):
             $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; ?>
           <tr>
-            <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
+            <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?php if (isset($absences[(int) $m['id']])): ?> <span class="chip warn">Afgemeld</span><?php if ($absences[(int) $m['id']]['reason']): ?> <span class="muted small"><?= e($absences[(int) $m['id']]['reason']) ?></span><?php endif; endif; ?></td>
             <?php if (in_array((int) $m['id'], $registrable, true)): ?>
             <?php foreach (['UNKNOWN', 'PRESENT', 'ABSENT'] as $s): ?>
               <td class="center">
@@ -85,13 +85,30 @@
   <?php else: ?>
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Lid</th><th>Status</th></tr></thead>
+      <thead><tr><th>Lid</th><th>Status</th><th>Afmelding</th></tr></thead>
       <tbody>
       <?php foreach ($roster as $m):
-          $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; ?>
+          $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; $abs = $absences[(int) $m['id']] ?? null; $mine = in_array((int) $m['id'], $ownIds, true); ?>
         <tr>
           <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
           <td><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span></td>
+          <td>
+            <?php if ($abs): ?><span class="chip warn">Afgemeld</span> <?php if ($abs['reason']): ?><span class="muted small"><?= e($abs['reason']) ?></span> <?php endif; ?><?php endif; ?>
+            <?php if ($mine && $canAbsence): ?>
+              <form class="inline-form" method="post" action="<?= e(url('absence')) ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
+                <input type="hidden" name="member_id" value="<?= (int) $m['id'] ?>">
+                <?php if ($abs): ?>
+                  <input type="hidden" name="do" value="remove">
+                  <button class="btn btn-small btn-ghost" type="submit">Afmelding intrekken</button>
+                <?php else: ?>
+                  <input name="reason" maxlength="200" placeholder="Reden (optioneel)" aria-label="Reden van afwezigheid">
+                  <button class="btn btn-small" type="submit">Kan niet komen</button>
+                <?php endif; ?>
+              </form>
+            <?php endif; ?>
+          </td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -100,6 +117,27 @@
     <?php if ($activity['status'] === 'CANCELLED'): ?><p class="muted small">Deze activiteit is geannuleerd; aanwezigheid kan niet meer geregistreerd worden.</p><?php endif; ?>
   <?php endif; ?>
 </section>
+<?php endif; ?>
+
+<?php if ($medical): ?>
+<section class="card">
+  <h2>Noodgegevens deelnemers</h2>
+  <p class="muted small">Enkel voor trainers en bestuur. Deze gegevens staan nooit in een export.</p>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Lid</th><th>Noodcontact</th><th>Medische opmerking</th></tr></thead>
+    <tbody>
+    <?php foreach ($medical as $m): ?>
+      <tr><td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
+        <td><?= e(trim(($m['emergency_name'] ?? '') . ' ' . ($m['emergency_phone'] ?? ''))) ?: '—' ?></td>
+        <td><?= e($m['medical_note'] ?? '') ?: '—' ?></td></tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+</section>
+<?php endif; ?>
+
+<?php if (Auth::can('mail.send') && $activity['status'] === 'PLANNED'): ?>
+  <p><a class="btn btn-ghost btn-small" href="<?= e(url('mail', ['to' => 'a:' . $activity['id']])) ?>">✉ Bericht aan de deelnemers</a></p>
 <?php endif; ?>
 
 <p><a href="<?= e(url('calendar', ['m' => substr($activity['starts_at'], 0, 7)])) ?>">← Terug naar de kalender</a></p>
