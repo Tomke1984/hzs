@@ -203,6 +203,12 @@ body.site { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
 .form legend { padding: 0 8px; font: 800 1.4rem/1 var(--display); font-style: italic; color: var(--deep); }
 .form label { display: block; margin: 0 0 14px; font-weight: 600; }
 .form input:not([type=checkbox]):not([type=radio]), .form select, .form textarea { display: block; width: 100%; margin-top: 5px; padding: 11px 13px; font: 400 1rem var(--text); color: var(--ink); background: #fff; border: 1px solid #a9bccb; border-radius: 10px; }
+/* Keuzelijsten: zelfde stijl als in de app (duidelijk veld met pijltje), in de kleuren van de website */
+.form input:not([type=checkbox]):not([type=radio]):not([type=file]), .form textarea { border: 2px solid #9db6d9; }
+.form input:not([type=checkbox]):not([type=radio]):hover, .form textarea:hover { border-color: var(--blue); }
+.form select { appearance: none; -webkit-appearance: none; border: 2px solid #9db6d9; padding-right: 44px; font-weight: 600; cursor: pointer;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23064ca2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center; }
+.form select:hover { border-color: var(--blue); }
 .form input:focus, .form select:focus, .form textarea:focus { outline: 3px solid var(--aqua); outline-offset: 0; border-color: var(--blue); }
 .form .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
 .form .check input { width: 20px; height: 20px; margin: 3px 0 0; flex: none; }

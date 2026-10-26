@@ -5,6 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+- **Keuzelijsten op de website:** de dropdowns in het contactformulier, de zwemtestaanvraag en de inschrijving hebben nu dezelfde duidelijke stijl als in de app (veld met pijltje), in de kleuren van de website; invulvelden hebben dezelfde duidelijke rand.
 - **Opmaak: alle spatie-achtige tekens opgevangen** (ook Braille-blank, Hangul-vulteken en andere Unicode-spaties) rond `##` en `- `, zodat plakwerk altijd tot een kop of opsomming leidt.
 - **Koppen nog tolerantere herkenning + diagnose voor beheerders:** `##Kop` zonder spatie, `\## Kop` (door editors "ge-escaped"), `&nbsp;`, regelscheiders van tekstverwerkers en alle onzichtbare opmaaktekens worden opgevangen. Wordt een regel die op een kop lijkt toch niet herkend, dan toont de publieke pagina of het bericht (enkel aan beheerders) een waarschuwing met de exacte tekens van die regel (bv. `[U+2063]## Kop`).
 - **Versie zichtbaar voor beheerders:** onderaan het menu staat klein de branch en commit die draait (bv. `dev cc837b1`), zodat je meteen ziet of een update binnen is. Enkel voor beheerders en enkel als de map een git-kopie is.
