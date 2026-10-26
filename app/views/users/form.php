@@ -191,3 +191,18 @@
 </section>
 
 <?php endif; ?>
+
+<?php if ($user['id']): $tfa = (int) Database::val('SELECT totp_enabled FROM users WHERE id = ?', [$user['id']]); ?>
+<section class="card">
+  <h2>Tweestapsverificatie</h2>
+  <?php if ($tfa): ?>
+    <p><span class="chip ok">Aan</span> Deze gebruiker moet bij het aanmelden een code uit de authenticator-app invullen. Telefoon kwijt? Zet ze hier uit; de gebruiker kan ze daarna opnieuw instellen.</p>
+    <form method="post" action="<?= e(url('user_2fa_reset')) ?>" data-confirm="Tweestapsverificatie van deze gebruiker uitzetten?">
+      <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $user['id'] ?>">
+      <button class="btn btn-ghost" type="submit">Tweestapsverificatie uitzetten</button>
+    </form>
+  <?php else: ?>
+    <p class="muted">Staat niet aan. De gebruiker stelt dit zelf in onder “Mijn account”.</p>
+  <?php endif; ?>
+</section>
+<?php endif; ?>

@@ -190,6 +190,19 @@ final class UserController
     }
 
     /** Kind aan een ouder koppelen. */
+    /** Beheerder zet de tweestapsverificatie van een gebruiker uit (bv. telefoon kwijt). */
+    public static function resetTwoFactor(): void
+    {
+        $id = (int) input('id', '0');
+        if (!Database::val('SELECT COUNT(*) FROM users WHERE id = ?', [$id])) {
+            abort(404, 'Gebruiker niet gevonden.');
+        }
+        Database::exec('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [$id]);
+        audit('2FA_RESET', 'user', $id);
+        flash('success', 'Tweestapsverificatie is uitgezet voor deze gebruiker.');
+        redirect(url('user_form', ['id' => $id]));
+    }
+
     public static function addChild(): void
     {
         $userId = (int) input('user_id', '0');

@@ -62,6 +62,7 @@ $routes = [
     'users'            => ['GET' => ['UserController', 'index', 'users.manage']],
     'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
     'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
+    'user_2fa_reset'   => ['POST' => ['UserController', 'resetTwoFactor', 'users.manage']],
     'user_child_add'   => ['POST' => ['UserController', 'addChild', 'users.manage']],
     'user_child_relation' => ['POST' => ['UserController', 'updateRelation', 'users.manage']],
     'user_child_remove' => ['POST' => ['UserController', 'removeChild', 'users.manage']],
