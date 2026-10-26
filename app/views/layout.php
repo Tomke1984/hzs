@@ -22,6 +22,7 @@
   <aside class="sidebar" id="sidebar">
     <a class="brand side-brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
     <?php require __DIR__ . '/_nav.php'; ?>
+    <?php if (Auth::can('stats.read') && ($build = app_build()) !== ''): ?><p class="side-build" title="Welke code draait er?"><?= e($build) ?></p><?php endif; ?>
     <form class="side-user" method="post" action="<?= e(url('logout')) ?>">
       <?= csrf_field() ?>
       <div class="side-who"><span class="avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $user['display_name'], 0, 1))) ?></span><span><?= e($user['display_name']) ?></span></div>

@@ -441,3 +441,5 @@ progress.share-track::-moz-progress-bar{background:var(--blue);border-radius:99p
 .stat-days{margin-top:10px}
 .stat-days summary{cursor:pointer;font-weight:600;color:var(--blue)}
 @media (max-width:760px){.stat-cols{grid-template-columns:1fr}}
+
+.side-build{margin:0 12px 6px;font-size:.75rem;color:#8fa6c4;word-break:break-all}

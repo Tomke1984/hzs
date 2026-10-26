@@ -166,6 +166,30 @@ function privacy_href(): string
     return $h;
 }
 
+/** Korte versie-aanduiding (branch en commit uit .git, indien aanwezig) voor beheerders, om te zien welke code er draait. */
+function app_build(): string
+{
+    $head = @file_get_contents(APP_ROOT . '/.git/HEAD');
+    if ($head === false) {
+        return '';
+    }
+    $head = trim($head);
+    if (!str_starts_with($head, 'ref: ')) {
+        return substr($head, 0, 7);
+    }
+    $ref = substr($head, 5);
+    $sha = @file_get_contents(APP_ROOT . '/.git/' . $ref);
+    if ($sha === false) {
+        foreach (@file(APP_ROOT . '/.git/packed-refs', FILE_IGNORE_NEW_LINES) ?: [] as $l) {
+            if (str_ends_with($l, ' ' . $ref)) {
+                $sha = substr($l, 0, 40);
+                break;
+            }
+        }
+    }
+    return basename($ref) . ' ' . substr(trim((string) $sha), 0, 7);
+}
+
 function now(): string
 {
     return date('Y-m-d H:i:s');
