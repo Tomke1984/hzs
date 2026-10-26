@@ -18,6 +18,7 @@
       <?php $groups = $timetable; $code = 'COMPETITION'; require __DIR__ . '/_slotcards.php'; ?>
       <p class="muted small">Wijzigingen of geschrapte trainingen staan in de <a href="<?= e(url('agenda')) ?>">kalender</a>.</p>
     <?php else: ?>
+    <?php if (Auth::can('content.manage') && ($mdProblems = Markup::problems((string) $p['body']))): ?><div class="alert alert-warning" role="alert"><strong>Let op (enkel zichtbaar voor beheerders):</strong> deze regel(s) lijken een kop maar worden niet herkend: <?php foreach ($mdProblems as $mp): ?><code><?= e($mp) ?></code> <?php endforeach; ?>. Zet de kop op een eigen regel, begin met <code>## </code> (twee hekjes en een spatie) en laat een lege regel erboven en eronder.</div><?php endif; ?>
     <div class="prose"><?= Markup::render((string) $p['body']) ?></div>
     <?php endif; ?>
     <?php if ($contact): $old = $contact['old']; ?>

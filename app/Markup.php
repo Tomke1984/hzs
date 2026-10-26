@@ -9,10 +9,31 @@ final class Markup
     /** Plakken uit chats, webpagina's of tekstverwerkers brengt onzichtbare of "mooie" tekens mee (vaste spatie, zero-width spatie, BOM, ＃, •). Die laten een kop of opsomming onopgemerkt; ze worden opgeschoond. */
     public static function clean(string $text): string
     {
-        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        $text = str_replace(["\r\n", "\r", "\u{2028}", "\u{2029}", "\u{0085}", "\x0B", "\x0C"], "\n", $text);
+        $text = str_ireplace(['&nbsp;', '&#35;', '&num;'], [' ', '#', '#'], $text);
+        $text = preg_replace('/^([ \t]*)\\\\(?=[#*-])/m', '$1', $text) ?? $text; // \\## uit editors die tekens "escapen"
         $out = preg_replace_callback('/^([ \t]*)(\x{FF03}+)/mu', fn($m) => $m[1] . str_repeat('#', strlen($m[2]) / 3), $text);
-        $out = preg_replace(['/[\x{00A0}\x{1680}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]/u', '/[\x{200B}-\x{200D}\x{2060}\x{FEFF}\x{00AD}]/u', '/^([ \t]*)\x{2022}\s/mu'], [' ', '', '$1- '], $out ?? $text);
+        $out = preg_replace(['/[\x{00A0}\x{1680}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]/u', '/(?![\x{200C}\x{200D}])\p{Cf}/u', '/^([ \t]*)\x{2022}\s/mu'], [' ', '', '$1- '], $out ?? $text);
         return $out ?? $text;
+    }
+
+    /** Regels die op een kop lijken (beginnen met ## of ###) maar niet als kop herkend worden, met de exacte tekens (voor beheerders). */
+    public static function problems(string $text): array
+    {
+        $found = [];
+        foreach (explode("\n", self::clean($text)) as $line) {
+            $line = rtrim($line);
+            if ($line === '' || !preg_match('/^.{0,8}?#{2,3}/u', $line) || str_starts_with(self::render($line), '<h')) {
+                continue;
+            }
+            $codes = '';
+            foreach (mb_str_split(mb_substr($line, 0, 14)) as $ch) {
+                $cp = mb_ord($ch);
+                $codes .= ($cp > 32 && $cp < 127) ? $ch : sprintf('[U+%04X]', $cp);
+            }
+            $found[] = $codes;
+        }
+        return array_slice($found, 0, 5);
     }
 
     public static function render(string $text): string
@@ -26,9 +47,9 @@ final class Markup
         $prev = '';
         $norm = [];
         foreach (explode("\n", $text) as $line) {
-            $isHead = (bool) preg_match('/^#{2,3}\s+\S/', $line);
+            $isHead = (bool) preg_match('/^#{2,3}[ \t]*[^#\s]/', $line);
             $isItem = (bool) preg_match('/^[-*]\s+\S/', $line);
-            $prevHead = (bool) preg_match('/^#{2,3}\s+\S/', $prev);
+            $prevHead = (bool) preg_match('/^#{2,3}[ \t]*[^#\s]/', $prev);
             $prevItem = (bool) preg_match('/^[-*]\s+\S/', $prev);
             if (trim($prev) !== '' && trim($line) !== '' && ($isHead || $prevHead || ($isItem && !$prevItem))) {
                 $norm[] = '';
@@ -40,7 +61,7 @@ final class Markup
         $out = [];
         foreach (preg_split("/\n{2,}/", $text) as $block) {
             $lines = explode("\n", trim($block));
-            if (preg_match('/^(#{2,3})\s+(.+)$/', $lines[0], $m) && count($lines) === 1) {
+            if (preg_match('/^(#{2,3})[ \t]*([^#\s].*)$/', $lines[0], $m) && count($lines) === 1) {
                 $n = strlen($m[1]);
                 $out[] = "<h$n>" . self::inline($m[2]) . "</h$n>";
             } elseif (preg_match('/^[-*]\s+/', $lines[0])) {
