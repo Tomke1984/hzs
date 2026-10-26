@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_(niets nieuws sinds v0.10.4)_
+
+## Op main
+
+### v0.10.4 – 2026-10-26 – `29b3a79`
+- **Documentatie bijgewerkt:** README en analyse beschrijven nu zwemblokken, weekoverzicht, statistieken, privacybeleid, opmaakregels en de configuratie-opties.
 - **Keuzelijsten op de website:** de dropdowns in het contactformulier, de zwemtestaanvraag en de inschrijving hebben nu dezelfde duidelijke stijl als in de app (veld met pijltje), in de kleuren van de website; invulvelden hebben dezelfde duidelijke rand.
 - **Opmaak: alle spatie-achtige tekens opgevangen** (ook Braille-blank, Hangul-vulteken en andere Unicode-spaties) rond `##` en `- `, zodat plakwerk altijd tot een kop of opsomming leidt.
 - **Koppen nog tolerantere herkenning + diagnose voor beheerders:** `##Kop` zonder spatie, `\## Kop` (door editors "ge-escaped"), `&nbsp;`, regelscheiders van tekstverwerkers en alle onzichtbare opmaaktekens worden opgevangen. Wordt een regel die op een kop lijkt toch niet herkend, dan toont de publieke pagina of het bericht (enkel aan beheerders) een waarschuwing met de exacte tekens van die regel (bv. `[U+2063]## Kop`).
@@ -16,9 +22,6 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 - **Privacybeleid: vervanging robuuster:** de oude tekst van 2018 wordt nu herkend aan de datum (*24 mei 2018*), ook als de editor de opmaak lichtjes heeft aangepast. Nieuwe opdracht `php tools/seed-site.php privacy` forceert de nieuwe tekst (maakt de pagina aan als ze ontbreekt).
 - **Privacybeleid herschreven (AVG):** nieuwe tekst op de pagina *Privacybeleid* (Club), afgestemd op wat de website en de Clubapp echt doen: verwerkingen met doel en rechtsgrond (statistieken, zwemtest, inschrijving, ledenadministratie, accounts, contactformulier, beveiliging), cookies (enkel de technische sessiecookie `hzs_session`, geen banner nodig), met wie gegevens gedeeld worden, concrete bewaartermijnen (7 dagen onbevestigde aanvragen, 24 uur mislukte aanmeldingen, 400 dagen statistieken, uitnodigingslink 7 dagen, wachtwoordlink 60 minuten), beveiliging, kinderen (13 jaar), rechten, klacht bij de Gegevensbeschermingsautoriteit en wijzigingen. Bestaande sites krijgen de nieuwe tekst automatisch **zolang de oude overgenomen tekst van 2018 nog onaangepast is**; een door de club aangepaste tekst blijft staan. De link *Privacy* staat nu altijd in de footer van de website en naast de formulieren (inschrijven, zwemtest, contact), ook zonder instelling `privacy_url` in `config.php` (die blijft voorrang hebben).
 - **Statistieken (enkel beheerders):** nieuw menu-item *Statistieken* (`/app/statistieken`, nieuwe permissie `stats.read`, enkel de rol Beheerder; bestuur, trainers en ouders krijgen een 403). Toont per periode (7/30/90 dagen, 1 jaar) voor de **website** en de **app** apart: bezoeken, paginaweergaves, gemiddelde per dag, bezoekers vandaag, staafdiagram per dag, meest bezochte pagina's/schermen, apparaten (computer/gsm/tablet) en bij de website de herkomst (zoekmachine, sociale media, rechtstreeks) plus een tabel per dag. **Privacy:** geen cookies, geen IP-adres, geen namen of gebruikers-id bewaard; een bezoeker is een dagelijks wisselende hash (daarom enkel unieke bezoekers per dag). Niet geteld: bots, POST-aanvragen, mislukte aanvragen, bezoekers met *Do Not Track*/*Global Privacy Control*, beheerders/bestuur op de website en het dashboard zelf. Gegevens ouder dan 400 dagen worden automatisch gewist. Nieuwe tabel `page_views` (wordt automatisch aangemaakt) en bestand `storage/stats.salt`.
-
-## Op main
-
 ### v0.10.3 – 2026-10-26 – `ab99feb`
 - **Website: balk onder het menu en boven de footer** is geen blauw-geel baantouw meer maar een golvend water in drie blauwtinten (donker, midden, licht), zonder geel.
 - **Kalender:** knop *Weekoverzicht zwemschool* naast *Trainingsreeksen* (voor wie activiteiten mag beheren).

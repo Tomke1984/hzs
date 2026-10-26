@@ -55,11 +55,13 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 - **Zwemtest aanvragen** (`?r=swimtest`): formulier voor kind en ouder, e-mailbevestiging, wachtlijst die het bestuur opvolgt (zie hieronder).
 - **Lid worden** (`?r=register`): inschrijfformulier voor ouders (één of meer kinderen) en zwemmers van 18+.
 - **Contact**: pagina met de contactpersonen van zwemschool en competitie en een contactformulier; berichten komen in de app en per mail bij het juiste adres.
+- **Privacybeleid** (Club → Privacybeleid, AVG): beschrijft per verwerking doel, grondslag en bewaartermijn, de cookies (enkel de technische sessiecookie, geen banner nodig), verwerkers, rechten en klachtmogelijkheid. De link *Privacy* staat altijd in de footer en bij de formulieren (inschrijven, zwemtest, contact), ook zonder `privacy_url` in `config.php`.
+- **Formulieren**: keuzelijsten en invulvelden hebben overal dezelfde duidelijke stijl (veld met pijltje).
 - Beveiliging van de formulieren: verborgen spamveld, limiet per e-mailadres/uur, CSRF, bevestiging per e-mail.
 
 ### Website beheren (menu *Website*, recht `content.manage`: beheerder en bestuur)
 - **Nieuws**: berichten als concept of gepubliceerd, met hoofdafbeelding.
-- **Pagina's**: tekst met eenvoudige opmaak (`## kop`, lijsten, **vet**, links), hoofd- en subpagina's, menu aan/uit, concept/gepubliceerd.
+- **Pagina's**: tekst met eenvoudige opmaak (`## kop`, `- lijst`, **vet**, links), hoofd- en subpagina's, menu aan/uit, concept/gepubliceerd. De opmaak is tolerant bij plakken (vaste spaties, onzichtbare tekens, `##Kop` zonder spatie). Wordt een regel die op een kop lijkt toch niet herkend, dan toont de publieke pagina aan beheerders een waarschuwing met de exacte tekens.
 - **Automatische pagina's** (Trainingsuren competitie, Doelstellingen, Contact, startpagina) staan in het overzicht met het label *Automatisch*: adres, plaats en status liggen vast, ze kunnen niet verwijderd worden en bij de eerste twee pas je enkel de inleiding aan; de rest komt uit Reeksen/Groepen.
 - **Paginacontrole**: meldt verouderde `doelstellingen-…`-pagina's, lege pagina's, concepten, kapotte links en onbereikbare pagina's; de knop *Overbodige pagina's opruimen* verwijdert enkel de verouderde en lege.
 - **Afbeeldingen**: bibliotheek met kopieerbare code voor in teksten.
@@ -74,6 +76,12 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 - **Gebruikers** (enkel beheerders): accounts, rollen, wachtwoord resetten, deactiveren, ouders aan kinderen koppelen (met relatie), trainers aan groepen. Twee tabbladen (beheer/trainers en ouders/zwemmers).
 - **Uitnodigingen per e-mail**: ouders en leden kiezen zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen); *Wachtwoord vergeten?* via mail (60 minuten).
 
+### Statistieken (enkel beheerders)
+- Menu *Statistieken* (`/app/statistieken`, permissie `stats.read`, enkel de rol Beheerder; bestuur, trainers en ouders krijgen een 403).
+- Per periode (7/30/90 dagen, 1 jaar) voor **website** en **app** apart: bezoeken (unieke bezoekers per dag, opgeteld), paginaweergaves, gemiddelde per dag, bezoekers vandaag, staafdiagram per dag, meest bezochte pagina's/schermen, apparaten, herkomst (website) en een tabel per dag.
+- **Privacyvriendelijk:** geen cookies, geen IP-adres, naam of gebruikers-id bewaard; een bezoeker is een dagelijks wisselende hash (geheim in `storage/stats.salt`, per server, niet in git). Niet geteld: bots, POST-aanvragen, mislukte aanvragen, bezoekers met *Do Not Track*/*Global Privacy Control*, beheerders/bestuur op de website en het dashboard zelf. Anonieme tellers tonen hoeveel bezoeken genegeerd werden en waarom. Gegevens ouder dan 400 dagen worden gewist.
+- Testen: open de website in een privévenster zonder aan te melden. Het dashboard legt uit waarom je eigen bezoek niet meetelt; met `'stats' => ['count_staff' => true]` in `config.php` tellen beheerders/bestuur wel mee. Fouten van de teller staan in het dashboard en in `storage/stats-error.log`.
+
 ### Inschrijvingen, zwemtest en berichten (bestuur)
 - **Inschrijvingen** (`registrations.manage`): bevestigde aanvragen beoordelen. Goedkeuren maakt de leden aan, koppelt de ouder en nodigt uit; afwijzen stuurt een mail met reden.
 - **Zwemtest** (menu *Zwemtest*, met teller): wachtlijst in volgorde van bevestiging met de statussen Wachtlijst, Uitgenodigd, Test gedaan, Ingeschreven en Geweigerd; per aanvraag een notitie, optionele mails en *Als lid inschrijven* (maakt een inschrijving die de gewone goedkeuring volgt).
@@ -82,7 +90,9 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 ### Kalender, trainingsreeksen en aanwezigheid
 - **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op zwemschool/competitie en groep.
 - **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen = annuleren en verwijderen (met aanwezigheden blijft ze geannuleerd bewaard); **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
-- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per lid kan je kiezen op welke reeks (trainingsdag) hij binnen de groep zwemt (*Groep → Trainingsmoment per lid*, een moment = één reeks = dag + uur). Per reeks en in bulk **op de website tonen of verbergen** en **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen.
+- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Per reeks en in bulk **op de website tonen of verbergen** en **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen. Zwemschool en competitie staan gescheiden op het overzicht.
+- **Competitie:** elke groep heeft een vast trainingsschema; alle leden van de groep staan op de lijsten van hun groep.
+- **Zwemschool = zwemblokken:** een zwemschoolreeks (één dag + uur) is een *blok* waarvoor je meerdere groepen kiest. Leden worden per blok ingedeeld (*Trainingsreeksen → blok → Leden in dit blok*, of de lijst *Nog niet ingedeeld* op het overzicht met een keuzelijst per lid, of het rooster *Trainingsmoment per lid* op de groepspagina). Een lid mag in meerdere blokken, leden van verschillende groepen mogen samen in één blok, er is geen capaciteitslimiet. **Een zwemschoollid zonder blok staat op geen enkele aanwezigheidslijst** en ziet (ouder/zwemmer) geen trainingen van zijn groep tot het is ingedeeld. Wisselt een lid van groep (of wordt het verplaatst of uit de groep gehaald), dan vervalt zijn indeling. Het **weekoverzicht zwemschool** (knop op de kalender en op Trainingsreeksen) toont dag × uur met de groepen en het aantal leden per blok. Een blok = één dag en uur: maak per moment een aparte reeks.
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
@@ -99,9 +109,10 @@ public/install.php      eenmalige installer (vergrendelt zichzelf)
 app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
 app/Controllers/        Auth, Dashboard, Member, Group, Activity, Series, User, Invite, Registration,
-                        SwimTest, Contact, Content (website-beheer), Site (publieke site)
+                        SwimTest, Contact, Content (website-beheer), Site (publieke site), Stats
 app/Installer.php       installatie, migraties bij elke start, referentiedata (rollen/permissies)
-app/Markup.php          veilige opmaak voor paginateksten; app/PageCheck.php = paginacontrole
+app/Markup.php          veilige opmaak voor paginateksten (tolerant bij plakken); app/PageCheck.php = paginacontrole
+app/Stats.php           anonieme bezoekersteller en rapportage (StatsController + views/stats)
 app/SiteSeed.php        startinhoud khzs.be; app/CompetitionSeed.php = competitie-uren
 app/views/              PHP-templates met escaping via e() (site/ = publieke site)
 db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
@@ -110,7 +121,12 @@ tools/                  seed-demo.php (demodata), seed-site.php (ontwikkelhulp: 
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
-Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur, HSTS bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Nog te doen voor productie: MFA voor beheerders, HSTS op serverniveau, back-ups, privacy/AVG-proces.
+Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur, HSTS bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Nog te doen voor productie: MFA voor beheerders, HSTS op serverniveau, back-ups, concrete bewaartermijnen voor ledengegevens en verwerkersovereenkomsten met hosting en mail (het privacybeleid zelf staat er; laat het door het bestuur nalezen).
+
+## Tips voor ontwikkelaars
+- `php tools/seed-site.php privacy` zet de ingebouwde tekst van het privacybeleid (overschrijft de pagina of maakt ze aan).
+- Beheerders zien onderaan het menu klein de branch en commit die draait (bv. `dev 29b3a79`), handig om te controleren of een update binnen is.
+- De CSP verbiedt inline stijl: gebruik CSS-klassen of SVG-attributen (zoals in de statistiekengrafiek), geen `style="…"`.
 
 ## Werkwijze met GitHub
 
@@ -138,18 +154,8 @@ In `config.php` (zie `config.sample.php`):
 ],
 ```
 
-Optioneel: `'registration' => ['notify_email' => 'bestuur@jouwdomein.be']` mailt het bestuur bij elke bevestigde inschrijving, en `'privacy_url' => '...'` voegt een link naar de privacyverklaring toe aan het formulier.
+Optioneel: `'registration' => ['notify_email' => 'bestuur@jouwdomein.be']` mailt het bestuur bij elke bevestigde inschrijving, en `'privacy_url' => '...'` wijst naar een eigen privacyverklaring (leeg = de pagina *Privacybeleid* van de site). `'stats' => ['count_staff' => true]` laat bezoek van beheerders/bestuur aan de website meetellen in de statistieken (om te testen). De map `storage/` moet schrijfbaar zijn (database, mail, `stats.salt`, `stats-error.log`).
 
 Berichten van het contactformulier gaan naar `'contact' => ['swimschool_email' => '…', 'competition_email' => '…', 'other_email' => '…']` (leeg = het meldadres van de inschrijvingen); ze staan altijd ook in de app onder *Berichten*. Geüploade afbeeldingen komen in `public/uploads/`: die map moet schrijfbaar zijn en in de back-up zitten.
 
 Lokaal testen: laat `driver` op `log` staan. Na een uitnodiging staat de activatielink in de melding en in `storage/mail/outbox.log`.
-
-### Zwemblokken (zwemschool)
-Een zwemschoolreeks (dag + uur) is een blok; `member_series` (weekday 0) koppelt leden aan blokken. Zwemschoolleden zonder blok staan op geen aanwezigheidslijst (`Scope::targetMembers`) en zien geen trainingen van hun groep (`Scope::hiddenSlots`); competitie volgt het vaste groepsschema. Beheer via `series_show` (Leden in dit blok), `series` (Nog niet ingedeeld) en routes `series_member_add` / `series_member_remove`. Groepswissel wist de indeling (`SeriesService::clearMemberBlocks`).
-
-Het weekoverzicht (`series_week`, `SeriesController::week`) toont de zwemblokken als raster dag × uur met groepen en aantal leden.
-
-### Statistieken (beheerders)
-Teller `Stats::track()` (aangeroepen in `public/index.php` vlak voor de actie) schrijft na een 200-antwoord een rij in `page_views` (dag, gebied SITE/APP, route, pad zonder querystring, dagelijkse hash als bezoeker, apparaat, enkel de herkomsthost). Geen cookies, IP-adres of gebruikers-id; de hash gebruikt een geheim in `storage/stats.salt`. Bots, POST, niet-200, DNT/GPC en beheerders op de site tellen niet. Bewaartermijn 400 dagen. Dashboard: route `stats` (`StatsController`, permissie `stats.read`, enkel ADMIN), grafieken als inline SVG omdat de CSP inline `style` verbiedt.
-
-Het privacybeleid staat als pagina `privacybeleid` (tekst in `SiteSeed::privacyBody()`; `Installer::migrate()` vervangt enkel de oorspronkelijke tekst van 2018). `privacy_href()` geeft het adres: `config privacy_url` of anders de gepubliceerde pagina. Controleer de tekst bij elke nieuwe verwerking (bv. nieuwe velden, nieuwe externe diensten).
