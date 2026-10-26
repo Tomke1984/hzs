@@ -13,7 +13,7 @@ final class Markup
         $text = str_ireplace(['&nbsp;', '&#35;', '&num;'], [' ', '#', '#'], $text);
         $text = preg_replace('/^([ \t]*)\\\\(?=[#*-])/m', '$1', $text) ?? $text; // \\## uit editors die tekens "escapen"
         $out = preg_replace_callback('/^([ \t]*)(\x{FF03}+)/mu', fn($m) => $m[1] . str_repeat('#', strlen($m[2]) / 3), $text);
-        $out = preg_replace(['/[\x{00A0}\x{1680}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]/u', '/(?![\x{200C}\x{200D}])\p{Cf}/u', '/^([ \t]*)\x{2022}\s/mu'], [' ', '', '$1- '], $out ?? $text);
+        $out = preg_replace(['/[\p{Z}\x{2800}\x{3164}\x{115F}\x{1160}\x{FFA0}\x{034F}\x{17B4}\x{17B5}\x{180B}-\x{180F}]/u', '/(?![\x{200C}\x{200D}])\p{Cf}/u', '/^([ \t]*)\x{2022}\s/mu'], [' ', '', '$1- '], $out ?? $text);
         return $out ?? $text;
     }
 
