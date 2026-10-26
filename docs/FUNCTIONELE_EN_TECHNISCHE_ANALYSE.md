@@ -6,7 +6,7 @@ Versie v0.10.4 (oktober 2026). Vervangt de analyse van V1 (JSON-testarchitectuur
 HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
 
 ## 2. Scope
-### In scope (v0.11, dev)
+### In scope (v0.11)
 - Publieke website: startpagina, pagina's met menu, nieuws, kalender, trainingsuren, doelstellingen, contact, zwemtestformulier en inschrijfformulier.
 - Website-beheer: nieuws, pagina's, afbeeldingen, paginacontrole (de eenmalige import van khzs.be is uit de app gehaald; `tools/seed-site.php` blijft als ontwikkelhulp).
 - Authenticatie, rollen (Beheerder, Bestuur, Trainer, Zwemmer, Ouder), permissies, gegevensscope, uitnodigingen en wachtwoord vergeten per e-mail.
@@ -132,7 +132,7 @@ Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 7
 - Mail instellen (smtp aanbevolen) en `contact`-adressen per onderwerp.
 - Dagelijkse back-up van de database en `public/uploads/`; restore testen. De map `storage/` moet schrijfbaar zijn (database, mail, `stats.salt`, `stats-error.log`); `storage/stats.salt` is geheim en per server verschillend.
 - Na een update: controleer onderaan het menu (beheerder) welke commit draait en of het privacybeleid op de site staat.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.11.0 staat op dev, nog niet op main). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.11.0 = deze release). Migraties lopen automatisch bij de eerste aanvraag na een update.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).

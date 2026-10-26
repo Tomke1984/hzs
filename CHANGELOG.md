@@ -5,7 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-### v0.11.0 (dev) – grote functionele uitbreiding: 20 verbeteringen in 4 blokken
+_(niets nieuws sinds v0.11.0)_
+
+## Op main
+
+### v0.11.0 – 2026-10-26 – `f8dd83d` – grote functionele uitbreiding: 20 verbeteringen in 4 blokken
 **Blok A – dagelijks werk**
 - **Aanwezigheidsrapport** (`/app/aanwezigheidsrapport`) per groep en periode, met lijst *Nog in te vullen* (voorbije trainingen zonder aanwezigheidslijst).
 - **Bericht sturen** (`/app/bericht-sturen`) naar een groep, trainingsblok, deelnemers van een activiteit of de hele club; met voorbeeldscherm, maximum 400 ontvangers, een trainer bereikt enkel de eigen groepen; elke verzending staat in `broadcasts` (nieuwe permissie `mail.send`).
@@ -33,8 +37,6 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 - **Privacybeleid aangevuld** voor de nieuwe verwerkingen (lidgeld, wedstrijdresultaten, afmeldingen, noodcontact/medische opmerking, berichten, activiteitsinschrijvingen, nieuwsbrief, foto's, agenda-link, 2FA) met bewaartermijnen. Bestaande sites krijgen de nieuwe tekst automatisch **enkel als de pagina nog letterlijk de vorige tekst is**; een aangepaste tekst blijft staan (dan de nieuwe passages handmatig overnemen, of `php tools/seed-site.php privacy` om te overschrijven).
 - Nieuwe databasetabellen en -kolommen worden bij de eerste aanvraag automatisch aangemaakt (schema 11); bestaande gegevens blijven ongewijzigd.
 - Tests: reeksen v11a–v11d (360 controles) en alle oudere reeksen blijven groen.
-
-## Op main
 
 ### v0.10.4 – 2026-10-26 – `29b3a79`
 - **Documentatie bijgewerkt:** README en analyse beschrijven nu zwemblokken, weekoverzicht, statistieken, privacybeleid, opmaakregels en de configuratie-opties.
