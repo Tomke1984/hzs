@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Reeksen importeren – commit volgt bij de push_
+_Reeksen importeren – commit `fa9b2f8`_
 
 - **Reeksen importeren** (*Trainingsreeksen → Importeren*): uurrooster plakken (groep, dag, uren, titel, locatie, vaste trainers), voorbeeld bekijken met fouten per regel, en alle reeksen in één keer aanmaken, met trainingen en vaste trainers voor de trainersplanning. Bestaande reeksen worden overgeslagen.
 - Knop **Uurrooster van khzs.be invullen**: het competitierooster van khzs.be/trainingsuren-competitie (6 groepen, 33 momenten → 11 reeksen: Zwemtraining en Droogtraining per groep).
