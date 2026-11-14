@@ -21,6 +21,7 @@ $routes = [
     'member'           => ['GET' => ['MemberController', 'show', 'members.read']],
     'member_form'      => ['GET' => ['MemberController', 'form', 'members.write']],
     'member_save'      => ['POST' => ['MemberController', 'save', 'members.write']],
+    'member_delete'    => ['POST' => ['MemberController', 'delete', 'members.write']],
 
     'groups'           => ['GET' => ['GroupController', 'index', 'groups.read']],
     'group'            => ['GET' => ['GroupController', 'show', 'groups.read']],
@@ -35,6 +36,7 @@ $routes = [
     'users'            => ['GET' => ['UserController', 'index', 'users.manage']],
     'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
     'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
+    'user_delete'      => ['POST' => ['UserController', 'delete', 'users.manage']],
     'user_2fa_reset'   => ['POST' => ['UserController', 'resetTwoFactor', 'users.manage']],
     'user_child_add'   => ['POST' => ['UserController', 'addChild', 'users.manage']],
     'user_child_relation' => ['POST' => ['UserController', 'updateRelation', 'users.manage']],

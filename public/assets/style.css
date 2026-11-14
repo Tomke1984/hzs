@@ -518,3 +518,7 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .cover-bulk-select select { width: auto; margin: 0; }
 .cover-pick { width: 22px; height: 22px; margin: 0 4px 0 0; flex: 0 0 auto; accent-color: var(--blue); }
 @media (max-width: 640px) { .cover-bulk-row .btn { width: 100%; } .cover-bulk-select select { width: 100%; } }
+/* Definitief verwijderen */
+.btn-danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn-ghost.btn-danger { background: #fff; color: var(--bad); border-color: var(--bad); }
+.danger-zone { border-left: 5px solid var(--bad); }

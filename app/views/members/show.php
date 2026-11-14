@@ -1,7 +1,13 @@
 <div class="row-between">
   <h1><?= e($member['first_name']) ?> <?= e($member['last_name']) ?></h1>
   <?php if (Auth::can('members.write')): ?>
-    <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
+    <span class="actions-inline">
+      <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
+      <form method="post" action="<?= e(url('member_delete')) ?>" data-confirm="<?= e($member['first_name'] . ' ' . $member['last_name']) ?> definitief verwijderen? Ook de groep, de koppeling met ouders, aanwezigheden en afmeldingen van dit lid verdwijnen. Dit kan je niet ongedaan maken. (Tijdelijk weg? Zet het lid dan op inactief via Wijzigen.)">
+        <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
+        <button class="btn btn-ghost btn-danger" type="submit">Verwijderen</button>
+      </form>
+    </span>
   <?php endif; ?>
 </div>
 

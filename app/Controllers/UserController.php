@@ -4,6 +4,45 @@
  */
 final class UserController
 {
+    /** Gebruiker definitief verwijderen (rollen, koppelingen met kinderen en groepen, trainersplanning). Leden blijven bestaan. */
+    public static function delete(): void
+    {
+        $id = (int) input('id', '0');
+        $user = Database::one('SELECT id, email, display_name FROM users WHERE id = ?', [$id]);
+        if (!$user) {
+            abort(404, 'Gebruiker niet gevonden.');
+        }
+        $back = url('user_form', ['id' => $id]);
+        if ($id === (int) Auth::user()['id']) {
+            flash('error', 'Je kan je eigen account niet verwijderen.');
+            redirect($back);
+        }
+        $isAdmin = (bool) Database::val("SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ? AND r.code = 'ADMIN'", [$id]);
+        $otherAdmins = (int) Database::val(
+            "SELECT COUNT(DISTINCT u.id) FROM users u JOIN user_roles ur ON ur.user_id = u.id JOIN roles r ON r.id = ur.role_id
+             WHERE r.code = 'ADMIN' AND u.is_active = 1 AND u.id <> ?",
+            [$id]
+        );
+        if ($isAdmin && $otherAdmins === 0) {
+            flash('error', 'Er moet minstens één actieve beheerder overblijven.');
+            redirect($back);
+        }
+        // Minderjarigen die zo hun laatste ouder of voogd verliezen: verwijderen mag, maar het bestuur moet dat weten.
+        $orphans = [];
+        foreach (Database::all('SELECT m.id, m.first_name, m.last_name, m.birth_date FROM guardian_links gl JOIN members m ON m.id = gl.member_id WHERE gl.user_id = ?', [$id]) as $m) {
+            if (Guardianship::isMinor($m['birth_date']) && Guardianship::count((int) $m['id']) <= 1) {
+                $orphans[] = $m['first_name'] . ' ' . $m['last_name'];
+            }
+        }
+        Database::tx(fn() => Purge::user($id));
+        audit('DELETE', 'user', $id, $user['email']);
+        flash('success', 'Gebruiker "' . $user['display_name'] . '" (' . $user['email'] . ') is definitief verwijderd.');
+        if ($orphans) {
+            flash('warning', 'Let op: ' . implode(', ', $orphans) . ' heeft nu geen ouder of voogd meer. Koppel een nieuwe ouder bij het lid.');
+        }
+        redirect(list_url('users'));
+    }
+
     private const ROLE_CODES = ['ADMIN', 'BOARD', 'TRAINER', 'COORDINATOR', 'SWIMMER', 'PARENT'];
 
     public static function index(): void

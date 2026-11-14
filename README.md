@@ -50,11 +50,11 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 ### Leden, groepen en gebruikers
 - Aanmelden met e-mail en wachtwoord; rollen **Beheerder, Bestuur, Trainer, Coördinator competitie, Zwemmer, Ouder** (combineerbaar, een trainer die ook lid is krijgt Trainer + Zwemmer); permissies in de database.
 - Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder/bestuur = clubbreed.
-- **Leden**: zoeken, toevoegen, wijzigen (nooit verwijderen, wel inactief), adres en contactgegevens (enkel met recht `members.contact`). Het lidnummer is intern en wordt nergens getoond.
+- **Leden**: zoeken, toevoegen, wijzigen, inactief zetten of **definitief verwijderen** (`members.write`: bestuur en beheerder; ook groep, ouderkoppelingen, aanwezigheden en afmeldingen van het lid verdwijnen; een gekoppeld account blijft zonder lid), adres en contactgegevens (enkel met recht `members.contact`). Het lidnummer is intern en wordt nergens getoond.
 - **Minderjarigen** hebben minstens één ouder of voogd (waarschuwingen; zonder ouder geen groep).
 - **Groepen** zijn allemaal competitiegroepen (de zwemschool zit sinds v0.14 niet meer in de app). Een lid zit in **maximaal één groep, zonder historiek** (geen van/tot). Leden in bulk verplaatsen (je blijft op de brongroep), groep verwijderen kan altijd (leden blijven bestaan zonder groep). Op de groepspagina: leden, trainers, gekoppelde reeksen, komende activiteiten. Er is geen lidnummer, capaciteit of lidgeld meer in beeld.
 - **Trainers** zijn aan groepen gekoppeld zonder datums; meerdere trainers per groep, in te stellen bij Groep wijzigen of bij de gebruiker.
-- **Gebruikers** (enkel beheerders): accounts, rollen, wachtwoord resetten, deactiveren, ouders aan kinderen koppelen (met relatie), trainers aan groepen. Twee tabbladen (beheer/trainers en ouders/zwemmers).
+- **Gebruikers** (enkel beheerders): accounts, rollen, wachtwoord resetten, deactiveren of **definitief verwijderen** (niet je eigen account; leden en kinderen blijven bestaan, met een waarschuwing als een minderjarige zo zijn laatste ouder verliest), ouders aan kinderen koppelen (met relatie), trainers aan groepen. Twee tabbladen (beheer/trainers en ouders/zwemmers).
 - **Uitnodigingen per e-mail**: ouders en leden kiezen zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen); *Wachtwoord vergeten?* via mail (60 minuten).
 
 ### Kalender, trainingsreeksen en aanwezigheid
@@ -122,7 +122,7 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout) en `v12_trainersplanning`.
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning` en `v15_verwijderen`.
 
 ## Werkwijze met GitHub
 

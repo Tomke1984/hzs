@@ -69,7 +69,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 ### Geïmplementeerd
 - `password_hash`, sessieregeneratie bij login, HttpOnly/SameSite-cookie, `cookie_secure` configureerbaar. Enige cookie: `hzs_session` (technisch).
 - CSRF op alle POST-acties; prepared statements; uitvoer-escaping via `e()`; CSP zonder inline scripts of stijl.
-- Permissiecheck per route en gegevensscope in elke query (`Scope`); geen fysieke deletes van leden.
+- Permissiecheck per route en gegevensscope in elke query (`Scope`). Leden en gebruikers kunnen definitief verwijderd worden (`Purge`, met auditlog); wie enkel tijdelijk weg is, zet je op inactief.
 - **Login-throttling:** na 5 mislukte pogingen per e-mailadres of 20 per IP-adres binnen 15 minuten volgt een blokkade van 15 minuten (HTTP 429).
 - **Sessie:** verloopt na 12 uur zonder activiteit. **Headers:** `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes `no-store` en `noindex`.
 - Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en gehasht bewaard; de iCal-link en de deellink weekplanning zijn herroepbare, willekeurige tokens (de deellink toont geen namen).
@@ -83,6 +83,7 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 
 ## 8. Functionele regels
 - Account-e-mail uniek; inactieve gebruikers kunnen niet aanmelden.
+- Definitief verwijderen (v0.15): een **lid** (`members.write`, route `member_delete`) neemt zijn groepslidmaatschap, ouderkoppelingen, aanwezigheden, afmeldingen, blokindeling en rijen in oude tabellen (lidgeld, resultaten, ...) mee; een gekoppeld account blijft bestaan met `member_id = NULL`. Een **gebruiker** (`users.manage`, route `user_delete`) neemt rollen, tokens, ouder- en trainerkoppelingen en de trainersplanning mee; verwijzingen als `created_by`/`updated_by`/`reported_by`/`sender_id` worden leeggemaakt. Je eigen account en de laatste actieve beheerder kunnen niet verwijderd worden; verliest een minderjarige zo zijn laatste ouder, dan volgt een waarschuwing. Een **groep** verwijderen bestond al (`GroupController::purge`). Alles gebeurt in één transactie en staat in het auditlog.
 - Een actief lid jonger dan 18 heeft minstens één ouder of voogd (zonder ouder geen groep; de laatste ouder kan niet ontkoppeld worden).
 - Een lid zit in maximaal één groep; een groep verwijderen kan altijd (leden blijven bestaan zonder groep; reeksen en activiteiten enkel voor die groep verdwijnen, trainingen met aanwezigheden blijven als losse trainingen).
 - Activiteit: einde na start; doelgroep GROUPS vereist minstens één groep; één aanwezigheid per activiteit en lid.
@@ -93,7 +94,7 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 - Berichten: max. 400 ontvangers per bericht; een trainer enkel voor zijn eigen groepen.
 
 ## 9. Testaanpak
-End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `smoke` (hoofdpagina's per rol, aanwezigheden verborgen en weer aan te zetten, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
+End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `v15_verwijderen` (lid, gebruiker en groep definitief verwijderen, rechten, opruimen van gekoppelde gegevens), `smoke` (hoofdpagina's per rol, aanwezigheden verborgen en weer aan te zetten, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
 
 ## 10. Responsive
 De app is gecontroleerd van 320 tot 1920 px (geen horizontale scroll). Het menu klapt in onder 960 px; tabellen worden kaarten op telefoon; formuliervelden zijn 16 px op telefoon (geen zoom op iOS).

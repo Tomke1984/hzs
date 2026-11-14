@@ -207,3 +207,14 @@
   <?php endif; ?>
 </section>
 <?php endif; ?>
+
+<?php if ($user['id'] && (int) $user['id'] !== (int) Auth::user()['id']): ?>
+<section class="card danger-zone">
+  <h2>Gebruiker verwijderen</h2>
+  <p class="muted small">Verwijdert het account definitief: rollen, koppelingen met kinderen en groepen, en de plaats in de trainersplanning. Gekoppelde leden en kinderen blijven bestaan. Wil je iemand enkel tijdelijk blokkeren, vink dan <em>Actief</em> uit.</p>
+  <form method="post" action="<?= e(url('user_delete')) ?>" data-confirm="<?= e($user['display_name'] . ' (' . $user['email'] . ')') ?> definitief verwijderen? Dit kan je niet ongedaan maken.">
+    <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $user['id'] ?>">
+    <button class="btn btn-danger" type="submit">Gebruiker verwijderen</button>
+  </form>
+</section>
+<?php endif; ?>

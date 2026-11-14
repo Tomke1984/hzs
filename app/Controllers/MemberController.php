@@ -281,6 +281,18 @@ final class MemberController
         return $no;
     }
 
+    /** Lid definitief verwijderen (met groepslidmaatschap, ouderkoppelingen, aanwezigheden en afmeldingen). */
+    public static function delete(): void
+    {
+        $member = self::loadVisible((int) input('id', '0'));
+        $name = $member['first_name'] . ' ' . $member['last_name'];
+        $account = Database::one('SELECT id, email FROM users WHERE member_id = ?', [$member['id']]);
+        Database::tx(fn() => Purge::member((int) $member['id']));
+        audit('DELETE', 'member', (int) $member['id'], $name);
+        flash('success', '"' . $name . '" is definitief verwijderd.' . ($account ? ' Het gekoppelde account (' . $account['email'] . ') bestaat nog, zonder lid; verwijder het bij Gebruikers als het niet meer nodig is.' : ''));
+        redirect(list_url('members'));
+    }
+
     private static function loadVisible(int $id): array
     {
         $member = $id ? Database::one('SELECT * FROM members WHERE id = ?', [$id]) : null;
