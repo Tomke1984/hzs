@@ -529,3 +529,34 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .bulk-table input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--blue); }
 .btn-wrap { white-space: normal; height: auto; text-align: left; max-width: 100%; }
 .input-narrow { max-width: 110px; }
+
+/* Trainersplanning: wisselen tussen lijst en weekkalender */
+.cover-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin: 12px 0 14px; border-bottom: 2px solid var(--line); }
+.cover-toolbar .tabs { margin: 0; border-bottom: 0; }
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: #fff; }
+.segmented a { padding: 7px 14px; text-decoration: none; font-weight: 600; color: var(--muted); font-size: .9rem; }
+.segmented a + a { border-left: 1px solid var(--line); }
+.segmented a[aria-current=page] { background: var(--blue); color: #fff; }
+.week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.week-day { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px; min-height: 140px; min-width: 0; }
+.week-day.is-today { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.week-head { font-size: .82rem; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+.week-empty { margin: 0; }
+.week-item { display: flex; flex-direction: column; gap: 3px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 6px; padding: 5px 6px; margin-bottom: 6px; font-size: .8rem; line-height: 1.25; }
+.week-item:hover { background: var(--aqua); }
+.week-item.is-short { border-left-color: var(--bad); background: #fffafa; }
+.week-item.is-past { opacity: .6; }
+.week-item .chip { align-self: flex-start; font-size: .7rem; }
+.week-time { font-weight: 700; }
+.week-title { font-weight: 600; overflow-wrap: anywhere; }
+.week-trainers { display: flex; flex-direction: column; color: var(--muted); }
+.week-trainers .is-me { color: var(--ink); font-weight: 600; }
+.week-trainers .is-absent { text-decoration: line-through; }
+@media (max-width: 820px) {
+  .week-grid { display: block; }
+  .week-day { min-height: 0; margin-bottom: 8px; }
+  .week-day:not(.has-events) { display: none; }
+  .week-head { font-size: .95rem; color: var(--ink); }
+  .week-item { font-size: .9rem; }
+  .cover-toolbar { align-items: stretch; }
+}

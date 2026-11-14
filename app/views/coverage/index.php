@@ -23,7 +23,7 @@
   <h2>Trainer gezocht <span class="badge"><?= count($problems) ?></span></h2>
   <ul class="list">
     <?php foreach ($problems as $p): ?>
-      <li><a href="<?= e(self_url()) ?>#a<?= (int) $p['id'] ?>"><strong><?= e(fmt_date($p['starts_at'])) ?> <?= e(fmt_time($p['starts_at'])) ?></strong> · <?= e($p['title']) ?></a>
+      <li><a href="<?= e($mode === 'week' ? url('activity', ['id' => $p['id']]) . '#trainers' : self_url() . '#a' . (int) $p['id']) ?>"><strong><?= e(fmt_date($p['starts_at'])) ?> <?= e(fmt_time($p['starts_at'])) ?></strong> · <?= e($p['title']) ?></a>
         <span class="muted"><?= e($p['gnames']) ?> · <?= (int) $p['present'] ?> van <?= (int) $p['required'] ?> trainer(s)</span></li>
     <?php endforeach; ?>
   </ul>
@@ -32,12 +32,65 @@
   <div class="alert alert-success">Alle trainingen en wedstrijden in deze periode hebben genoeg trainers.</div>
 <?php endif; ?>
 
-<nav class="tabs" aria-label="Weergave">
-  <?php foreach (['' => 'Alles', 'problems' => 'Enkel tekorten', 'mine' => 'Mijn planning'] as $k => $label): ?>
-    <a href="<?= e(url('coverage', array_filter(['show' => $k, 'weeks' => $weeks === 4 ? '' : $weeks]))) ?>"<?= $show === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
-  <?php endforeach; ?>
-</nav>
+<?php
+  // Querystring om binnen dezelfde weergave te blijven
+  $q = fn(array $over = []) => array_filter(array_merge(['view' => $mode, 'show' => $show, 'weeks' => $weeks === 4 ? '' : $weeks, 'w' => $offset ?: ''], $over), fn($v) => $v !== '' && $v !== null);
+?>
+<div class="cover-toolbar">
+  <nav class="tabs" aria-label="Filter">
+    <?php foreach (['' => 'Alles', 'problems' => 'Enkel tekorten', 'mine' => 'Mijn planning'] as $k => $label): ?>
+      <a href="<?= e(url('coverage', $q(['show' => $k]))) ?>"<?= $show === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+    <?php endforeach; ?>
+  </nav>
+  <div class="segmented" role="group" aria-label="Weergave">
+    <a href="<?= e(url('coverage', $q(['view' => 'list', 'w' => '']))) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
+    <a href="<?= e(url('coverage', $q(['view' => 'week', 'weeks' => '']))) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Weekkalender</a>
+  </div>
+</div>
+
+<?php if ($mode === 'week'): ?>
+  <?php $sunday = date('Y-m-d', strtotime("$monday +6 days")); ?>
+  <div class="cal-nav">
+    <a class="btn btn-ghost btn-small" href="<?= e(url('coverage', $q(['w' => $offset - 1 ?: '']))) ?>" aria-label="Vorige week">← Vorige</a>
+    <strong class="cal-title">Week van <?= e(fmt_date($monday)) ?></strong>
+    <span class="actions-inline">
+      <?php if ($offset !== 0): ?><a class="btn btn-ghost btn-small" href="<?= e(url('coverage', $q(['w' => '']))) ?>">Deze week</a><?php endif; ?>
+      <a class="btn btn-ghost btn-small" href="<?= e(url('coverage', $q(['w' => $offset + 1 ?: '']))) ?>" aria-label="Volgende week">Volgende →</a>
+    </span>
+  </div>
+  <div class="week-grid">
+    <?php for ($i = 0; $i < 7; $i++): $day = date('Y-m-d', strtotime("$monday +$i days")); $items = $byDay[$day] ?? []; ?>
+      <section class="week-day<?= $day === today() ? ' is-today' : '' ?><?= $items ? ' has-events' : '' ?>">
+        <h3 class="week-head"><?= e(fmt_date($day)) ?></h3>
+        <?php if (!$items): ?><p class="muted small week-empty">—</p><?php endif; ?>
+        <?php foreach ($items as $a): $past = $a['ends_at'] <= now(); ?>
+          <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?>#trainers">
+            <span class="week-time"><?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
+            <span class="week-title"><?= e($a['title']) ?></span>
+            <?php if ($a['missing'] > 0): ?>
+              <span class="chip bad"><?= $a['present'] === 0 ? 'Geen trainer' : 'Trainer gezocht' ?> · <?= (int) $a['present'] ?>/<?= (int) $a['required'] ?></span>
+            <?php else: ?>
+              <span class="chip ok">In orde · <?= (int) $a['present'] ?>/<?= (int) $a['required'] ?></span>
+            <?php endif; ?>
+            <?php if ($a['trainers']): ?>
+              <span class="week-trainers">
+                <?php foreach ($a['trainers'] as $t): ?>
+                  <span class="<?= $t['absent'] ? 'is-absent' : '' ?><?= $t['id'] === $uid ? ' is-me' : '' ?>" title="<?= e($t['absent'] ? ($t['auto'] ? 'Op wedstrijd' : 'Afgemeld' . ($t['note'] ? ': ' . $t['note'] : '')) : 'Ingepland') ?>"><?= e($t['name']) ?><?= $t['absent'] ? ($t['auto'] ? ' (op wedstrijd)' : ' (afgemeld)') : '' ?></span>
+                <?php endforeach; ?>
+              </span>
+            <?php endif; ?>
+          </a>
+        <?php endforeach; ?>
+      </section>
+    <?php endfor; ?>
+  </div>
+  <p class="muted small">Klik op een training of wedstrijd om je af te melden, over te nemen of iemand in te plannen.</p>
+  <?php if (!$byDay): ?>
+    <p class="muted"><?= $show === 'mine' ? 'Je staat deze week nergens ingepland.' : ($show === 'problems' ? 'Geen tekorten deze week.' : 'Geen trainingen of wedstrijden van de competitie deze week.') ?></p>
+  <?php endif; ?>
+<?php else: ?>
 <form class="filters" method="get" action="<?= e(url('coverage')) ?>">
+  <input type="hidden" name="view" value="list">
   <?php if ($show !== ''): ?><input type="hidden" name="show" value="<?= e($show) ?>"><?php endif; ?>
   <label>Periode
     <select name="weeks">
@@ -47,15 +100,15 @@
   <button class="btn btn-small" type="submit">Tonen</button>
 </form>
 
-
 <?php if (!$byWeek): ?>
   <p class="muted"><?= $show === 'mine' ? 'Je staat in deze periode nergens ingepland.' : ($show === 'problems' ? 'Geen tekorten in deze periode.' : 'Geen trainingen of wedstrijden van de competitie in deze periode.') ?></p>
 <?php endif; ?>
 
 <?php $keep = array_filter(['weeks' => $weeks === 4 ? '' : $weeks, 'show' => $show]); $back = ''; ?>
-<?php foreach ($byWeek as $monday => $items): ?>
-  <h2 class="cover-week">Week van <?= e(fmt_date($monday)) ?></h2>
+<?php foreach ($byWeek as $mon => $items): ?>
+  <h2 class="cover-week">Week van <?= e(fmt_date($mon)) ?></h2>
   <?php foreach ($items as $a): ?>
     <?php require __DIR__ . '/_card.php'; ?>
   <?php endforeach; ?>
 <?php endforeach; ?>
+<?php endif; ?>

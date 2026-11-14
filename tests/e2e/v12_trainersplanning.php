@@ -60,6 +60,22 @@ $coord->get('/app/trainersplanning');
 T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 2\/1/s', $coord->body) === 1, 'tweede groepstrainer staat meteen op de trainingen');
 T::exec('DELETE FROM group_trainers WHERE user_id = ? AND group_id = ?', [$tinaId, $gid]);
 
+echo "Weekkalender\n";
+$coord->get('/app/trainersplanning?view=week');
+$tomDate = date('Y-m-d', strtotime('+1 day'));
+$wOff = (int) floor((strtotime('monday this week', strtotime($tomDate)) - strtotime('monday this week', strtotime(date('Y-m-d')))) / 604800);
+$coord->get('/app/trainersplanning?view=week&w=' . $wOff);
+T::ok($coord->has('class="week-grid"') && $coord->has('Weekkalender</a>') && preg_match('/aria-current="page">Weekkalender/', $coord->body) === 1, 'weekkalender getoond');
+T::ok(preg_match('/href="[^"]*kalender\/' . $tomorrow . '#trainers".*?Avond WP.*?In orde · 1\/1.*?Kobe Competitie/s', $coord->body) === 1, 'training met status en trainer; klik opent de activiteit');
+$coord->get('/app/trainersplanning');
+T::ok($coord->has('class="week-grid"'), 'gekozen weergave wordt onthouden');
+$coord->get('/app/trainersplanning?view=week&w=' . ($wOff + 1));
+T::ok($coord->has('Vorige') && $coord->has('Deze week'), 'navigatie naar andere weken');
+$coord->get('/app/trainersplanning?view=week&show=mine&w=' . $wOff);
+T::ok(!$coord->has('Avond WP'), 'filter Mijn planning werkt ook in de weekkalender');
+$coord->get('/app/trainersplanning?view=list');
+T::ok(!$coord->has('class="week-grid"') && $coord->has('Periode'), 'terug naar de lijst');
+
 echo "Afmelden met vervanger\n";
 T::clearMails();
 $kobe->get('/app/trainersplanning');
