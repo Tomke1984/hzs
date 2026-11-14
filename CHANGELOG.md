@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Leden en gebruikers definitief verwijderen – commit volgt bij de push_
+_Leden en gebruikers definitief verwijderen – commit `431ef98`_
 
 - **Lid verwijderen** (knop op de ledenpagina, bestuur en beheerder): het lid verdwijnt met zijn groep, ouderkoppelingen, aanwezigheden en afmeldingen, en ook uit oude tabellen (lidgeld, resultaten, ...) als die nog bestaan. Een gekoppeld account blijft bestaan zonder lid.
 - **Gebruiker verwijderen** (onderaan *Gebruiker wijzigen*, enkel beheerder): rollen, koppelingen met kinderen en groepen en de plaats in de trainersplanning verdwijnen; leden blijven. Niet voor je eigen account of de laatste beheerder; waarschuwing als een minderjarige zo geen ouder meer heeft.
