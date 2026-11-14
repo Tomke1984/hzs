@@ -67,7 +67,7 @@ final class DashboardController
                 $absences[] = $r;
             }
         }
-        return ['unfilled' => ReportController::unfilled(21, 6), 'absences' => array_slice($absences, 0, 12)];
+        return ['unfilled' => feature('attendance') ? ReportController::unfilled(21, 6) : [], 'absences' => array_slice($absences, 0, 12)];
     }
 
     /** Beheer: tweestapsverificatie nog niet aan. */

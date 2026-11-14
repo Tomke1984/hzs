@@ -29,14 +29,14 @@ $menu = [
         ['Kalender', 'calendar', 'calendar', 'activities.read', ['calendar', 'activity', 'activity_form', 'activity_save', 'attendance_save'], 0],
         ['Trainingsreeksen', 'series', 'repeat', 'activities.write', ['series', 'series_show', 'series_form', 'series_save', 'series_bulk', 'series_delete', 'occurrence'], 0],
         ['Trainersplanning', 'coverage', 'roster', 'coverage.view', ['coverage', 'coverage_settings', 'coverage_action', 'coverage_bulk', 'coverage_settings_save', 'coverage_share', 'coverage_remind'], $nShort],
-        ['Aanwezigheden', 'attendance_report', 'report', 'attendance.read', ['attendance_report'], 0],
+        ['Aanwezigheden', 'attendance_report', 'report', feature('attendance') ? 'attendance.read' : 'feature.off', ['attendance_report'], 0],
         ['Bericht sturen', 'mail', 'send', 'mail.send', ['mail', 'mail_send', 'mail_edit'], 0],
     ]],
 ];
 ?>
 <nav class="side-nav" id="app-nav" aria-label="Hoofdmenu">
   <?php foreach ($menu as [$label, $items]):
-      $items = array_values(array_filter($items, fn($i) => $i[3] === null || ($i[3] === 'coverage.view' ? $coverView : Auth::can($i[3]))));
+      $items = array_values(array_filter($items, fn($i) => $i[3] === null || ($i[3] === 'coverage.view' ? $coverView : ($i[3] !== 'feature.off' && Auth::can($i[3])))));
       if (!$items) { continue; } ?>
     <div class="side-section">
       <?php if ($label): ?><div class="side-label"><?= e($label) ?></div><?php endif; ?>

@@ -42,7 +42,7 @@ final class T
             fwrite(STDERR, "Installatie mislukt: $out\n");
             exit(1);
         }
-        $cmd = [PHP_BINARY, '-S', "127.0.0.1:$port", '-t', self::$dir . '/public'];
+        $cmd = [PHP_BINARY, '-d', 'opcache.enable=0', '-d', 'opcache.enable_cli=0', '-S', "127.0.0.1:$port", '-t', self::$dir . '/public'];
         self::$server = proc_open($cmd, [1 => ['file', '/dev/null', 'w'], 2 => ['file', self::$dir . '/server.log', 'w']], $pipes, self::$dir);
         for ($i = 0; $i < 50; $i++) {
             if (@fsockopen('127.0.0.1', $port)) {
@@ -63,6 +63,17 @@ final class T
             exec('rm -rf ' . escapeshellarg(self::$dir));
         } else {
             echo 'Testmap bewaard: ' . self::$dir . "\n";
+        }
+    }
+
+    /** Instelling(en) in config.php van de testkopie aanpassen, bv. ['features' => ['attendance' => true]]. */
+    public static function config(array $over): void
+    {
+        $f = self::$dir . '/config.php';
+        $cfg = array_replace_recursive(require $f, $over);
+        file_put_contents($f, '<?php return ' . var_export($cfg, true) . ';');
+        if (function_exists('opcache_invalidate')) {
+            @opcache_invalidate($f, true);
         }
     }
 

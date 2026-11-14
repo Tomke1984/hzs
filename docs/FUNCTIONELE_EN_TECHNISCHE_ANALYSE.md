@@ -11,7 +11,8 @@ HZS Clubapp is de **ledenapp** van Hasseltse Zwemvereniging Spartacus: leden en 
 - Leden, groepen (allemaal competitiegroepen), trainers per groep, ouder-kindkoppeling, gebruikersbeheer, noodcontact en medische opmerking.
 - Activiteiten, trainingsreeksen, persoonlijke kalender, schrappen/verplaatsen, iCal-agendalink, afmelden door ouders/leden.
 - Trainersplanning competitie: vaste trainer per blok, trainers per training/wedstrijd, afmelden en overnemen, minimum per groep/activiteit, mail vooraf bij tekorten, deelbare weekplanning per competitiegroep.
-- Presentielijst en aanwezigheidsrapport; bericht sturen naar groep, trainingsreeks, activiteit of club.
+- Bericht sturen naar groep, trainingsreeks, activiteit of club.
+- Presentielijst en aanwezigheidsrapport: **voorlopig verborgen** (feature `attendance`, standaard uit in `config.php`: `'features' => ['attendance' => true]` zet ze aan). Code en gegevens blijven; afmelden door ouders/leden werkt altijd.
 - Auditlog, globaal zoeken, dashboards per rol.
 
 ### Verwijderd in v0.13
@@ -59,6 +60,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - **Vormgeving:** één layout (`layout.php` + `style.css`), ook voor aanmelden, foutpagina's en de deellink.
 - **Reeksen, groepskleuren, schrappen, navigatie:** ongewijzigd ten opzichte van v0.12 (zie `SeriesService`, `Scope::targetMembers()`, `Scope::activityFilter()`, `ensure_group_colors()`, `back_url()`); `targetMembers()` = alle actieve leden van de groepen van de activiteit. Een groep verwijderen gebeurt via `GroupController::purge()` (ook gebruikt door de migratie).
 - **Trainersplanning:** `Coverage` (bezetting, tekorten, herinneringen) en `CoverageController`. Herinneringen lopen zonder cron: `Coverage::autoRemind()` in `public/index.php` hooguit één keer per uur (bestand `storage/coverage-last-run`), na het antwoord; alternatief `tools/coverage-reminders.php` via cron.
+- **Feature-schakelaars:** `feature('naam')` leest `config features.naam` (standaard uit). `ROUTE_FEATURES` in `public/index.php` geeft 404 voor routes van een uitgeschakeld onderdeel; menu, dashboard en activiteitspagina verbergen de bijhorende delen. Nu enkel `attendance` (routes `attendance_report`, `attendance_save`).
 - **Menu:** vaste zijbalk (`_nav.php`) met secties Club (Leden, Groepen, Gebruikers, Auditlog) en Planning (Kalender, Trainingsreeksen, Trainersplanning, Aanwezigheden, Bericht sturen), gefilterd op rechten.
 - **Mail:** driver `log` (lokaal, `storage/mail/outbox.log`), `smtp` of PHP `mail()`. Links in mails gebruiken `app_url`.
 - **Privacy:** `privacy_href()` = `config privacy_url` (link onderaan elke pagina); het privacybeleid zelf staat op de clubwebsite.
@@ -91,7 +93,7 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 - Berichten: max. 400 ontvangers per bericht; een trainer enkel voor zijn eigen groepen.
 
 ## 9. Testaanpak
-End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `smoke` (hoofdpagina's per rol, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
+End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `smoke` (hoofdpagina's per rol, aanwezigheden verborgen en weer aan te zetten, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
 
 ## 10. Responsive
 De app is gecontroleerd van 320 tot 1920 px (geen horizontale scroll). Het menu klapt in onder 960 px; tabellen worden kaarten op telefoon; formuliervelden zijn 16 px op telefoon (geen zoom op iOS).

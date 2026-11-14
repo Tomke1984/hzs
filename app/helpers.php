@@ -4,6 +4,15 @@ function e($v): string
     return htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/**
+ * Staat een (tijdelijk verborgen) onderdeel aan? Instellen in config.php: 'features' => ['attendance' => true].
+ * Standaard uit. Onderdelen: attendance (presentielijst, aanwezigheidsrapport, "nog in te vullen").
+ */
+function feature(string $name): bool
+{
+    return (bool) config("features.$name", false);
+}
+
 function config(string $key, $default = null)
 {
     $cur = $GLOBALS['CONFIG'] ?? [];

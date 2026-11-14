@@ -121,6 +121,12 @@ if (!isset($routes[$route][$method])) {
     abort(405, 'Deze actie is niet toegestaan via deze methode.');
 }
 
+// Onderdelen die (voorlopig) uit staan, bestaan niet voor de gebruiker (zie feature() en 'features' in config.php).
+const ROUTE_FEATURES = ['attendance_report' => 'attendance', 'attendance_save' => 'attendance'];
+if (isset(ROUTE_FEATURES[$route]) && !feature(ROUTE_FEATURES[$route])) {
+    abort(404, 'Deze pagina bestaat niet.');
+}
+
 [$class, $action, $permission] = $routes[$route][$method];
 
 if ($method === 'POST') {

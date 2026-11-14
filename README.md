@@ -62,7 +62,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 - **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen = annuleren en verwijderen (met aanwezigheden blijft ze geannuleerd bewaard); **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
 - **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Alle getoonde reeksen in één keer **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen. Het overzicht toont de reeksen per groep.
 - Elke groep heeft een vast trainingsschema; alle leden van de groep staan op de lijsten van hun groep.
-- **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
+- **Aanwezigheden (voorlopig verborgen):** presentielijst met Onbekend / Aanwezig / Afwezig, aanwezigheidsrapport en het blok *Aanwezigheid nog in te vullen* staan standaard uit. Zet ze aan met `'features' => ['attendance' => true]` in `config.php`. Zolang ze uit staan, toont een activiteit *Deelnemers en afmeldingen*: ouders en leden kunnen zich nog altijd afmelden en trainers/bestuur zien wie afgemeld is.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
 ### Trainersplanning competitie (v0.12)
@@ -78,7 +78,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 - **Rol *Coördinator competitie*** (permissie `coverage.manage`, ook voor bestuur en beheerder). Geeft de coördinator zelf training, vink dan ook *Trainer* aan. Wie in de trainersplanning staat: actieve trainers van een competitiegroep en coördinatoren.
 
 ### Verder in de app
-- **Aanwezigheid en communicatie:** aanwezigheidsrapport per groep/periode met lijst *Nog in te vullen*; **bericht sturen** naar groep, trainingsreeks, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
+- **Communicatie:** (aanwezigheidsrapport per groep/periode als `features.attendance` aan staat); **bericht sturen** naar groep, trainingsreeks, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
 - **Noodcontact en medische opmerking** (enkel met `members.medical`); reden bij stopzetting; waarschuwing bij **dubbele leden**.
 - **Auditlog** (`audit.read`, enkel beheerders), **globaal zoeken** in het menu, **dashboards per rol**.
 - **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); `security.require_2fa_admin` verplicht ze voor beheerders; een beheerder kan 2FA van een gebruiker uitzetten.

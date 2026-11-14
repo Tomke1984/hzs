@@ -48,9 +48,9 @@
 </section>
 <?php endif; ?>
 
-<?php if ($canSeeAttendance): ?>
-<section class="card">
-  <h2>Aanwezigheid</h2>
+<?php if ($canSeeAttendance && ($attendanceOn || $roster)): ?>
+<section class="card" id="deelnemers">
+  <h2><?= $attendanceOn ? 'Aanwezigheid' : 'Deelnemers en afmeldingen' ?></h2>
 
   <?php if (!$roster): ?>
     <p class="muted">Geen leden voor deze activiteit<?= Scope::clubWide() ? ' (de doelgroep bevat geen actieve leden)' : ' binnen jouw toegang' ?>.</p>
@@ -93,13 +93,13 @@
   <?php else: ?>
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Lid</th><th>Status</th><th>Afmelding</th></tr></thead>
+      <thead><tr><th>Lid</th><?php if ($attendanceOn): ?><th>Status</th><?php endif; ?><th>Afmelding</th></tr></thead>
       <tbody>
       <?php foreach ($roster as $m):
           $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; $abs = $absences[(int) $m['id']] ?? null; $mine = in_array((int) $m['id'], $ownIds, true); ?>
         <tr>
           <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
-          <td><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span></td>
+          <?php if ($attendanceOn): ?><td><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span></td><?php endif; ?>
           <td>
             <?php if ($abs): ?><span class="chip warn">Afgemeld</span> <?php if ($abs['reason']): ?><span class="muted small"><?= e($abs['reason']) ?></span> <?php endif; ?><?php endif; ?>
             <?php if ($mine && $canAbsence): ?>
@@ -122,7 +122,7 @@
       </tbody>
     </table>
     </div>
-    <?php if ($activity['status'] === 'CANCELLED'): ?><p class="muted small">Deze activiteit is geannuleerd; aanwezigheid kan niet meer geregistreerd worden.</p><?php endif; ?>
+    <?php if ($activity['status'] === 'CANCELLED'): ?><p class="muted small">Deze activiteit is geannuleerd<?= $attendanceOn ? '; aanwezigheid kan niet meer geregistreerd worden' : '' ?>.</p><?php endif; ?>
   <?php endif; ?>
 </section>
 <?php endif; ?>

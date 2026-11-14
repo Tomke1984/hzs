@@ -30,6 +30,9 @@ return [
     'privacy_url' => '',
     // Beveiliging: true verplicht beheerders om tweestapsverificatie aan te zetten.
     'security' => ['require_2fa_admin' => false],
+    // Onderdelen die voorlopig uit staan; zet op true om ze te gebruiken.
+    // attendance = presentielijst bij trainingen, aanwezigheidsrapport en "aanwezigheid nog in te vullen".
+    'features' => ['attendance' => false],
     // Trainersplanning competitie: hoeveel dagen vooraf een mail vertrekt als er nog een trainer ontbreekt, en of de app
     // dat zelf doet (hooguit één keer per uur, bij een bezoek). Met een cron-taak: auto_remind false + tools/coverage-reminders.php.
     'coverage' => ['remind_days' => 3, 'auto_remind' => true],

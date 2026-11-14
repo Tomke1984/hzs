@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Aanwezigheden voorlopig verborgen – commit volgt bij de push_
+
+- **Aanwezigheden verborgen** achter een schakelaar (`'features' => ['attendance' => false]` in `config.php`, standaard uit): geen menu-item *Aanwezigheden*, geen aanwezigheidsrapport (404), geen presentielijst bij een activiteit, geen blok *Aanwezigheid nog in te vullen*. Code en bestaande gegevens blijven; met `true` komt alles terug.
+- Bij een activiteit staat nu *Deelnemers en afmeldingen*: ouders en leden kunnen zich nog altijd afmelden, trainers en bestuur zien wie afgemeld is.
+- Tests: testserver zonder opcache (instellingen wijzigen tijdens een test); 378 controles.
+
 _Wordt v0.14.0 – zwemschool uit de app – commit `e94820e`_
 
 - **Zwemschool volledig uit de app:** geen keuze meer tussen zwemschool en competitie (alle groepen zijn competitiegroepen), geen filter daarop in leden, kalender, reeksen en aanwezigheden; zwemblokken weg (indeling per lid, lijst *Nog niet ingedeeld*, *Weekoverzicht zwemschool*, *Trainingsmoment per lid*). Alle leden van een groep staan op de lijsten van hun groep.

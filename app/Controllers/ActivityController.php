@@ -116,7 +116,9 @@ final class ActivityController
         // Alleen leden binnen de scope van de gebruiker: trainer = eigen groepen, zwemmer = zichzelf, ouder = kinderen.
         $roster = Scope::visibleTargetMembers($activity);
         $registrable = Auth::can('attendance.write') ? array_map('intval', array_column(Scope::registrableMembers($activity), 'id')) : [];
-        $canRegister = $registrable && $activity['status'] === 'PLANNED';
+        // Aanwezigheden staan voorlopig uit (feature 'attendance'); afmelden door ouders/leden blijft altijd werken.
+        $attendanceOn = feature('attendance');
+        $canRegister = $attendanceOn && $registrable && $activity['status'] === 'PLANNED';
         $canSeeAttendance = Auth::can('attendance.read');
 
         $absences = [];
@@ -138,7 +140,7 @@ final class ActivityController
         $coverage = Coverage::canView() ? Coverage::one((int) $activity['id']) : null;
         $coveragePool = $coverage ? Coverage::pool() : [];
 
-        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'coverage', 'coveragePool'), $activity['title']);
+        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'attendanceOn', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'coverage', 'coveragePool'), $activity['title']);
     }
 
     /** Ouder of lid meldt vooraf af voor één activiteit (of trekt de afmelding in). */
