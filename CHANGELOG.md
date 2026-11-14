@@ -5,11 +5,9 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Reeksen importeren – commit `fa9b2f8`_
+_Reeksen importeren weer verwijderd – commit volgt bij de push_
 
-- **Reeksen importeren** (*Trainingsreeksen → Importeren*): uurrooster plakken (groep, dag, uren, titel, locatie, vaste trainers), voorbeeld bekijken met fouten per regel, en alle reeksen in één keer aanmaken, met trainingen en vaste trainers voor de trainersplanning. Bestaande reeksen worden overgeslagen.
-- Knop **Uurrooster van khzs.be invullen**: het competitierooster van khzs.be/trainingsuren-competitie (6 groepen, 33 momenten → 11 reeksen: Zwemtraining en Droogtraining per groep).
-- Tests: nieuwe suite `v16_import` (21 controles, 431 in totaal).
+- **Reeksen importeren** (commit `fa9b2f8`) is teruggedraaid: geen knop *Importeren* meer bij Trainingsreeksen, `SeriesImport` en de testsuite `v16_import` zijn weg. Reeksen maak je zoals voorheen via *+ Nieuwe reeks*.
 
 _Leden en gebruikers definitief verwijderen – commit `431ef98`_
 

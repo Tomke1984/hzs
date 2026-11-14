@@ -1,7 +1,6 @@
 <div class="row-between">
   <h1>Trainingsreeksen</h1>
   <span class="actions-inline">
-    <a class="btn btn-ghost" href="<?= e(url('series_import')) ?>">Importeren</a>
     <a class="btn btn-ghost" href="<?= e(url('series_bulk')) ?>">Schrappen / verplaatsen</a>
     <a class="btn" href="<?= e(url('series_form')) ?>">+ Nieuwe reeks</a>
   </span>

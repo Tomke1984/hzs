@@ -53,7 +53,7 @@ const APP_PATHS = [
     'groups' => ['app/groepen'], 'group' => ['app/groepen/{id}'], 'group_form' => ['app/groepen/{id}/wijzigen', 'app/groepen/nieuw'],
     'users' => ['app/gebruikers'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
     'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
-    'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'], 'series_import' => ['app/reeksen/importeren'],
+    'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'],
     'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
     'account' => ['app/account'],
@@ -365,7 +365,6 @@ function back_url(string $route, array $get): string
         'series_show' => list_url('series'),
         'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : list_url('series'),
         'series_bulk' => list_url('series'),
-        'series_import' => list_url('series'),
         'coverage_settings' => list_url('coverage'),
         default => url('dashboard'),
     };

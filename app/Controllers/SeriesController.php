@@ -26,55 +26,6 @@ final class SeriesController
         render('series/index', ['series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
-    /** Reeksen importeren: tekst plakken (of het uurrooster van khzs.be), voorbeeld bekijken, aanmaken. */
-    public static function importForm(): void
-    {
-        $text = isset($_GET['voorbeeld']) ? SeriesImport::KHZS_EXAMPLE : '';
-        self::renderImport($text, today(), self::seasonEnd(), null);
-    }
-
-    public static function import(): void
-    {
-        $text = (string) ($_POST['text'] ?? '');
-        $start = input('start_date', today());
-        $end = input('end_date', self::seasonEnd());
-        if (mb_strlen($text) > 20000) {
-            flash('error', 'De lijst is te lang (max. 20 000 tekens).');
-            redirect(url('series_import'));
-        }
-        $errors = [];
-        if (!valid_date($start) || !valid_date($end) || $end < $start) {
-            $errors[] = 'Geef een geldige periode (de einddatum na de startdatum).';
-        } elseif ((strtotime($end) - strtotime(max($start, today()))) / 86400 > SeriesService::MAX_DAYS) {
-            $errors[] = 'De einddatum mag maximaal ongeveer 2 jaar na vandaag liggen.';
-        }
-        $parsed = SeriesImport::parse($text);
-        $parsed['errors'] = array_merge($errors, $parsed['errors']);
-        if (input('do') === 'create' && !$parsed['errors'] && $parsed['series']) {
-            $typeId = (int) Database::val("SELECT id FROM activity_types WHERE code = 'TRAINING'");
-            $r = SeriesImport::create($parsed['series'], $start, $end, $typeId);
-            audit('IMPORT', 'activity_series', null, $r['created'] . ' reeksen');
-            flash('success', sprintf('%d %s aangemaakt met %d trainingen.', $r['created'], $r['created'] === 1 ? 'reeks' : 'reeksen', $r['trainings'])
-                . ($r['skipped'] ? ' ' . $r['skipped'] . ' overgeslagen (bestond al).' : '')
-                . ' Controleer de vaste trainers in de trainersplanning.');
-            redirect(url('series'));
-        }
-        self::renderImport($text, $start, $end, $parsed);
-    }
-
-    /** Einde van het lopende zwemseizoen: 30 juni (dit jaar, of volgend jaar vanaf juli). */
-    private static function seasonEnd(): string
-    {
-        $y = (int) date('Y') + ((int) date('n') >= 7 ? 1 : 0);
-        return "$y-06-30";
-    }
-
-    private static function renderImport(string $text, string $start, string $end, ?array $parsed): void
-    {
-        render('series/import', ['text' => $text, 'start' => $start, 'end' => $end, 'parsed' => $parsed,
-            'groups' => array_column(Database::all('SELECT name FROM `groups` WHERE is_active = 1 ORDER BY name'), 'name')], 'Reeksen importeren');
-    }
-
     /** Reeks(en) verlengen tot een nieuwe einddatum; de extra trainingen worden meteen aangemaakt (geschrapte dagen blijven weg). */
     public static function extend(): void
     {

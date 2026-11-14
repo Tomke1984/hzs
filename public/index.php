@@ -59,7 +59,6 @@ $routes = [
     'series_form'      => ['GET' => ['SeriesController', 'form', 'activities.write']],
     'series_delete'    => ['POST' => ['SeriesController', 'delete', 'activities.write']],
     'series_save'      => ['POST' => ['SeriesController', 'save', 'activities.write']],
-    'series_import'    => ['GET' => ['SeriesController', 'importForm', 'activities.write'], 'POST' => ['SeriesController', 'import', 'activities.write']],
     'series_bulk'      => ['GET' => ['SeriesController', 'bulkForm', 'activities.write'], 'POST' => ['SeriesController', 'bulk', 'activities.write']],
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
     'coverage'         => ['GET' => ['CoverageController', 'index', null]],

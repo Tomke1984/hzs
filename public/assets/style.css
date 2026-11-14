@@ -522,5 +522,3 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .btn-danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 .btn-ghost.btn-danger { background: #fff; color: var(--bad); border-color: var(--bad); }
 .danger-zone { border-left: 5px solid var(--bad); }
-textarea.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; white-space: pre; overflow-x: auto; }
-tr.is-off td { opacity: .6; }
