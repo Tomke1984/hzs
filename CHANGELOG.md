@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Overzicht als weekkalender – commit `HASH`_
+
+- **Op het overzicht (startpagina) kan je de activiteiten nu als Lijst of als Weekkalender bekijken**, net als in de trainersplanning. De weekkalender toont maandag tot zondag met uur, soort, groep en locatie; bladeren met *Vorige* en *Volgende*; de keuze wordt onthouden. Werkt voor iedereen, ook ouders (enkel hun eigen groepen).
+- Weeknavigatie op telefoon compacter (ook in de trainersplanning).
+- Tests: 4 extra controles (385 in totaal).
+
 _Trainersplanning als weekkalender – commit `f3e7bc5`_
 
 - **Wisselen tussen Lijst en Weekkalender** (knoppen rechtsboven in de trainersplanning; de app onthoudt je keuze). De weekkalender toont maandag tot zondag naast elkaar, met per training of wedstrijd het uur, *In orde* / *Trainer gezocht* en de trainers (afgemeld of op wedstrijd doorstreept). Bladeren met *Vorige* en *Volgende*.

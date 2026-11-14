@@ -73,10 +73,43 @@
 <?php if (Auth::can('activities.read')): ?>
 <section class="card">
   <div class="row-between">
-    <h2>Eerstvolgende activiteiten</h2>
-    <a href="<?= e(url('calendar')) ?>">Hele kalender →</a>
+    <h2><?= $mode === 'week' ? 'Activiteiten' : 'Eerstvolgende activiteiten' ?></h2>
+    <span class="actions-inline">
+      <span class="segmented" role="group" aria-label="Weergave">
+        <a href="<?= e(url('dashboard', ['view' => 'list'])) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
+        <a href="<?= e(url('dashboard', ['view' => 'week'])) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Weekkalender</a>
+      </span>
+      <a href="<?= e(url('calendar')) ?>">Hele kalender →</a>
+    </span>
   </div>
-  <?php if (!$upcoming): ?>
+  <?php if ($mode === 'week'): ?>
+    <div class="cal-nav week-nav">
+      <a class="btn btn-ghost btn-small" href="<?= e(url('dashboard', array_filter(['view' => 'week', 'w' => $offset - 1 ?: '']))) ?>" aria-label="Vorige week">← Vorige</a>
+      <strong class="cal-title">Week van <?= e(fmt_date($monday)) ?></strong>
+      <span class="actions-inline">
+        <?php if ($offset !== 0): ?><a class="btn btn-ghost btn-small" href="<?= e(url('dashboard', ['view' => 'week'])) ?>">Deze week</a><?php endif; ?>
+        <a class="btn btn-ghost btn-small" href="<?= e(url('dashboard', array_filter(['view' => 'week', 'w' => $offset + 1 ?: '']))) ?>" aria-label="Volgende week">Volgende →</a>
+      </span>
+    </div>
+    <div class="week-grid week-plain">
+      <?php for ($i = 0; $i < 7; $i++): $day = date('Y-m-d', strtotime("$monday +$i days")); $items = $byDay[$day] ?? []; ?>
+        <section class="week-day<?= $day === today() ? ' is-today' : '' ?><?= $items ? ' has-events' : '' ?>">
+          <h3 class="week-head"><?= e(fmt_date($day)) ?></h3>
+          <?php if (!$items): ?><p class="muted small week-empty">—</p><?php endif; ?>
+          <?php foreach ($items as $a): ?>
+            <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['ends_at'] <= now() ? ' is-past' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?>">
+              <span class="week-time"><?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
+              <span class="week-title"><?= e($a['title']) ?></span>
+              <span class="chip type-<?= e(strtolower($a['type_code'])) ?>"><?= e($a['type_name']) ?></span>
+              <?php if ($a['groups']): ?><span class="week-trainers"><?php foreach ($a['groups'] as $g): ?><span><?= group_chip($g) ?></span><?php endforeach; ?></span><?php endif; ?>
+              <?php if ($a['location']): ?><span class="muted small"><?= e($a['location']) ?></span><?php endif; ?>
+            </a>
+          <?php endforeach; ?>
+        </section>
+      <?php endfor; ?>
+    </div>
+    <?php if (!$byDay): ?><p class="muted">Geen activiteiten deze week.</p><?php endif; ?>
+  <?php elseif (!$upcoming): ?>
     <p class="muted">Geen geplande activiteiten.</p>
   <?php else: ?>
     <ul class="list">

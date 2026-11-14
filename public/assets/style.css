@@ -548,7 +548,7 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .week-item.is-past { opacity: .6; }
 .week-item .chip { align-self: flex-start; font-size: .7rem; }
 .week-time { font-weight: 700; }
-.week-title { font-weight: 600; overflow-wrap: anywhere; }
+.week-title { font-weight: 600; }
 .week-trainers { display: flex; flex-direction: column; color: var(--muted); }
 .week-trainers .is-me { color: var(--ink); font-weight: 600; }
 .week-trainers .is-absent { text-decoration: line-through; }
@@ -559,4 +559,21 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
   .week-head { font-size: .95rem; color: var(--ink); }
   .week-item { font-size: .9rem; }
   .cover-toolbar { align-items: stretch; }
+}
+.week-plain .week-item.type-training { border-left-color: var(--training); }
+.week-plain .week-item.type-competition { border-left-color: var(--competition); }
+.week-plain .week-item.type-club { border-left-color: var(--club); }
+.week-plain .week-trainers { color: var(--ink); }
+.card .segmented { margin-bottom: 0; }
+.week-title { hyphens: auto; overflow-wrap: break-word; }
+@media (max-width: 820px) {
+  .week-nav { flex-wrap: wrap; }
+  .week-nav .cal-title { order: -1; flex-basis: 100%; text-align: center; }
+  .week-nav .actions-inline { margin-left: auto; }
+}
+@media (max-width: 820px) {
+  .week-nav { gap: 6px; }
+  .week-nav .btn { width: auto; flex: 0 0 auto; padding: 6px 9px; font-size: .88rem; }
+  .week-nav .actions-inline { display: flex; flex-wrap: nowrap; gap: 6px; }
+  .week-nav > .btn, .week-nav .actions-inline { margin-top: 0; }
 }

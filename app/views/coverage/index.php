@@ -50,7 +50,7 @@
 
 <?php if ($mode === 'week'): ?>
   <?php $sunday = date('Y-m-d', strtotime("$monday +6 days")); ?>
-  <div class="cal-nav">
+  <div class="cal-nav week-nav">
     <a class="btn btn-ghost btn-small" href="<?= e(url('coverage', $q(['w' => $offset - 1 ?: '']))) ?>" aria-label="Vorige week">← Vorige</a>
     <strong class="cal-title">Week van <?= e(fmt_date($monday)) ?></strong>
     <span class="actions-inline">

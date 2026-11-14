@@ -4,16 +4,49 @@ final class DashboardController
     public static function index(): void
     {
         $upcoming = [];
+        // Eerstvolgende activiteiten: als lijst of als weekkalender (keuze onthouden in de sessie).
+        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'list');
+        $_SESSION['dashboard_view'] = $view;
+        $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
+        $monday = date('Y-m-d', strtotime('monday this week', strtotime(today())));
+        $monday = date('Y-m-d', strtotime("$monday $offset weeks"));
+        $byDay = [];
         if (Auth::can('activities.read')) {
             [$sql, $params] = Scope::activityFilter('a');
-            $upcoming = Database::all(
-                "SELECT a.*, t.code AS type_code, t.name AS type_name
-                 FROM activities a JOIN activity_types t ON t.id = a.type_id
-                 WHERE a.ends_at >= ? AND a.status = 'PLANNED' AND $sql
-                 ORDER BY a.starts_at LIMIT 8",
-                array_merge([now()], $params)
-            );
+            if ($view === 'week') {
+                $week = Database::all(
+                    "SELECT a.*, t.code AS type_code, t.name AS type_name
+                     FROM activities a JOIN activity_types t ON t.id = a.type_id
+                     WHERE a.starts_at >= ? AND a.starts_at < ? AND a.status = 'PLANNED' AND $sql
+                     ORDER BY a.starts_at",
+                    array_merge([$monday . ' 00:00:00', date('Y-m-d 00:00:00', strtotime("$monday +7 days"))], $params)
+                );
+                $names = [];
+                if ($week) {
+                    $ids = array_map(fn($a) => (int) $a['id'], $week);
+                    foreach (Database::all(
+                        'SELECT ag.activity_id, g.name FROM activity_groups ag JOIN `groups` g ON g.id = ag.group_id
+                         WHERE ag.activity_id IN (' . Scope::in($ids) . ') ORDER BY g.name',
+                        $ids
+                    ) as $g) {
+                        $names[(int) $g['activity_id']][] = $g['name'];
+                    }
+                }
+                foreach ($week as $a) {
+                    $a['groups'] = $names[(int) $a['id']] ?? [];
+                    $byDay[substr($a['starts_at'], 0, 10)][] = $a;
+                }
+            } else {
+                $upcoming = Database::all(
+                    "SELECT a.*, t.code AS type_code, t.name AS type_name
+                     FROM activities a JOIN activity_types t ON t.id = a.type_id
+                     WHERE a.ends_at >= ? AND a.status = 'PLANNED' AND $sql
+                     ORDER BY a.starts_at LIMIT 8",
+                    array_merge([now()], $params)
+                );
+            }
         }
+        $mode = $view;
 
         $stats = null;
         if (Scope::clubWide()) {
@@ -27,7 +60,7 @@ final class DashboardController
         $guardianMissing = Auth::can('members.contact') ? Guardianship::missingCount() : 0;
 
         render('dashboard', array_merge(
-            compact('upcoming', 'stats', 'guardianMissing'),
+            compact('upcoming', 'stats', 'guardianMissing', 'mode', 'offset', 'monday', 'byDay'),
             self::coach(),
             self::office(),
             self::coverage()

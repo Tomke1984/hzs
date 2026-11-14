@@ -76,6 +76,15 @@ T::ok(!$coord->has('Avond WP'), 'filter Mijn planning werkt ook in de weekkalend
 $coord->get('/app/trainersplanning?view=list');
 T::ok(!$coord->has('class="week-grid"') && $coord->has('Periode'), 'terug naar de lijst');
 
+$wpP = Browser::login('ouder.wouters@demo.local');
+$wpP->get('/app?view=week&w=' . $wOff);
+T::ok($wpP->status === 200 && $wpP->has('class="week-grid week-plain"') && preg_match('/kalender\/' . $tomorrow . '".*?Avond WP/s', $wpP->body) === 1, 'overzicht: weekkalender met de trainingen van het eigen kind');
+T::ok(!$wpP->has('Training Miniemen'), 'overzicht: geen activiteiten van andere groepen');
+$wpP->get('/app');
+T::ok($wpP->has('class="week-grid week-plain"'), 'overzicht: weergave onthouden');
+$wpP->get('/app?view=list');
+T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: terug naar de lijst');
+
 echo "Afmelden met vervanger\n";
 T::clearMails();
 $kobe->get('/app/trainersplanning');
