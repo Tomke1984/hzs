@@ -31,9 +31,9 @@ function base_path(): string
 }
 
 /** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
-const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten', 'gallery' => 'fotos'];
+const PRETTY_ROUTES = ['login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten'];
 /** Routes die bewust op ?r= blijven (bevestigingslinks in mails, formulierdoel). */
-const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news', 'event', 'event_signup', 'newsletter_subscribe', 'newsletter_confirm', 'newsletter_unsub', 'weekplanning'];
+const PLAIN_ROUTES = ['weekplanning'];
 /**
  * Leesbare adressen voor de beheer-app (onder /app): route => [adres met id, adres zonder id (nieuw)].
  * Alle andere app-routes (vooral POST-acties) krijgen /app/<route-met-streepjes>.
@@ -45,40 +45,20 @@ const APP_PATHS = [
     'users' => ['app/gebruikers'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
     'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
     'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'],
-    'registrations' => ['app/inschrijvingen'], 'registration' => ['app/inschrijvingen/{id}'],
-    'swimtests' => ['app/wachtlijst'], 'swimtest_show' => ['app/wachtlijst/{id}'],
-    'messages' => ['app/berichten'], 'stats' => ['app/statistieken'],
     'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
-    'export' => ['app/exporteren'], 'account' => ['app/account'], 'fees' => ['app/lidgeld'], 'season_rollover' => ['app/seizoensovergang'],
-    'event_signups' => ['app/activiteit-inschrijvingen'], 'newsletter' => ['app/nieuwsbrief'], 'gallery_admin' => ['app/fotogalerij'], 'gallery_album' => ['app/fotogalerij/{id}'],
-    'content' => ['app/website'], 'post_form' => ['app/website/berichten/{id}', 'app/website/berichten/nieuw'], 'page_form' => ['app/website/paginas/{id}', 'app/website/paginas/nieuw'],
+    'account' => ['app/account'],
 ];
-/** Adressen die een pagina niet mag gebruiken (ze zijn al in gebruik door de app of de server). */
-const RESERVED_SLUGS = ['activeren', 'wachtwoord-vergeten', 'kalender', 'trainingsuren', 'zwemtest', 'inschrijven', 'aanmelden', 'nieuws', 'fotos', 'sitemap', 'robots', 'assets', 'uploads', 'install', 'index', 'public', 'app', 'storage', 'db', 'docs', 'tools'];
-
 /**
  * Adres voor een route, relatief aan de basis (de layouts zetten <base href>), dus zonder voorloopslash.
- * Publieke pagina's krijgen een leesbaar adres (/zwemschool); de rest van de app blijft ?r=route.
+ * Aanmelden e.d. krijgen een leesbaar adres (/aanmelden), de app /app/...; enkele routes blijven ?r=route.
  */
 function url(string $route = 'dashboard', array $params = []): string
 {
-    $path = null;
-    if ($route === 'home') {
-        $path = '';
-    } elseif ($route === 'page' && !empty($params['slug'])) {
-        $path = rawurlencode((string) $params['slug']);
-        unset($params['slug']);
-    } elseif ($route === 'post' && !empty($params['slug'])) {
-        $path = 'nieuws/' . rawurlencode((string) $params['slug']);
-        unset($params['slug']);
-    } elseif (isset(PRETTY_ROUTES[$route])) {
-        $path = PRETTY_ROUTES[$route];
+    if (isset(PRETTY_ROUTES[$route])) {
+        return PRETTY_ROUTES[$route] . ($params ? '?' . http_build_query($params) : '');
     }
-    if ($path !== null) {
-        return $path . ($params ? '?' . http_build_query($params) : '') ?: './';
-    }
-    if (in_array($route, PLAIN_ROUTES, true) || $route === 'home') {
+    if (in_array($route, PLAIN_ROUTES, true)) {
         return '?' . http_build_query(array_merge(['r' => $route], $params));
     }
     // beheer-app
@@ -129,18 +109,6 @@ function self_url(): string
     return (string) strtok((string) ($_SERVER['REQUEST_URI'] ?? ''), '#');
 }
 
-/** Zet een intern adres uit een tekst (?r=page&slug=x) om naar het leesbare adres. */
-function pretty_internal(string $href): string
-{
-    if (!str_starts_with($href, '?r=')) {
-        return $href;
-    }
-    parse_str(substr($href, 1), $q);
-    $route = (string) ($q['r'] ?? '');
-    unset($q['r']);
-    return $route === '' ? $href : url($route, $q);
-}
-
 function redirect(string $to): void
 {
     $to = str_replace(["\r", "\n"], '', $to);
@@ -152,22 +120,10 @@ function redirect(string $to): void
     exit;
 }
 
-/** Adres van het privacybeleid: het ingestelde adres, anders de gepubliceerde pagina 'privacybeleid' (leeg als die ontbreekt). */
+/** Adres van het privacybeleid van de club (config privacy_url), leeg als het niet ingesteld is. */
 function privacy_href(): string
 {
-    $c = trim((string) config('privacy_url', ''));
-    if ($c !== '') {
-        return $c;
-    }
-    static $h = null;
-    if ($h === null) {
-        try {
-            $h = Database::val("SELECT 1 FROM pages WHERE slug = 'privacybeleid' AND status = 'PUBLISHED'") ? url('page', ['slug' => 'privacybeleid']) : '';
-        } catch (Throwable $e) {
-            $h = '';
-        }
-    }
-    return $h;
+    return trim((string) config('privacy_url', ''));
 }
 
 /** Korte versie-aanduiding (branch en commit uit .git, indien aanwezig) voor beheerders, om te zien welke code er draait. */
@@ -271,27 +227,13 @@ function render(string $view, array $data = [], string $title = ''): void
     require APP_ROOT . '/app/views/layout.php';
 }
 
-/** Weergave binnen de publieke website-layout. */
-function render_public(string $view, array $data = [], string $title = ''): void
-{
-    extract($data, EXTR_SKIP);
-    ob_start();
-    require APP_ROOT . '/app/views/' . $view . '.php';
-    $content = ob_get_clean();
-    require APP_ROOT . '/app/views/layout_public.php';
-}
-
+/** Foutpagina tonen en stoppen. */
 function abort(int $code, string $message = ''): void
 {
     http_response_code($code);
     $titles = [403 => 'Geen toegang', 404 => 'Niet gevonden', 405 => 'Methode niet toegestaan', 419 => 'Formulier verlopen'];
     $titles[500] = 'Er ging iets mis';
-    // Bezoekers zonder login krijgen de foutpagina in de stijl van de website.
-    if (Auth::user()) {
-        render('error', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
-    } else {
-        render_public('error_public', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
-    }
+    render('error', ['code' => $code, 'message' => $message], $titles[$code] ?? 'Fout');
     exit;
 }
 
@@ -389,7 +331,7 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
 }
 
 /** Hoofdpagina's uit het menu: daar is geen "Terug" nodig. */
-const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees', 'newsletter', 'gallery_admin', 'coverage'];
+const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'attendance_report', 'audit', 'search', 'mail', 'account', 'coverage'];
 
 /** Onthoudt de laatst bekeken filters/maand/tab van een lijstpagina, zodat "Terug" er precies naar terugkeert. */
 function remember_list_context(string $route, array $get): void
@@ -425,15 +367,11 @@ function back_url(string $route, array $get): string
         'group' => list_url('groups'),
         'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : list_url('groups'),
         'user_form', 'user_save', 'invite_bulk' => list_url('users'),
-        'registration' => list_url('registrations'),
-        'swimtest_show' => list_url('swimtests'),
         'activity_form', 'activity_save' => $id ? url('activity', ['id' => $id]) : list_url('calendar'),
         'series_show' => list_url('series'),
         'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : list_url('series'),
         'series_bulk' => list_url('series'),
         'coverage_settings' => list_url('coverage'),
-        'post_form', 'post_save' => url('content', ['tab' => 'news']),
-        'page_form', 'page_save' => url('content', ['tab' => 'pages']),
         default => url('dashboard'),
     };
 }

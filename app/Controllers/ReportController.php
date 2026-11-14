@@ -146,7 +146,7 @@ final class ReportController
     public static function search(): void
     {
         $q = trim((string) ($_GET['q'] ?? ''));
-        $res = ['members' => [], 'groups' => [], 'activities' => [], 'users' => [], 'pages' => [], 'posts' => []];
+        $res = ['members' => [], 'groups' => [], 'activities' => [], 'users' => []];
         if (mb_strlen($q) >= 2) {
             $like = '%' . $q . '%';
             if (Auth::can('members.read')) {
@@ -178,10 +178,6 @@ final class ReportController
             }
             if (Auth::can('users.manage')) {
                 $res['users'] = Database::all('SELECT id, display_name, email FROM users WHERE display_name LIKE ? OR email LIKE ? ORDER BY display_name LIMIT 15', [$like, $like]);
-            }
-            if (Auth::can('content.manage')) {
-                $res['pages'] = Database::all('SELECT id, title, slug FROM pages WHERE title LIKE ? OR body LIKE ? ORDER BY title LIMIT 15', [$like, $like]);
-                $res['posts'] = Database::all('SELECT id, title FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id DESC LIMIT 15', [$like, $like]);
             }
         }
         render('reports/search', ['q' => $q, 'res' => $res, 'total' => array_sum(array_map('count', $res))], 'Zoeken');

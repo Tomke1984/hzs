@@ -25,7 +25,7 @@
       <input type="search" name="q" placeholder="Zoeken…" aria-label="Zoeken in de app" maxlength="60" value="<?= e((string) ($_GET['r'] ?? '') === 'search' ? (string) ($_GET['q'] ?? '') : '') ?>">
     </form>
     <?php require __DIR__ . '/_nav.php'; ?>
-    <?php if (Auth::can('stats.read') && ($build = app_build()) !== ''): ?><p class="side-build" title="Welke code draait er?"><?= e($build) ?></p><?php endif; ?>
+    <?php if (Auth::can('users.manage') && ($build = app_build()) !== ''): ?><p class="side-build" title="Welke code draait er?"><?= e($build) ?></p><?php endif; ?>
     <form class="side-user" method="post" action="<?= e(url('logout')) ?>">
       <?= csrf_field() ?>
       <div class="side-who"><span class="avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr((string) $user['display_name'], 0, 1))) ?></span><a class="side-account" href="<?= e(url('account')) ?>" title="Mijn account"><?= e($user['display_name']) ?></a></div>
@@ -37,7 +37,7 @@
 <?php else: ?>
 <header class="topbar">
   <div class="wrap bar">
-    <a class="brand" href="<?= e(url('home')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
+    <a class="brand" href="<?= e(url('login')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
   </div>
 </header>
 <?php endif; ?>
@@ -53,7 +53,7 @@
   <?php endforeach; ?>
   <?= $content ?>
 </main>
-<footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp</footer>
+<footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp<?php if (($privacy = privacy_href()) !== ''): ?> · <a href="<?= e($privacy) ?>">Privacybeleid</a><?php endif; ?></footer>
 <?php if ($user): ?>
   </div>
 </div>

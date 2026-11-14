@@ -53,15 +53,6 @@
   <label>Alle getoonde reeksen verlengen tot <input type="date" name="end_date" value="<?= e(date('Y-m-d', strtotime((max(array_column($series, 'end_date')) ?: today()) . ' +1 year'))) ?>" required></label>
   <button class="btn" type="submit">Verlengen</button>
 </form>
-<div class="actions-inline">
-  <?php foreach ([1 => ['Alles op de website zetten', 'Alle getoonde reeksen op de website zetten?'], 0 => ['Alles van de website halen', 'Alle getoonde reeksen van de website halen?']] as $val => [$label, $ask]): ?>
-  <form method="post" action="<?= e(url('series_public')) ?>" data-confirm="<?= e($ask) ?>">
-    <?= csrf_field() ?><input type="hidden" name="public" value="<?= $val ?>"><input type="hidden" name="back" value="<?= e($back) ?>">
-    <?php foreach ($series as $s): ?><input type="hidden" name="ids[]" value="<?= (int) $s['id'] ?>"><?php endforeach; ?>
-    <button class="btn btn-small btn-ghost" type="submit"><?= e($label) ?></button>
-  </form>
-  <?php endforeach; ?>
-</div>
 <?php endif; ?>
 <?php
 // Competitie: per groep. Zwemschool: per weekdag (een reeks met meerdere weekdagen staat bij elke dag).
@@ -111,14 +102,6 @@ uksort($sections, function ($a, $b) use ($cats) {
     <p class="muted"><?= e(SeriesService::summary($s['slots'])) ?></p>
     <p class="muted small"><?= e(fmt_date($s['start_date'])) ?> – <?= e(fmt_date($s['end_date'])) ?> · <?= (int) $s['upcoming'] ?> komende trainingen</p>
     </a>
-    <form method="post" action="<?= e(url('series_public')) ?>">
-      <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"><input type="hidden" name="back" value="<?= e($back) ?>">
-      <?php if ((int) $s['is_public']): ?>
-        <input type="hidden" name="public" value="0"><span class="chip ok">Op website</span> <button class="btn btn-small btn-ghost" type="submit">Verbergen</button>
-      <?php else: ?>
-        <input type="hidden" name="public" value="1"><span class="chip warn">Niet op website</span> <button class="btn btn-small" type="submit">Tonen</button>
-      <?php endif; ?>
-    </form>
   </div>
 <?php endforeach; ?>
 </div>

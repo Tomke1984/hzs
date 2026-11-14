@@ -264,7 +264,7 @@ final class CoverageController
         foreach ($rows as $r) {
             $byWeek[date('Y-m-d', strtotime('monday this week', strtotime(substr($r['starts_at'], 0, 10))))][] = $r;
         }
-        render_public('coverage/week', ['group' => $g, 'byWeek' => $byWeek], 'Weekplanning ' . $g['name']);
+        render('coverage/week', ['group' => $g, 'byWeek' => $byWeek], 'Weekplanning ' . $g['name']);
     }
 
     private static function requireView(): void

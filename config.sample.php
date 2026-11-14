@@ -26,18 +26,10 @@ return [
         ],
     ],
 
-    // Optioneel: link naar de privacyverklaring (getoond op het inschrijfformulier) en een e-mailadres
-    // dat een melding krijgt bij elke bevestigde inschrijving.
+    // Optioneel: link naar de privacyverklaring van de club (onderaan elke pagina van de app).
     'privacy_url' => '',
-    // Statistieken: bezoek van ingelogde beheerders/bestuur op de website telt standaard niet mee. Zet op true om te testen.
-    'stats' => ['count_staff' => false],
-    'registration' => ['notify_email' => ''],
-    // Lidgeld: rekeningnummer en begunstigde die in de betaalinstructies verschijnen.
-    'fees' => ['iban' => '', 'beneficiary' => 'Hasseltse Zwemvereniging Spartacus'],
     // Beveiliging: true verplicht beheerders om tweestapsverificatie aan te zetten.
     'security' => ['require_2fa_admin' => false],
-    // Naar welk adres gaan berichten van het contactformulier? Leeg = het adres bij 'registration' hierboven.
-    'contact' => ['swimschool_email' => '', 'competition_email' => '', 'other_email' => ''],
     // Trainersplanning competitie: hoeveel dagen vooraf een mail vertrekt als er nog een trainer ontbreekt, en of de app
     // dat zelf doet (hooguit één keer per uur, bij een bezoek). Met een cron-taak: auto_remind false + tools/coverage-reminders.php.
     'coverage' => ['remind_days' => 3, 'auto_remind' => true],

@@ -16,7 +16,4 @@
     <?php foreach ($res['activities'] as $a): ?><li><a href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e($a['title']) ?></a> <span class="muted"><?= e(fmt_dt($a['starts_at'])) ?></span><?= $a['status'] === 'CANCELLED' ? ' <span class="chip off">Geschrapt</span>' : '' ?></li><?php endforeach; ?></ul></section><?php endif; ?>
   <?php if ($res['users']): ?><section class="card"><h2>Gebruikers</h2><ul class="list">
     <?php foreach ($res['users'] as $u): ?><li><a href="<?= e(url('user_form', ['id' => $u['id']])) ?>"><?= e($u['display_name']) ?></a> <span class="muted"><?= e($u['email']) ?></span></li><?php endforeach; ?></ul></section><?php endif; ?>
-  <?php if ($res['pages'] || $res['posts']): ?><section class="card"><h2>Website</h2><ul class="list">
-    <?php foreach ($res['pages'] as $p): ?><li><a href="<?= e(url('page_form', ['id' => $p['id']])) ?>"><?= e($p['title']) ?></a> <span class="muted small">pagina</span></li><?php endforeach; ?>
-    <?php foreach ($res['posts'] as $p): ?><li><a href="<?= e(url('post_form', ['id' => $p['id']])) ?>"><?= e($p['title']) ?></a> <span class="muted small">nieuwsbericht</span></li><?php endforeach; ?></ul></section><?php endif; ?>
 <?php endif; ?>

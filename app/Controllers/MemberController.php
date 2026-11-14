@@ -157,20 +157,7 @@ final class MemberController
             $myDays[] = ucfirst(SeriesService::summary(Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']])));
         }
 
-        $canMoney = Auth::can('fees.manage') || in_array((int) $member['id'], Scope::ownMemberIds(), true);
-        $dues = $canMoney ? Database::all(
-            'SELECT d.*, s.name AS season_name FROM dues d JOIN seasons s ON s.id = d.season_id WHERE d.member_id = ? ORDER BY s.start_date DESC',
-            [$member['id']]
-        ) : [];
-        $waitlists = Auth::can('groups.write') ? Database::all(
-            'SELECT g.id, g.name FROM group_waitlist w JOIN `groups` g ON g.id = w.group_id WHERE w.member_id = ? ORDER BY w.created_at',
-            [$member['id']]
-        ) : [];
-        $results = Database::all('SELECT r.*, a.title AS activity_title FROM results r LEFT JOIN activities a ON a.id = r.activity_id WHERE r.member_id = ? ORDER BY r.swum_on DESC, r.id DESC LIMIT 50', [$member['id']]);
-
         render('members/show', [
-            'dues' => $dues, 'waitlists' => $waitlists, 'results' => $results, 'bests' => Results::bests((int) $member['id']),
-            'canResults' => Auth::can('attendance.write') && (Scope::coachMemberIds() === null || in_array((int) $member['id'], Scope::coachMemberIds(), true)),
             'showMedical' => Auth::can('members.medical'),
             'myDays' => $myDays,
             'member' => $member,
@@ -191,7 +178,7 @@ final class MemberController
         $member = $id ? self::loadVisible($id) : [
             'id' => 0, 'first_name' => '', 'last_name' => '',
             'birth_date' => '', 'email' => '', 'phone' => '', 'street' => '', 'postal_code' => '', 'city' => '', 'status' => 'ACTIVE',
-            'status_reason' => '', 'emergency_name' => '', 'emergency_phone' => '', 'medical_note' => '', 'photo_consent' => 0,
+            'status_reason' => '', 'emergency_name' => '', 'emergency_phone' => '', 'medical_note' => '',
         ];
         render('members/form', ['member' => $member, 'errors' => [], 'duplicates' => []], $id ? 'Lid wijzigen' : 'Nieuw lid');
     }
@@ -215,7 +202,6 @@ final class MemberController
             'emergency_name' => input('emergency_name'),
             'emergency_phone' => input('emergency_phone'),
             'medical_note' => input('medical_note'),
-            'photo_consent' => input('photo_consent') === '1' ? 1 : 0,
         ];
 
         $errors = [];
@@ -272,8 +258,8 @@ final class MemberController
         $nullable = fn($v) => $v === '' ? null : $v;
         if ($existing) {
             Database::exec(
-                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, status=?, status_reason=?, status_date=?, photo_consent=? WHERE id=?',
-                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $statusReason, $statusDate, $data['photo_consent'], $id]
+                'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, status=?, status_reason=?, status_date=? WHERE id=?',
+                [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $statusReason, $statusDate, $id]
             );
             if ($canMedical) {
                 Database::exec('UPDATE members SET emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?', [$nullable($data['emergency_name']), $nullable($data['emergency_phone']), $nullable($data['medical_note']), $id]);
@@ -282,8 +268,8 @@ final class MemberController
             flash('success', 'Lid bijgewerkt.');
         } else {
             $id = Database::insert(
-                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at, status_reason, status_date, photo_consent, emergency_name, emergency_phone, medical_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now(), $statusReason, $data['status'] === 'INACTIVE' ? $statusDate : null, $data['photo_consent'],
+                'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at, status_reason, status_date, emergency_name, emergency_phone, medical_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now(), $statusReason, $data['status'] === 'INACTIVE' ? $statusDate : null,
                     $canMedical ? $nullable($data['emergency_name']) : null, $canMedical ? $nullable($data['emergency_phone']) : null, $canMedical ? $nullable($data['medical_note']) : null]
             );
             audit('CREATE', 'member', $id);

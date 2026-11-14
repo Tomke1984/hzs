@@ -14,31 +14,8 @@ $routes = [
     'login_2fa'        => ['GET' => ['AuthController', 'showTwoFactor', 'public'], 'POST' => ['AuthController', 'twoFactor', 'public']],
     'forgot'           => ['GET' => ['AuthController', 'showForgot', 'public'], 'POST' => ['AuthController', 'forgot', 'public']],
     'activate'         => ['GET' => ['AuthController', 'showActivate', 'public'], 'POST' => ['AuthController', 'activate', 'public']],
-    'register'         => ['GET' => ['RegistrationController', 'showForm', 'public'], 'POST' => ['RegistrationController', 'submit', 'public']],
-    'swimtest'         => ['GET' => ['SwimTestController', 'showForm', 'public'], 'POST' => ['SwimTestController', 'submit', 'public']],
-    'swimtest_confirm' => ['GET' => ['SwimTestController', 'confirm', 'public']],
-    'contact_send'     => ['POST' => ['SiteController', 'contactSend', 'public']],
-    'register_confirm' => ['GET' => ['RegistrationController', 'confirm', 'public']],
     'logout'           => ['POST' => ['AuthController', 'logout', null]],
     'dashboard'        => ['GET' => ['DashboardController', 'index', null]],
-
-    'home'             => ['GET' => ['SiteController', 'home', 'public']],
-    'news'             => ['GET' => ['SiteController', 'post', 'public']],
-    'post'             => ['GET' => ['SiteController', 'post', 'public']],
-    'page'             => ['GET' => ['SiteController', 'page', 'public']],
-    'agenda'           => ['GET' => ['SiteController', 'agenda', 'public']],
-    'trainingstimes'   => ['GET' => ['SiteController', 'trainingTimes', 'public']],
-
-    'content'          => ['GET' => ['ContentController', 'index', 'content.manage']],
-    'post_form'        => ['GET' => ['ContentController', 'postForm', 'content.manage']],
-    'post_save'        => ['POST' => ['ContentController', 'postSave', 'content.manage']],
-    'post_delete'      => ['POST' => ['ContentController', 'postDelete', 'content.manage']],
-    'page_form'        => ['GET' => ['ContentController', 'pageForm', 'content.manage']],
-    'page_save'        => ['POST' => ['ContentController', 'pageSave', 'content.manage']],
-    'page_cleanup'     => ['POST' => ['ContentController', 'pageCleanup', 'content.manage']],
-    'page_delete'      => ['POST' => ['ContentController', 'pageDelete', 'content.manage']],
-    'media_upload'     => ['POST' => ['ContentController', 'mediaUpload', 'content.manage']],
-    'media_delete'     => ['POST' => ['ContentController', 'mediaDelete', 'content.manage']],
 
     'members'          => ['GET' => ['MemberController', 'index', 'members.read']],
     'member'           => ['GET' => ['MemberController', 'show', 'members.read']],
@@ -50,9 +27,6 @@ $routes = [
     'group_form'       => ['GET' => ['GroupController', 'form', 'groups.write']],
     'group_delete'     => ['POST' => ['GroupController', 'delete', 'groups.write']],
     'group_save'       => ['POST' => ['GroupController', 'save', 'groups.write']],
-    'waitlist_add'     => ['POST' => ['GroupController', 'waitlistAdd', 'groups.write']],
-    'waitlist_remove'  => ['POST' => ['GroupController', 'waitlistRemove', 'groups.write']],
-    'waitlist_enroll'  => ['POST' => ['GroupController', 'waitlistEnroll', 'groups.write']],
     'member_days'      => ['POST' => ['GroupController', 'saveDays', 'activities.write']],
     'membership_add'   => ['POST' => ['GroupController', 'addMember', 'groups.write']],
     'member_group'     => ['POST' => ['GroupController', 'setMemberGroup', 'groups.write']],
@@ -74,21 +48,6 @@ $routes = [
     'invite_resend'    => ['POST' => ['InviteController', 'resend', 'users.manage']],
     'invite_bulk'      => ['GET' => ['InviteController', 'bulk', 'users.manage'], 'POST' => ['InviteController', 'bulkSend', 'users.manage']],
 
-    'registrations'    => ['GET' => ['RegistrationController', 'index', 'registrations.manage']],
-    'swimtests'        => ['GET' => ['SwimTestController', 'index', 'registrations.manage']],
-    'swimtest_show'    => ['GET' => ['SwimTestController', 'show', 'registrations.manage']],
-    'swimtest_status'  => ['POST' => ['SwimTestController', 'setStatus', 'registrations.manage']],
-    'swimtest_remind'  => ['POST' => ['SwimTestController', 'remind', 'registrations.manage']],
-    'swimtest_note'    => ['POST' => ['SwimTestController', 'saveNote', 'registrations.manage']],
-    'swimtest_enroll'  => ['POST' => ['SwimTestController', 'enroll', 'registrations.manage']],
-    'messages'         => ['GET' => ['ContactController', 'index', 'registrations.manage']],
-    'message_handle'   => ['POST' => ['ContactController', 'handle', 'registrations.manage']],
-    'message_delete'   => ['POST' => ['ContactController', 'delete', 'registrations.manage']],
-    'registration'     => ['GET' => ['RegistrationController', 'show', 'registrations.manage']],
-    'registration_approve' => ['POST' => ['RegistrationController', 'approve', 'registrations.manage']],
-    'registration_reject'  => ['POST' => ['RegistrationController', 'reject', 'registrations.manage']],
-    'registration_resend'  => ['POST' => ['RegistrationController', 'resend', 'registrations.manage']],
-
     'calendar'         =>['GET' => ['ActivityController', 'calendar', 'activities.read']],
     'activity'         => ['GET' => ['ActivityController', 'show', 'activities.read']],
     'activity_form'    => ['GET' => ['ActivityController', 'form', 'activities.write']],
@@ -98,7 +57,6 @@ $routes = [
     'series_member_add'    => ['POST' => ['SeriesController', 'memberAdd', 'activities.write']],
     'series_member_remove' => ['POST' => ['SeriesController', 'memberRemove', 'activities.write']],
     'series_extend'    => ['POST' => ['SeriesController', 'extend', 'activities.write']],
-    'series_public'    => ['POST' => ['SeriesController', 'setPublic', 'activities.write']],
     'series_show'      => ['GET' => ['SeriesController', 'show', 'activities.write']],
     'series_form'      => ['GET' => ['SeriesController', 'form', 'activities.write']],
     'series_delete'    => ['POST' => ['SeriesController', 'delete', 'activities.write']],
@@ -112,7 +70,6 @@ $routes = [
     'coverage_share'   => ['POST' => ['CoverageController', 'share', 'coverage.manage']],
     'coverage_remind'  => ['POST' => ['CoverageController', 'remindNow', 'coverage.manage']],
     'weekplanning'     => ['GET' => ['CoverageController', 'week', 'public']],
-    'stats'            => ['GET' => ['StatsController', 'index', 'stats.read']],
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
     'absence'          => ['POST' => ['ActivityController', 'absence', 'activities.read']],
     'attendance_report' => ['GET' => ['ReportController', 'attendance', 'attendance.read']],
@@ -121,48 +78,16 @@ $routes = [
     'mail'             => ['GET' => ['MailController', 'compose', 'mail.send']],
     'mail_send'        => ['POST' => ['MailController', 'send', 'mail.send']],
     'mail_edit'        => ['POST' => ['MailController', 'edit', 'mail.send']],
-    'export'           => ['GET' => ['ExportController', 'index', 'export.data']],
-    'export_csv'       => ['GET' => ['ExportController', 'download', 'export.data']],
     'account'          => ['GET' => ['AccountController', 'index', null]],
     'account_password' => ['POST' => ['AccountController', 'password', null]],
     'account_ical'     => ['POST' => ['AccountController', 'icalReset', null]],
     'account_2fa_start' => ['POST' => ['AccountController', 'twoFactorStart', null]],
     'account_2fa_enable' => ['POST' => ['AccountController', 'twoFactorEnable', null]],
     'account_2fa_disable' => ['POST' => ['AccountController', 'twoFactorDisable', null]],
-    'meet_answer'      => ['POST' => ['MeetController', 'answer', 'activities.read']],
-    'result_save'      => ['POST' => ['MeetController', 'resultSave', 'attendance.write']],
-    'result_delete'    => ['POST' => ['MeetController', 'resultDelete', 'attendance.write']],
-    'fees'             => ['GET' => ['FeeController', 'index', 'fees.manage']],
-    'fee_status'       => ['POST' => ['FeeController', 'status', 'fees.manage']],
-    'fee_generate'     => ['POST' => ['FeeController', 'generate', 'fees.manage']],
-    'fee_remind'       => ['POST' => ['FeeController', 'remind', 'fees.manage']],
-    'season_save'      => ['POST' => ['FeeController', 'seasonSave', 'fees.manage']],
-    'season_rollover'  => ['GET' => ['FeeController', 'rollover', 'fees.manage']],
-    'season_rollover_apply' => ['POST' => ['FeeController', 'rolloverApply', 'fees.manage']],
     'ical'             => ['GET' => ['AccountController', 'ical', 'public']],
-    'sitemap'          => ['GET' => ['SeoController', 'sitemap', 'public']],
-    'robots'           => ['GET' => ['SeoController', 'robots', 'public']],
-    'event'            => ['GET' => ['EventController', 'show', 'public']],
-    'event_signup'     => ['POST' => ['EventController', 'signup', 'public']],
-    'event_signups'    => ['GET' => ['EventController', 'admin', 'activities.write']],
-    'event_signup_delete' => ['POST' => ['EventController', 'delete', 'activities.write']],
-    'newsletter_subscribe' => ['POST' => ['NewsletterController', 'subscribe', 'public']],
-    'newsletter_confirm'   => ['GET' => ['NewsletterController', 'confirm', 'public']],
-    'newsletter_unsub'     => ['GET' => ['NewsletterController', 'unsubscribe', 'public']],
-    'newsletter'       => ['GET' => ['NewsletterController', 'admin', 'content.manage']],
-    'newsletter_send'  => ['POST' => ['NewsletterController', 'send', 'content.manage']],
-    'gallery'          => ['GET' => ['GalleryController', 'publicIndex', 'public']],
-    'gallery_admin'    => ['GET' => ['GalleryController', 'admin', 'content.manage']],
-    'gallery_album'    => ['GET' => ['GalleryController', 'albumShow', 'content.manage']],
-    'gallery_album_save'   => ['POST' => ['GalleryController', 'albumSave', 'content.manage']],
-    'gallery_album_delete' => ['POST' => ['GalleryController', 'albumDelete', 'content.manage']],
-    'gallery_photo_upload' => ['POST' => ['GalleryController', 'photoUpload', 'content.manage']],
-    'gallery_photo_save'   => ['POST' => ['GalleryController', 'photoSave', 'content.manage']],
-    'gallery_photo_delete' => ['POST' => ['GalleryController', 'photoDelete', 'content.manage']],
-    'gallery_publish'      => ['POST' => ['GalleryController', 'publish', 'content.manage']],
 ];
 
-// Leesbare adressen: /zwemschool, /kalender, /nieuws/<bericht>, ... (zonder ?r= in de URL)
+// Leesbare adressen: /aanmelden, /app/kalender, ... (zonder ?r= in de URL). De startpagina is de app.
 if (!isset($_GET['r'])) {
     $path = trim(rawurldecode((string) parse_url((string) $_SERVER['REQUEST_URI'], PHP_URL_PATH)), '/');
     $b = trim(base_path(), '/');
@@ -174,15 +99,8 @@ if (!isset($_GET['r'])) {
     }
     if ($path !== '') {
         $byPath = array_flip(PRETTY_ROUTES);
-        if ($path === 'sitemap.xml' || $path === 'robots.txt') {
-            $_GET['r'] = $path === 'sitemap.xml' ? 'sitemap' : 'robots';
-        } elseif (isset($byPath[$path])) {
+        if (isset($byPath[$path])) {
             $_GET['r'] = $byPath[$path];
-        } elseif ($path === 'nieuws') {
-            $_GET['r'] = 'home';
-        } elseif (preg_match('#^nieuws/([a-z0-9-]+)$#', $path, $m)) {
-            $_GET['r'] = 'post';
-            $_GET['slug'] = $m[1];
         } elseif ($path === 'app' || str_starts_with($path, 'app/')) {
             $hit = app_route_from_path($path, $routes);
             if (!$hit) {
@@ -190,16 +108,13 @@ if (!isset($_GET['r'])) {
             }
             $_GET['r'] = $hit[0];
             $_GET += $hit[1];
-        } elseif (preg_match('#^[a-z0-9-]+$#', $path)) {
-            $_GET['r'] = 'page';
-            $_GET['slug'] = $path;
         } else {
             abort(404, 'Deze pagina bestaat niet.');
         }
     }
 }
 
-$route  = (string) ($_GET['r'] ?? 'home');
+$route  = (string) ($_GET['r'] ?? 'dashboard');
 $method = $_SERVER['REQUEST_METHOD'] === 'POST' ? 'POST' : ($_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD' ? 'GET' : '');
 
 if (!isset($routes[$route])) {
@@ -227,6 +142,5 @@ if ($permission !== 'public') {
     }
 }
 
-Stats::track($route);
 Coverage::autoRemind(); // mail als er binnenkort een trainer ontbreekt (hooguit één keer per uur, na het antwoord)
 $class::$action();

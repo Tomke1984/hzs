@@ -223,13 +223,13 @@ T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_at
 T::clearMails();
 T::exec('DELETE FROM coverage_alerts');
 T::autoRan(false);
-(new Browser())->get('/');
+(new Browser())->get('/aanmelden');
 T::ok(str_contains(T::outbox(), 'Trainers gezocht voor') || str_contains(T::outbox(), 'Trainer gezocht:'), 'bezoek aan de site verstuurt de herinnering (zonder cron)');
 $n1 = substr_count(T::outbox(), ' | aan ');
 T::autoRan(false);
-(new Browser())->get('/');
+(new Browser())->get('/aanmelden');
 T::ok(substr_count(T::outbox(), ' | aan ') === $n1, 'zelfde tekorten worden niet opnieuw gemeld');
-(new Browser())->get('/');
+(new Browser())->get('/aanmelden');
 T::ok(substr_count(T::outbox(), ' | aan ') === $n1, 'hooguit één keer per uur');
 T::clearMails();
 $coord->post('/app/coverage-remind', []);

@@ -11,13 +11,8 @@ final class Installer
         'activities.write' => 'Activiteiten aanmaken en wijzigen',
         'attendance.read' => 'Aanwezigheden bekijken (binnen scope)',
         'attendance.write' => 'Aanwezigheden registreren',
-        'registrations.manage' => 'Inschrijvingen beoordelen (goedkeuren of afwijzen)',
-        'content.manage'  => 'Website beheren (nieuws, pagina\'s, afbeeldingen)',
-        'stats.read'      => 'Statistieken over bezoekers en verkeer bekijken (enkel beheerders)',
         'users.manage'    => 'Gebruikers, rollen en koppelingen (ouder-kind, trainer-groep) beheren',
         'mail.send'       => 'Berichten sturen naar groepen, blokken of deelnemers (binnen scope)',
-        'export.data'     => 'Gegevens exporteren naar CSV (leden, aanwezigheden, aanmeldingen)',
-        'fees.manage'     => 'Lidgeld en seizoenen beheren',
         'members.medical' => 'Noodcontact en medische opmerkingen zien (binnen scope)',
         'audit.read'      => 'Auditlog bekijken (enkel beheerders)',
         'coverage.manage' => 'Trainersplanning competitie beheren (vaste trainers per blok, minimum per groep, herinneringen)',
@@ -26,8 +21,8 @@ final class Installer
     public const ROLES = [
         'ADMIN'   => ['Beheerder', ['*']],
         'BOARD'   => ['Bestuur', ['members.read', 'members.write', 'members.contact', 'groups.read', 'groups.write',
-                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage', 'content.manage',
-                                  'mail.send', 'export.data', 'fees.manage', 'members.medical', 'coverage.manage']],
+                                  'activities.read', 'activities.write', 'attendance.read', 'attendance.write',
+                                  'mail.send', 'members.medical', 'coverage.manage']],
         'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write', 'mail.send', 'members.medical']],
         'COORDINATOR' => ['Coördinator competitie', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'coverage.manage']],
         'SWIMMER' => ['Zwemmer', ['members.read', 'activities.read', 'attendance.read']],
@@ -51,64 +46,59 @@ final class Installer
         }
     }
 
+    /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
+    public const SCHEMA = 13;
+
     /**
-     * Vult ontbrekende permissies en rol-koppelingen aan in een bestaande database
-     * (bv. na een update die een nieuwe permissie toevoegt). Doet niets als alles er al is.
+     * Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL), één keer per sessie.
+     * Ontbrekende tabellen worden aangemaakt (alles is CREATE TABLE IF NOT EXISTS), ontbrekende kolommen toegevoegd.
+     * Tabellen van onderdelen die sinds v0.13 weg zijn (website, lidgeld, inschrijvingen, zwemtest, ...) blijven in een
+     * bestaande database staan, met hun gegevens; de app gebruikt ze niet meer.
      */
-    /** Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL). */
     public static function migrate(): void
     {
-        foreach (['user_tokens', 'registrations', 'activity_series', 'posts', 'pages', 'media', 'swimtest_requests', 'contact_messages', 'login_attempts', 'activity_series_skips', 'member_series', 'page_views'] as $table) {
+        if ((int) ($_SESSION['schema'] ?? 0) >= self::SCHEMA) {
+            return;
+        }
+        foreach (['user_tokens', 'login_attempts', 'activity_series', 'activity_series_slots', 'activity_series_groups', 'activity_series_skips', 'member_series',
+                  'absence_reports', 'broadcasts', 'series_trainers', 'activity_trainers', 'coverage_alerts'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
             } catch (Throwable $e) {
-                self::createSchema(); // alle tabellen zijn CREATE TABLE IF NOT EXISTS: enkel wat ontbreekt wordt aangemaakt
+                self::createSchema();
                 break;
             }
         }
         try {
-            Database::val('SELECT series_id FROM activities LIMIT 1');
+            Database::val('SELECT weekday FROM member_series LIMIT 1');
         } catch (Throwable $e) {
-            Database::exec('ALTER TABLE activities ADD COLUMN series_id INT NULL');
-            Database::exec('ALTER TABLE activities ADD COLUMN is_custom TINYINT NOT NULL DEFAULT 0');
-            Database::exec('ALTER TABLE activities ADD COLUMN status_note VARCHAR(200) NULL');
+            try {
+                Database::exec('DROP TABLE member_series'); // oude vorm zonder weekdag: opnieuw aanmaken
+            } catch (Throwable $e2) {
+            }
+            self::createSchema();
         }
-        try {
-            Database::val('SELECT goals FROM `groups` LIMIT 1');
-        } catch (Throwable $e) {
-            Database::exec('ALTER TABLE `groups` ADD COLUMN goals TEXT NULL');
-        }
-        // Doelstellingen horen bij de groep: de losse pagina's "Doelstellingen – <groep>" verhuizen naar de groep zelf.
-        foreach (Database::all("SELECT id, title, body FROM pages WHERE slug LIKE 'doelstellingen-%'") as $dp) {
-            $name = trim((string) preg_replace('/^Doelstellingen\s*[–-]\s*/u', '', (string) $dp['title']));
-            $g = Database::one('SELECT id, goals FROM `groups` WHERE name = ?', [$name]);
-            if ($g) {
-                if ($g['goals'] === null || $g['goals'] === '') {
-                    Database::exec('UPDATE `groups` SET goals = ? WHERE id = ?', [$dp['body'], $g['id']]);
-                }
-                Database::exec('DELETE FROM pages WHERE id = ?', [$dp['id']]);
+        $cols = [
+            ['activities', 'series_id', 'INT NULL'], ['activities', 'is_custom', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'status_note', 'VARCHAR(200) NULL'],
+            ['activities', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'signup_capacity', 'INT NULL'], ['activities', 'min_trainers', 'INT NULL'],
+            ['activity_series', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activity_series', 'capacity', 'INT NULL'],
+            ['groups', 'color', 'INT NULL'], ['groups', 'category', "VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'"], ['groups', 'goals', 'TEXT NULL'],
+            ['groups', 'capacity', 'INT NULL'], ['groups', 'fee_cents', 'INT NULL'], ['groups', 'next_group_id', 'INT NULL'],
+            ['groups', 'min_trainers', 'INT NULL'], ['groups', 'share_token', 'VARCHAR(40) NULL'],
+            ['members', 'street', 'VARCHAR(120) NULL'], ['members', 'postal_code', 'VARCHAR(10) NULL'], ['members', 'city', 'VARCHAR(80) NULL'],
+            ['members', 'status_reason', 'VARCHAR(60) NULL'], ['members', 'status_date', 'VARCHAR(10) NULL'],
+            ['members', 'emergency_name', 'VARCHAR(120) NULL'], ['members', 'emergency_phone', 'VARCHAR(40) NULL'],
+            ['members', 'medical_note', 'VARCHAR(500) NULL'], ['members', 'photo_consent', 'TINYINT NOT NULL DEFAULT 0'],
+            ['users', 'ical_token', 'VARCHAR(40) NULL'], ['users', 'totp_secret', 'VARCHAR(64) NULL'], ['users', 'totp_enabled', 'TINYINT NOT NULL DEFAULT 0'],
+        ];
+        foreach ($cols as [$table, $col, $def]) {
+            $t = $table === 'groups' ? '`groups`' : $table;
+            try {
+                Database::val("SELECT $col FROM $t LIMIT 1");
+            } catch (Throwable $e) {
+                Database::exec("ALTER TABLE $t ADD COLUMN $col $def");
             }
         }
-        if (!Database::val("SELECT COUNT(*) FROM pages WHERE slug LIKE 'doelstellingen-%'")) {
-            $intro = 'Per niveau werken de zwemmers naar vaste doelstellingen. Doorstromen gebeurt op basis van een evaluatie door de trainers.';
-            Database::exec("UPDATE pages SET body = ? WHERE slug = 'doelstellingen' AND body LIKE '%doelstellingen-%'", [$intro]);
-        }
-        // Typfout in het gsm-nummer van de API (+32 96 → +32 496).
-        Database::exec("UPDATE pages SET body = REPLACE(body, 'gsm +32 96 32 92 52', 'gsm +32 496 32 92 52') WHERE slug = 'ombudsman' AND body LIKE '%gsm +32 96 32 92 52%'");
-        // De uitleg over de zwemtest verwijst naar het aparte zwemtestformulier.
-        Database::exec(
-            "UPDATE pages SET body = REPLACE(body, '[inschrijfformulier](?r=register)', '[formulier voor de zwemtest](?r=swimtest)') WHERE slug = 'inschrijven-zwemtest' AND body LIKE '%(?r=register)%'"
-        );
-        // De oorspronkelijke contactpagina (nog onaangepast) krijgt de contactgegevens van zwemschool en competitie.
-        Database::exec(
-            "UPDATE pages SET body = ? WHERE slug = 'contact' AND body LIKE '%Vragen over de **zwemschool** gaan naar de secretaris%'",
-            [trim(SiteSeed::contactBody())]
-        );
-        // Het oorspronkelijke privacybeleid (nog onaangepast, overname uit 2018) krijgt de nieuwe AVG-tekst.
-        Database::exec(
-            "UPDATE pages SET body = ?, updated_at = ? WHERE slug = 'privacybeleid' AND body LIKE '%24 mei 2018%' AND body NOT LIKE '%26 oktober 2026%'",
-            [SiteSeed::privacyBody(), now()]
-        );
         // Groepslidmaatschap = enkel de huidige groep: einddatums/historiek en dubbele koppelingen opruimen.
         if (Database::val('SELECT COUNT(*) FROM group_memberships WHERE end_date IS NOT NULL') > 0) {
             Database::exec('DELETE FROM group_memberships WHERE end_date IS NOT NULL');
@@ -121,108 +111,15 @@ final class Installer
         if (Database::one('SELECT user_id FROM group_trainers GROUP BY user_id, group_id HAVING COUNT(*) > 1 LIMIT 1')) {
             Database::exec('DELETE FROM group_trainers WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_trainers GROUP BY user_id, group_id) k)');
         }
-        try {
-            Database::val('SELECT color FROM `groups` LIMIT 1');
-        } catch (Throwable $e) {
-            Database::exec('ALTER TABLE `groups` ADD COLUMN color INT NULL');
-        }
         ensure_group_colors();
-        try {
-            Database::val('SELECT weekday FROM member_series LIMIT 1');
-        } catch (Throwable $e) {
-            try {
-                Database::exec('DROP TABLE member_series'); // nieuw, nog ongebruikt: opnieuw aanmaken met weekdag per keuze
-            } catch (Throwable $e2) {
-            }
-            self::createSchema();
+        // v0.13: rechten van verwijderde onderdelen opruimen (website, inschrijvingen, lidgeld, statistieken, exports).
+        $known = array_keys(self::PERMISSIONS);
+        $old = Database::all('SELECT id FROM permissions WHERE code NOT IN (' . Scope::in($known) . ')', $known);
+        foreach ($old as $p) {
+            Database::exec('DELETE FROM role_permissions WHERE permission_id = ?', [$p['id']]);
+            Database::exec('DELETE FROM permissions WHERE id = ?', [$p['id']]);
         }
-        try {
-            Database::val('SELECT is_public FROM activities LIMIT 1');
-        } catch (Throwable $e) {
-            Database::exec('ALTER TABLE activities ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');
-            Database::exec('ALTER TABLE activity_series ADD COLUMN is_public TINYINT NOT NULL DEFAULT 0');
-        }
-        try {
-            Database::val('SELECT street FROM members LIMIT 1');
-        } catch (Throwable $e) {
-            Database::exec('ALTER TABLE members ADD COLUMN street VARCHAR(120) NULL');
-            Database::exec('ALTER TABLE members ADD COLUMN postal_code VARCHAR(10) NULL');
-            Database::exec('ALTER TABLE members ADD COLUMN city VARCHAR(80) NULL');
-        }
-        try {
-            Database::val('SELECT category FROM `groups` LIMIT 1');
-        } catch (Throwable $e) {
-            Database::exec("ALTER TABLE `groups` ADD COLUMN category VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'");
-        }
-        self::migrateV11();
-    }
-
-    /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
-    public const SCHEMA = 12;
-
-    /** Nieuwe tabellen en kolommen van v0.11 (rapporten, lidgeld, wachtlijst, resultaten, nieuwsbrief, galerij, 2FA). */
-    private static function migrateV11(): void
-    {
-        if ((int) ($_SESSION['schema'] ?? 0) >= self::SCHEMA) {
-            return;
-        }
-        foreach (['absence_reports', 'broadcasts', 'seasons', 'dues', 'group_waitlist', 'meet_entries', 'results', 'event_signups', 'subscribers', 'gallery_albums', 'gallery_photos', 'photo_members'] as $table) {
-            try {
-                Database::val("SELECT 1 FROM $table LIMIT 1");
-            } catch (Throwable $e) {
-                self::createSchema();
-                break;
-            }
-        }
-        $cols = [
-            ['users', 'ical_token', 'VARCHAR(40) NULL'], ['users', 'totp_secret', 'VARCHAR(64) NULL'], ['users', 'totp_enabled', 'TINYINT NOT NULL DEFAULT 0'],
-            ['members', 'status_reason', 'VARCHAR(60) NULL'], ['members', 'status_date', 'VARCHAR(10) NULL'],
-            ['members', 'emergency_name', 'VARCHAR(120) NULL'], ['members', 'emergency_phone', 'VARCHAR(40) NULL'],
-            ['members', 'medical_note', 'VARCHAR(500) NULL'], ['members', 'photo_consent', 'TINYINT NOT NULL DEFAULT 0'],
-            ['groups', 'capacity', 'INT NULL'], ['groups', 'fee_cents', 'INT NULL'], ['groups', 'next_group_id', 'INT NULL'],
-            ['activity_series', 'capacity', 'INT NULL'], ['activities', 'signup_capacity', 'INT NULL'],
-            ['posts', 'newsletter_sent_at', 'VARCHAR(19) NULL'],
-            ['swimtest_requests', 'reminder_at', 'VARCHAR(19) NULL'], ['swimtest_requests', 'reminder_count', 'INT NOT NULL DEFAULT 0'],
-        ];
-        foreach ($cols as [$table, $col, $def]) {
-            try {
-                Database::val("SELECT $col FROM " . ($table === 'groups' ? '`groups`' : $table) . ' LIMIT 1');
-            } catch (Throwable $e) {
-                Database::exec('ALTER TABLE ' . ($table === 'groups' ? '`groups`' : $table) . " ADD COLUMN $col $def");
-            }
-        }
-        // Privacytekst: enkel de ongewijzigde tekst van vóór v0.11 wordt aangevuld; een door de club aangepaste tekst blijft staan.
-        try {
-            $pg = Database::one("SELECT id, body FROM pages WHERE slug = 'privacybeleid'");
-            $norm = fn(string $t) => trim(str_replace("\r\n", "\n", $t));
-            if ($pg && $norm((string) $pg['body']) === $norm(SiteSeed::privacyBodyPrev())) {
-                Database::exec('UPDATE pages SET body = ?, updated_at = ? WHERE id = ?', [SiteSeed::privacyBody(), now(), $pg['id']]);
-            }
-        } catch (Throwable $e) {
-            // pagina's bestaan nog niet: niets te doen
-        }
-        self::migrateV12();
         $_SESSION['schema'] = self::SCHEMA;
-    }
-
-    /** v0.12: trainersplanning competitie (vaste trainers per blok, trainers per activiteit, herinneringen, deellink per groep). */
-    private static function migrateV12(): void
-    {
-        foreach (['series_trainers', 'activity_trainers', 'coverage_alerts'] as $table) {
-            try {
-                Database::val("SELECT 1 FROM $table LIMIT 1");
-            } catch (Throwable $e) {
-                self::createSchema();
-                break;
-            }
-        }
-        foreach ([['`groups`', 'min_trainers', 'INT NULL'], ['`groups`', 'share_token', 'VARCHAR(40) NULL'], ['activities', 'min_trainers', 'INT NULL']] as [$table, $col, $def]) {
-            try {
-                Database::val("SELECT $col FROM $table LIMIT 1");
-            } catch (Throwable $e) {
-                Database::exec("ALTER TABLE $table ADD COLUMN $col $def");
-            }
-        }
     }
 
     public static function syncReferenceData(): void

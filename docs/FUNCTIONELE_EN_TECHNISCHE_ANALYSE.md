@@ -1,149 +1,112 @@
 # HZS Clubapp – Functionele en technische analyse
 
-Versie v0.12 (november 2026). Vervangt de analyse van V1 (JSON-testarchitectuur, historische koppelingen en aparte beheer-UI als vervolgwerk zijn achterhaald).
+Versie v0.13 (november 2026). Minimale versie: enkel de ledenapp met login. Vervangt de analyse van v0.12 (met publieke website, lidgeld, inschrijvingen en zwemtest).
 
 ## 1. Doel
-HZS Clubapp is de **publieke clubwebsite** én de **ledenapp** van Hasseltse Zwemvereniging Spartacus. Ze vervangt de WordPress-site khzs.be en ondersteunt ledenbeheer, groepsindeling, trainingsreeksen, kalender, aanwezigheid, inschrijvingen, de zwemtestwachtlijst en het contactkanaal. Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
+HZS Clubapp is de **ledenapp** van Hasseltse Zwemvereniging Spartacus: leden en ouders zien wanneer er training of wedstrijd is, trainers en bestuur beheren groepen, trainingsreeksen, de trainersplanning van de competitie, aanwezigheden en berichten. De publieke website staat apart (repository hzs-basic). Eén PHP-monoliet die draait op klassieke shared hosting (MySQL) en lokaal op SQLite.
 
 ## 2. Scope
-### In scope (v0.12)
-- Publieke website: startpagina, pagina's met menu, nieuws, kalender, trainingsuren, doelstellingen, contact, zwemtestformulier en inschrijfformulier.
-- Website-beheer: nieuws, pagina's, afbeeldingen, paginacontrole (de eenmalige import van khzs.be is uit de app gehaald; `tools/seed-site.php` blijft als ontwikkelhulp).
-- Authenticatie, rollen (Beheerder, Bestuur, Trainer, Zwemmer, Ouder), permissies, gegevensscope, uitnodigingen en wachtwoord vergeten per e-mail.
-- Leden, groepen (zwemschool/competitie), trainers per groep, ouder-kindkoppeling, gebruikersbeheer.
-- Activiteiten, trainingsreeksen, persoonlijke kalender, schrappen/verplaatsen (ook alle activiteiten van een dag of periode), presentielijst.
-- Inschrijvingen (lidmaatschap) met goedkeuring door het bestuur; zwemtestwachtlijst met statussen; contactberichten.
-- Zwemblokken: zwemschoolreeksen als blokken (dag + uur) met indeling per lid, lijst *Nog niet ingedeeld* en weekoverzicht.
-- Bezoekersstatistieken voor website en app (enkel beheerders), cookieloos en zonder persoonsgegevens.
-- Privacybeleid (AVG) als pagina van de site, met een link in footer en formulieren.
-- **v0.12:** trainersplanning competitie: vaste trainer per blok, trainers per training/wedstrijd, afmelden en overnemen, minimum per groep/activiteit, mail vooraf bij tekorten, deelbare weekplanning per competitiegroep, rol Coördinator competitie.
-- **v0.11:** aanwezigheidsrapport, groepsmail, afmelden, iCal-link, CSV-export, auditlog, globaal zoeken, tweestapsverificatie (TOTP); lidgeld met gestructureerde mededeling en seizoensovergang, capaciteit en wachtlijst, wedstrijddeelname en resultaten, noodcontact/medische opmerking, dubbele-ledencontrole, zwemtest-opvolging; dashboards per rol; online inschrijven voor activiteiten, nieuwsbrief, SEO/sitemap en fotogalerij met toestemmingscontrole.
+### In scope (v0.13)
+- Authenticatie (wachtwoord, tweestapsverificatie, uitnodiging en wachtwoord vergeten per e-mail), rollen (Beheerder, Bestuur, Trainer, Coördinator competitie, Zwemmer, Ouder), permissies, gegevensscope.
+- Leden, groepen (zwemschool/competitie), trainers per groep, ouder-kindkoppeling, gebruikersbeheer, noodcontact en medische opmerking.
+- Activiteiten, trainingsreeksen, zwemblokken (indeling per lid), persoonlijke kalender, schrappen/verplaatsen, iCal-agendalink, afmelden door ouders/leden.
+- Trainersplanning competitie: vaste trainer per blok, trainers per training/wedstrijd, afmelden en overnemen, minimum per groep/activiteit, mail vooraf bij tekorten, deelbare weekplanning per competitiegroep.
+- Presentielijst en aanwezigheidsrapport; bericht sturen naar groep, blok, activiteit of club.
+- Auditlog, globaal zoeken, dashboards per rol.
 
-### Niet in scope / vervolgwerk
-Online betalingen, documentenbeheer (upload van reglementen e.d.), CSV-import van bestaande leden (bewust uitgesteld), clubrecords als tabel, volledige audit-triggers, herhalende activiteiten buiten reeksen, restyling van login/app in de stijl van de site.
+### Verwijderd in v0.13
+Publieke website (pagina's, nieuws, publieke kalender, trainingsuren, doelstellingen, contactformulier, SEO, sitemap), websitebeheer, bezoekersstatistieken, lidgeld en seizoenen, inschrijvingen (lid worden), zwemtestwachtlijst, contactberichten, nieuwsbrief, fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit en wachtlijst per groep/blok, CSV-exports. De code staat in de Git-geschiedenis (v0.12). Bestaande databases houden hun tabellen en gegevens; de app gebruikt ze niet meer.
 
 ## 3. Actoren en rechten
 | Rol | Rechten (permissies) | Zichtbaarheid |
 |---|---|---|
-| Beheerder | alle (`*`), ook `users.manage` en `stats.read` | clubbreed |
-| Bestuur | members.read/write/contact, groups.read/write, activities.read/write, attendance.read/write, registrations.manage, content.manage, mail.send, export.data, fees.manage, members.medical | clubbreed, geen gebruikersbeheer, geen statistieken, geen auditlog |
+| Beheerder | alle (`*`), ook `users.manage` en `audit.read` | clubbreed |
+| Bestuur | members.read/write/contact, groups.read/write, activities.read/write, attendance.read/write, mail.send, members.medical, coverage.manage | clubbreed, geen gebruikersbeheer, geen auditlog |
 | Trainer | members.read, groups.read, activities.read, attendance.read/write, mail.send, members.medical | leden en groepen van zijn actieve groepen; aanwezigheid enkel voor groepen die hij traint |
-| Coördinator competitie | members.read, groups.read, activities.read, attendance.read, coverage.manage | trainersplanning van alle competitiegroepen; vaste trainers, minimum, deellinks en herinneringen. Meestal gecombineerd met Trainer |
+| Coördinator competitie | members.read, groups.read, activities.read, attendance.read, coverage.manage | trainersplanning van alle competitiegroepen; meestal gecombineerd met Trainer |
 | Zwemmer | members.read, activities.read, attendance.read | zichzelf en de eigen groep |
 | Ouder | members.read, activities.read, attendance.read | gekoppelde kinderen en hun groepen |
-| Bezoeker | geen login | publieke site en de openbare formulieren |
+| Bezoeker | geen login | enkel aanmelden, uitnodiging activeren, wachtwoord vergeten, deellink weekplanning en iCal-feed |
 
-Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de rollen. `registrations.manage` dekt inschrijvingen, zwemtestwachtlijst en contactberichten; `content.manage` dekt het websitebeheer; `stats.read` (enkel Beheerder) dekt het statistiekendashboard. Nieuw in v0.11: `mail.send` (berichten sturen), `export.data` (CSV-exports), `fees.manage` (lidgeld en seizoensovergang), `members.medical` (noodcontact en medische opmerking), `audit.read` (auditlog, enkel Beheerder). Nieuw in v0.12: `coverage.manage` (Coördinator, Bestuur, Beheerder). De trainersplanning zelf (bekijken, afmelden, overnemen, inplannen) is open voor wie `coverage.manage` heeft én voor elke Trainer die aan een actieve competitiegroep gekoppeld is (`Coverage::canView()`).
+Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de rollen. De trainersplanning (bekijken, afmelden, overnemen, inplannen) is open voor wie `coverage.manage` heeft én voor elke Trainer die aan een actieve competitiegroep gekoppeld is (`Coverage::canView()`). Bij de update naar v0.13 worden de rechten van verwijderde onderdelen (`content.manage`, `registrations.manage`, `fees.manage`, `stats.read`, `export.data`) uit de database gehaald.
 
 ## 4. Kernflows
-1. **Zwemtest**: bezoeker vult het formulier in → bevestigt per e-mail (token) → staat op de wachtlijst (WAITING) → bestuur zet op INVITED / TESTED / DECLINED (optionele mails) → *Als lid inschrijven* maakt een gewone inschrijving (PENDING) die de goedkeuring volgt → ENROLLED.
-2. **Lid worden**: openbaar inschrijfformulier → bevestiging per e-mail → bestuur keurt goed (leden + ouderaccount + uitnodiging) of af (mail met reden).
-3. **Trainingen**: bestuur maakt per groep een reeks (weekdagen, uren, periode) → de app maakt de trainingen aan → schrappen per training of periode → trainer registreert aanwezigheid. **Zwemschool:** de reeks is een blok (dag + uur) voor meerdere groepen; het bestuur deelt de leden in (blokpagina, lijst *Nog niet ingedeeld* of rooster op de groepspagina); alleen ingedeelde leden staan op de lijst en zien het blok.
-4. **Website**: bestuur beheert pagina's en nieuws; trainingsuren, doelstellingen, contactformulier en agenda komen automatisch uit de app.
-5. **Contact**: bezoeker stuurt een bericht → opgeslagen in de app en gemaild naar het adres van het gekozen onderwerp → bestuur handelt af.
-6. **Dagelijks gebruik**: leden, ouders en trainers openen hun persoonlijke kalender in de app.
-7. **Trainersplanning competitie**: coördinator kiest per blok (reeks + weekdag) de vaste trainer(s) → die staan op elke training → een trainer meldt zich af → tekort zichtbaar (planning, kalender, overzicht, menu) → een collega neemt over of wordt ingepland → staat er binnen 3 dagen nog een tekort, dan krijgen coördinator en competitietrainers één mail.
-8. **Statistieken**: beheerders volgen het verkeer op de site en in de app (zie 7, Statistieken).
+1. **Account**: beheerder maakt een gebruiker of nodigt een ouder/lid uit → persoonlijke link (7 dagen) → wachtwoord kiezen. Nieuwe leden komen er via het bestuur (Leden → Nieuw lid), niet meer via een publiek formulier.
+2. **Trainingen**: bestuur maakt per groep een reeks (weekdagen, uren, periode) → de app maakt de trainingen aan → schrappen per training of periode → trainer registreert aanwezigheid. **Zwemschool:** de reeks is een blok (dag + uur) voor meerdere groepen; het bestuur deelt de leden in; alleen ingedeelde leden staan op de lijst en zien het blok.
+3. **Trainersplanning competitie**: coördinator kiest per blok (reeks + weekdag) de vaste trainer(s) → die staan op elke training → een trainer meldt zich af → tekort zichtbaar (planning, kalender, overzicht, menu) → een collega neemt over of wordt ingepland → staat er binnen 3 dagen nog een tekort, dan krijgen coördinator en competitietrainers één mail.
+4. **Dagelijks gebruik**: leden, ouders en trainers openen hun persoonlijke kalender in de app (of via de iCal-link in hun agenda); ouders melden hun kind af voor een training.
+5. **Communicatie**: trainer of bestuur stuurt een bericht naar een groep, blok, activiteit of de club (voorbeeldscherm, gelogd in `broadcasts`).
 
-## 5. Publieke site versus app
-- **Publieke kalender en *Komende activiteiten*:** voor iedereen, ook aangemelden, uitsluitend wedstrijden (type COMPETITION) en clubactiviteiten (type CLUB), met titel, tijd, plaats en omschrijving; nooit groepen, leden of trainingen.
-- **Trainingsuren (site):** de trainingsreeksen met vinkje *Tonen op de website*, actief en niet verlopen, per groep met de trainers. Pagina *Trainingsuren competitie* toont ze automatisch.
-- **Persoonlijke kalender (app):** trainingen en activiteiten van de eigen groepen (trainer, lid, ouder via kinderen) plus alle clubactiviteiten en wedstrijden. Wedstrijden voor andere groepen staan in grijs en zijn niet aanklikbaar; beheerders en bestuur kunnen alles openen.
-- **Automatische pagina's:** `trainingsuren-competitie`, `doelstellingen`, `contact` en `home` halen inhoud uit de app. In het beheer: label *Automatisch*, vast adres/plaats/status, niet verwijderbaar; de eerste twee laten enkel de inleiding (tekst vóór de eerste kop) toe.
-- **Paginacontrole:** `PageCheck` meldt verouderde `doelstellingen-*`-pagina's, lege pagina's, concepten, kapotte interne links (onbekende pagina of route, link naar een concept), onbereikbare pagina's (niet in menu en nergens naar verwezen) en vaste uren die door reeksen vervangen worden. Opruimen verwijdert enkel verouderde en lege pagina's, nooit automatische pagina's.
+## 5. Domeinmodel
+- **Identiteit en RBAC:** `users` (optioneel gekoppeld aan één `members`), `user_tokens` (uitnodiging/reset, hash + vervaldatum), `roles`, `permissions`, `user_roles`, `role_permissions`, `login_attempts`.
+- **Leden:** `members` (profiel, adres, status, noodcontact, medische opmerking), `guardian_links` (ouder ↔ kind met relatie), `member_series` (indeling in zwemblokken).
+- **Groepen:** `groups` (categorie SWIM_SCHOOL/COMPETITION, `is_active`, `color`, `min_trainers`, `share_token`), `group_memberships` (**maximaal één groep, geen datums**), `group_trainers` (**zonder datums**, meerdere trainers per groep).
+- **Planning:** `activity_types` (TRAINING, COMPETITION, CLUB), `activities` (doelgroep CLUB of GROUPS, status PLANNED/CANCELLED, `series_id`, `is_custom`, `status_note`, `min_trainers`), `activity_groups`, `attendance` (UNKNOWN/PRESENT/ABSENT), `absence_reports` (afmeldingen).
+- **Reeksen:** `activity_series`, `activity_series_slots` (uniek per reeks en weekdag), `activity_series_groups`, `activity_series_skips`. `SeriesService::sync()` maakt en onderhoudt de trainingen; individueel gewijzigde trainingen en trainingen met aanwezigheid blijven ongemoeid.
+- **Trainersplanning:** `series_trainers` (reeks, weekdag, trainer = vaste trainer van een blok), `activity_trainers` (afwijking per activiteit en trainer: ASSIGNED = vervanger/extra, ABSENT = afgemeld, met reden), `coverage_alerts` (welke activiteit met welk tekort al gemeld werd). Bezetting = vaste trainers van het blok op de weekdag van de activiteit + ASSIGNED − ABSENT, enkel actieve gebruikers; wordt altijd berekend (`Coverage::enrich()`), niet opgeslagen.
+- **Communicatie en audit:** `broadcasts` (log van verzonden berichten), `audit_log`.
+- **Restkolommen:** `activities.is_public`/`signup_capacity`, `activity_series.is_public`/`capacity`, `groups.goals`/`capacity`/`fee_cents`/`next_group_id` en `members.photo_consent` staan nog in het schema maar worden niet meer gebruikt (geen risico, eenvoudiger dan alle queries aanpassen).
 
-## 6. Domeinmodel
-- **Identiteit en RBAC:** `users` (optioneel gekoppeld aan één `members`), `user_tokens` (uitnodiging/reset/bevestiging, hash + vervaldatum), `roles`, `permissions`, `user_roles`, `role_permissions`.
-- **Leden:** `members` (profiel, adres, status), `guardian_links` (ouder ↔ kind met relatie), `member_series` (indeling in zwemblokken, zie 7).
-- **Groepen:** `groups` (categorie SWIM_SCHOOL/COMPETITION, `is_active`, `goals` voor de website), `group_memberships` (één rij per lid: **maximaal één groep, geen datums**), `group_trainers` (**zonder datums**, meerdere trainers per groep).
-- **Planning:** `activity_types` (TRAINING, COMPETITION, CLUB), `activities` (doelgroep CLUB of GROUPS, status PLANNED/CANCELLED, `series_id`, `is_custom`, `status_note`, `is_public`), `activity_groups`, `attendance` (UNKNOWN/PRESENT/ABSENT, uniek per activiteit en lid).
-- **Reeksen:** `activity_series` (periode, `is_active`, `is_public`), `activity_series_slots` (uniek per reeks en weekdag), `activity_series_groups`. `SeriesService::sync()` maakt en onderhoudt de trainingen; individueel gewijzigde trainingen en trainingen met aanwezigheid blijven ongemoeid.
-- **Inschrijven:** `registrations` + `registration_persons` (PENDING/APPROVED/REJECTED, bevestigingstoken), `swimtest_requests` (UNCONFIRMED, WAITING, INVITED, TESTED, ENROLLED, DECLINED), `contact_messages` (onderwerp, afgehandeld).
-- **Website:** `posts` (nieuws), `pages` (hoofd- en subpagina's, max. één niveau, slug, menu, status), `media`.
-- **Statistieken:** `page_views` (dag, gebied SITE/APP of SKIP, route, pad zonder querystring, dagelijkse hash als bezoeker, apparaat, herkomsthost). Rijen met gebied SKIP zijn anonieme tellers van genegeerde bezoeken (reden in `route`: DNT, BOT, STAFF), zonder bezoeker of pad. Bewaartermijn 400 dagen.
-- **v0.11 – administratie:** `seasons`, `dues` (uniek per lid en seizoen, status OPEN/PAID/WAIVED, herinneringen), `group_waitlist`, `meet_entries` (deelname aan wedstrijden), `results` (tijden in honderdsten), `absence_reports` (afmeldingen), `broadcasts` (log van verzonden berichten en nieuwsbrieven); nieuwe kolommen o.a. `members.emergency_*`, `medical_note`, `photo_consent`, `status_reason`, `groups.capacity/fee_cents/next_group_id`, `users.ical_token/totp_*`.
-- **v0.11 – website:** `event_signups` (inschrijvingen op activiteiten met `activities.signup_capacity`; NULL = uit, 0 = onbeperkt), `subscribers` (nieuwsbrief, dubbele opt-in, token voor afmelden), `gallery_albums`, `gallery_photos` (`consent_ok`), `photo_members` (getagde leden).
-- **v0.12 – trainersplanning:** `series_trainers` (reeks, weekdag, trainer = vaste trainer van een blok), `activity_trainers` (afwijking per activiteit en trainer: ASSIGNED = vervanger/extra, ABSENT = afgemeld, met reden), `coverage_alerts` (welke activiteit met welk tekort al gemeld werd), `groups.min_trainers`, `groups.share_token` (deellink weekplanning), `activities.min_trainers`. Bezetting = vaste trainers van het blok op de weekdag van de activiteit + ASSIGNED − ABSENT, enkel actieve gebruikers; wordt altijd berekend (`Coverage::enrich()`), niet opgeslagen, zodat een nieuwe vaste trainer meteen voor alle komende trainingen geldt. Geen foreign keys op deze tabellen; ze worden opgeruimd waar activiteiten of reeksen verwijderd worden.
-- **Audit:** `audit_log` wordt gevuld door `audit()` bij de belangrijkste mutaties (aanmaken, wijzigen, verwijderen, import, opruimen).
-
-## 7. Architectuur
+## 6. Architectuur
 - Server-rendered PHP-monoliet zonder externe pakketten; PDO met prepared statements (SQLite lokaal, MySQL in productie).
-- **Adressen:** publieke pagina's hebben leesbare permalinks (`/<paginanaam>`, `/kalender`, `/trainingsuren`, `/zwemtest`, `/inschrijven`, `/aanmelden`, `/nieuws/<berichtnaam>`). `public/.htaccess` stuurt alles wat geen bestand is naar `index.php`; de router vertaalt het pad naar een route, `url()` bouwt de adressen (relatief aan `<base href>`, met `base_path()` voor submappen). De beheer-app staat onder `/app` (`APP_PATHS` voor de hoofdschermen met id in het pad, bv. `/app/leden/12/wijzigen`; alle andere routes, vooral POST-acties, op `/app/<route-met-streepjes>`); `app_route_from_path()` vertaalt het pad terug. Bevestigingslinks (`swimtest_confirm`, `register_confirm`) blijven op `?r=` (`PLAIN_ROUTES`). `?r=route` blijft overal werken (oude links en mails). Gereserveerde namen (`RESERVED_SLUGS`) kunnen niet als paginanaam dienen. Links in paginateksten worden bij het renderen omgezet (`pretty_internal`).
+- **Adressen:** `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` (`PRETTY_ROUTES`) en de app onder `/app` (`APP_PATHS` voor de hoofdschermen met id in het pad, bv. `/app/leden/12/wijzigen`; andere routes op `/app/<route-met-streepjes>`); `app_route_from_path()` vertaalt het pad terug. De deellink weekplanning blijft op `?r=weekplanning&t=…` (`PLAIN_ROUTES`). `/` toont het overzicht (en stuurt dus naar aanmelden zonder login); elk ander pad buiten `/app` geeft 404. `public/.htaccess` stuurt alles wat geen bestand is naar `index.php`.
 - `public/index.php`: front controller met routetabel `route → methode → [Controller, actie, permissie|'public'|null]`; centrale CSRF-controle op elke POST (fout = 419).
-- `app/Controllers/*`: use-cases per domein; `app/Scope.php`: centrale gegevensscope; `app/Auth.php`: sessie en permissies; `app/Markup.php`: veilige opmaak voor teksten (eerst escapen, dan een beperkte set opmaak en een whitelist voor links); `app/SeriesService.php`, `app/PageCheck.php`, `app/Mailer.php`, `app/Invites.php`, `app/Guardianship.php`.
-- **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}` (portable SQL, datums als tekst). `Installer::migrate()` draait bij elke start: ontbrekende tabellen aanmaken (nieuwe tabellen moeten in de probe-lijst staan), kolommen toevoegen, opruimmigraties (groepshistoriek, doelstellingen naar de groep, inhoudscorrecties) en referentiedata (rollen/permissies) synchroniseren. Bestaande databases worden dus automatisch bijgewerkt.
-- **Publieke vormgeving:** `layout_public.php` + `public/assets/site.css`, zelf gehoste lettertypen; de beheer-app gebruikt `layout.php` + `style.css`.
-- **Zwemblokken en trainingsmoment per lid:** tabel `member_series (member_id, series_id, weekday)`; de app slaat de indeling per reeks op (weekday 0 = de hele reeks; een reeks is één trainingsmoment); de filters begrijpen ook rijen met een weekdag 1–7. **Regel:** voor *zwemschoolgroepen* geldt dat een lid enkel op de lijst staat van reeksen waaraan het gekoppeld is (zonder koppeling = nergens); voor *competitiegroepen* volgt het lid het vaste schema van de groep, tenzij er toch een eigen keuze is. `Scope::targetMembers()` filtert de aanwezigheidslijst met die regel; `Scope::activityFilter()` verbergt via `hiddenSlots()` de reeksen waaraan een lid van een zwemschoolgroep niet gekoppeld is (een niet-ingedeeld kind ziet dus niets van die groep); trainers van de groep en clubbrede rollen zien alles. Beheer: `SeriesController::show` (sectie *Leden in dit blok*), `memberAdd`/`memberRemove` (routes `series_member_add`/`series_member_remove`), `index` (lijst *Nog niet ingedeeld* via `SeriesService::unassignedSwimMembers()`), `GroupController::saveDays` (rooster op de groepspagina, route `member_days`). `SeriesService::assign()` controleert dat de groep van het lid in het blok is toegelaten; `SeriesService::clearMemberBlocks()` wist de indeling bij groepswissel, verplaatsen en verwijderen uit de groep. Het weekoverzicht (`series_week`, `SeriesController::week`) toont dag × uur met groepen en aantal leden.
-- **Reeks verlengen:** `SeriesController::extend` (route `series_extend`, één of meerdere reeksen) zet de einddatum later en roept `SeriesService::sync()` aan; de limiet (`MAX_DAYS` = 800) geldt vanaf vandaag, niet vanaf de startdatum.
-- **Groepskleuren:** `groups.color` (0–11) wordt toegekend door `ensure_group_colors()` (eerste ongebruikte, anders minst gebruikte) bij aanmaken en bij elke migratie; bestaande kleuren veranderen nooit. `group_chip()` toont naam + kleurstip; CSS-klassen `.g-0`…`.g-11` (geen inline styles wegens CSP).
-- **Schrappen:** `SeriesService::erase()` verwijdert een activiteit (incl. aanwezigheden/groepskoppelingen) en onthoudt bij reekstrainingen de dag in `activity_series_skips`, zodat `sync()` ze niet opnieuw aanmaakt; met geregistreerde aanwezigheden wordt de activiteit enkel op CANCELLED gezet.
-- **Menu van de app:** vaste zijbalk (`app/views/_nav.php`) met secties Club, Planning, Aanvragen (met tellers) en Website, gefilterd op rechten; onder 960 px een uitschuifbaar menu via een *Menu*-knop (`app.js`), zonder JavaScript altijd zichtbaar (`nojs.css`).
-- **Navigatie:** de knop *← Terug* gaat naar de bovenliggende pagina via `back_url()` (geen browsergeschiedenis); filters, tab en kalendermaand van de lijst worden in de sessie onthouden (`remember_list_context()`), activiteiten keren terug naar hun eigen maand; op de hoofdpagina's uit het menu (`BACK_TOP_ROUTES`) staat geen Terug.
-- **Statistieken:** `Stats::track()` wordt in `public/index.php` vlak voor de actie aangeroepen (na de rechtencontrole). Het kiest gebied (SITE = publieke routes, APP = ingelogde routes), bepaalt of het bezoek meetelt en registreert een shutdown-functie die enkel bij een 200-antwoord (of een server die geen statuscode teruggeeft) één rij in `page_views` schrijft; fouten komen in het serverlog en in `storage/stats-error.log` en nooit in de pagina. Bezoeker = `hmac(dag | IP+user-agent of gebruikers-id, geheim)` afgekapt tot 16 tekens; het geheim staat in `storage/stats.salt` (per server aangemaakt, niet in git). Niet geteld (anoniem als SKIP-teller): `Do Not Track`/`Sec-GPC`, bots (user-agent), beheerders/bestuur op de website (`config stats.count_staff` zet dat om). Dashboard: route `stats` (`StatsController`, permissie `stats.read`); de grafiek is inline SVG en de meters zijn `<progress>`, omdat de CSP inline `style` verbiedt. `Stats::whyNotCounted()` legt aan de beheerder uit waarom het eigen bezoek niet telt.
-- **Privacybeleid:** pagina `privacybeleid` (tekst in `SiteSeed::privacyBody()`; `Installer::migrate()` vervangt enkel de oorspronkelijke tekst van 2018, herkend aan de datum; `php tools/seed-site.php privacy` forceert). `privacy_href()` geeft het adres: `config privacy_url` of anders de gepubliceerde pagina; de footer en de formulieren gebruiken dat. Controleer de tekst bij elke nieuwe verwerking (nieuwe velden, nieuwe externe diensten, nieuwe bewaartermijnen).
-- **Opmaak (`Markup`):** `Markup::clean()` normaliseert plakwerk (regelscheiders, `&nbsp;`, `\##`, Unicode-spaties en onzichtbare tekens, `＃`, `•`); koppen en lijsten starten ook zonder lege regels. `Markup::problems()` geeft de exacte tekens van regels die op een kop lijken maar niet herkend worden; de publieke pagina en het bericht tonen die aan beheerders. Het intro-deel van een pagina splitst op de opgeschoonde tekst.
-- **Versie-aanduiding:** `app_build()` leest branch en commit uit `.git` en toont ze aan beheerders onderaan het menu.
+- `app/Controllers/*`: Auth, Account, Dashboard, Member, Group, Activity, Series, User, Invite, Report, Mail, Coverage. `app/Scope.php`: centrale gegevensscope; `app/Auth.php`: sessie en permissies; verder `SeriesService`, `Coverage`, `Mailer`, `Mailing`, `Invites`, `Guardianship`, `Totp`.
+- **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}`. `Installer::migrate()` loopt één keer per sessie (schemaversie 13): ontbrekende tabellen aanmaken, ontbrekende kolommen toevoegen, opruimmigraties (groepshistoriek), groepskleuren en het opruimen van verouderde rechten; daarna `syncReferenceData()` voor nieuwe rollen/rechten.
+- **Vormgeving:** één layout (`layout.php` + `style.css`), ook voor aanmelden, foutpagina's en de deellink.
+- **Zwemblokken, reeksen, groepskleuren, schrappen, navigatie:** ongewijzigd ten opzichte van v0.12 (zie `SeriesService`, `Scope::targetMembers()`, `Scope::activityFilter()`, `ensure_group_colors()`, `back_url()`).
+- **Trainersplanning:** `Coverage` (bezetting, tekorten, herinneringen) en `CoverageController`. Herinneringen lopen zonder cron: `Coverage::autoRemind()` in `public/index.php` hooguit één keer per uur (bestand `storage/coverage-last-run`), na het antwoord; alternatief `tools/coverage-reminders.php` via cron.
+- **Menu:** vaste zijbalk (`_nav.php`) met secties Club (Leden, Groepen, Gebruikers, Auditlog) en Planning (Kalender, Trainingsreeksen, Trainersplanning, Aanwezigheden, Bericht sturen), gefilterd op rechten.
 - **Mail:** driver `log` (lokaal, `storage/mail/outbox.log`), `smtp` of PHP `mail()`. Links in mails gebruiken `app_url`.
-- **Uploads:** `public/uploads/` (enkel afbeeldingen, type- en groottecontrole).
+- **Privacy:** `privacy_href()` = `config privacy_url` (link onderaan elke pagina); het privacybeleid zelf staat op de clubwebsite.
 
-## 8. Beveiliging
+## 7. Beveiliging
 ### Geïmplementeerd
-- `password_hash`, sessieregeneratie bij login, HttpOnly/SameSite-cookie, `cookie_secure` configureerbaar. Enige cookie: `hzs_session` (technisch, verdwijnt bij sluiten van de browser); geen tracking- of analysecookies en geen externe verbindingen.
-- CSRF op alle POST-acties; prepared statements; uitvoer-escaping via `e()`; CSP zonder inline scripts.
+- `password_hash`, sessieregeneratie bij login, HttpOnly/SameSite-cookie, `cookie_secure` configureerbaar. Enige cookie: `hzs_session` (technisch).
+- CSRF op alle POST-acties; prepared statements; uitvoer-escaping via `e()`; CSP zonder inline scripts of stijl.
 - Permissiecheck per route en gegevensscope in elke query (`Scope`); geen fysieke deletes van leden.
-- Publieke formulieren: verborgen spamveld, limieten per e-mailadres en uur, e-mailbevestiging met eenmalig token, onbevestigde aanvragen worden na 7 dagen opgeruimd.
-- **Login-throttling:** tabel `login_attempts`; na 5 mislukte pogingen per e-mailadres of 20 per IP-adres binnen 15 minuten volgt een blokkade van 15 minuten (HTTP 429); een geslaagde login wist de teller. Constante responstijd bij onbekende accounts.
-- **Sessie:** verloopt na 12 uur zonder activiteit; sessie-ID wordt vernieuwd bij login.
-- **Headers:** CSP zonder inline stijl of script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes met `Cache-Control: no-store` en `X-Robots-Tag: noindex`.
-- **Foutafhandeling:** globale exception handler (logt, toont een neutrale foutpagina, in de stijl van de site voor bezoekers); `debug` toont details enkel lokaal.
-- **Uploads:** enkel jpg/png/gif/webp op basis van de echte afbeeldingsgegevens, willekeurige bestandsnamen, `.htaccess` die scriptuitvoering in `public/uploads/` blokkeert.
-- Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en worden gehasht bewaard.
-- **Privacy van de statistieken:** geen cookies, geen IP-adres, naam of gebruikers-id opgeslagen; dagelijks wisselende hash; DNT/GPC gerespecteerd; bewaartermijn 400 dagen; enkel toegankelijk voor `stats.read` (Beheerder). Mislukte aanmeldingen (e-mail + IP) worden na 24 uur gewist; onbevestigde aanvragen na 7 dagen.
-- Publieke site toont nooit persoonsgegevens: enkel wedstrijden/clubactiviteiten en de uren per groep met de naam van de trainers.
-- **Tweestapsverificatie (v0.11):** TOTP volgens RFC 6238 (eigen `Totp`-klasse, getest met de RFC-testvector); na het wachtwoord volgt de code (`pending_uid`, max. 10 minuten). Optie `security.require_2fa_admin` dwingt beheerders om ze aan te zetten; een beheerder kan 2FA van een gebruiker uitzetten (auditlog).
-- **Gevoelige gegevens:** medische opmerking en noodcontact enkel met `members.medical`; nooit in CSV-exports. CSV-cellen worden beschermd tegen formule-injectie; de agenda-link (iCal) is een herroepbare, willekeurige token.
-- **Foto's:** een foto is enkel publiek als het album gepubliceerd is, de toestemming bevestigd is en geen getagd lid `photo_consent = 0` heeft; de controle gebeurt bij elke weergave, zodat het intrekken van toestemming meteen werkt.
-- Installer vergrendelt zichzelf; laatste actieve beheerder kan niet uitgeschakeld worden.
+- **Login-throttling:** na 5 mislukte pogingen per e-mailadres of 20 per IP-adres binnen 15 minuten volgt een blokkade van 15 minuten (HTTP 429).
+- **Sessie:** verloopt na 12 uur zonder activiteit. **Headers:** `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes `no-store` en `noindex`.
+- Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en gehasht bewaard; de iCal-link en de deellink weekplanning zijn herroepbare, willekeurige tokens (de deellink toont geen namen).
+- **Tweestapsverificatie:** TOTP (RFC 6238); `security.require_2fa_admin` dwingt ze af voor beheerders.
+- **Gevoelige gegevens:** medische opmerking en noodcontact enkel met `members.medical`.
+- Kleiner aanvalsoppervlak dan v0.12: geen publieke formulieren, geen uploads, geen publieke pagina's meer.
 ### Voor productie nog te doen
-Afdwingen van 2FA voor beheerders (`security.require_2fa_admin`), headers/HSTS ook op serverniveau, back-ups van database en `public/uploads/`, minimale databaserechten, logging en alerting. Privacy/AVG: het privacybeleid staat in de app; het bestuur moet nog concrete bewaartermijnen voor ledengegevens vastleggen, verwerkersovereenkomsten sluiten met hosting- en mailprovider, de punten over de federatie en foto's in het beleid bevestigen, en een proces voor inzage- en wisverzoeken afspreken.
+Afdwingen van 2FA voor beheerders, headers/HSTS ook op serverniveau, back-ups van de database, minimale databaserechten, logging en alerting. Privacy/AVG: bewaartermijnen voor ledengegevens, verwerkersovereenkomsten met hosting en mail, en `privacy_url` naar het privacybeleid op de clubwebsite.
 ### MySQL-beperking
 Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe query op leden, groepen, activiteiten of aanwezigheid moet `Scope` gebruiken en getest worden met autorisatietests.
 
-## 9. Functionele regels
+## 8. Functionele regels
 - Account-e-mail uniek; inactieve gebruikers kunnen niet aanmelden.
 - Een actief lid jonger dan 18 heeft minstens één ouder of voogd (zonder ouder geen groep; de laatste ouder kan niet ontkoppeld worden).
 - Een lid zit in maximaal één groep; een groep verwijderen kan altijd (leden blijven bestaan zonder groep; reeksen en activiteiten enkel voor die groep verdwijnen, trainingen met aanwezigheden blijven als losse trainingen).
 - Activiteit: einde na start; doelgroep GROUPS vereist minstens één groep; één aanwezigheid per activiteit en lid.
 - Reeks: één tijdslot per weekdag per reeks (een droogtraining op dezelfde dag is een aparte reeks).
-- Zichtbaarheid van een reeks op de site: `is_public = 1`, `is_active = 1` en einddatum niet verstreken (labels *Niet op website*, *Gestopt*, *Verlopen*).
-- Pagina's: max. één subniveau; automatische pagina's niet verwijderbaar.
-- Lidgeld: bedrag komt van de groep (`fee_cents`), één rekening per lid en seizoen; de gestructureerde mededeling is 10 cijfers + controlegetal modulo 97. Capaciteit en wachtlijst gelden per groep en blok; een wachtlijstplaats wordt pas ingevuld door het bestuur.
-- Online inschrijven: telt personen (niet inschrijvingen), één inschrijving per e-mailadres per activiteit, max. 5 per uur per e-mailadres en 200 per uur in totaal.
-- Nieuwsbrief: enkel bevestigde, niet-afgemelde abonnees; een bericht wordt niet twee keer verstuurd zonder “opnieuw versturen”; max. 400 ontvangers per verzending.
-- Zwemblok: een lid wordt enkel ingedeeld in een blok waarvoor zijn huidige groep is toegelaten; meerdere blokken per lid kan, geen capaciteitslimiet; wisselt de groep, dan vervalt de indeling. Een zwemschoollid zonder blok staat nergens op een lijst.
-- Trainersplanning: enkel trainingen en wedstrijden (status PLANNED) van actieve competitiegroepen plus clubbrede wedstrijden; zwemschool niet. Nodig = `activities.min_trainers`, anders het hoogste `groups.min_trainers` van de competitiegroepen, standaard 1. Voorbije activiteiten zijn niet meer te wijzigen. Inplannen kan enkel met actieve competitietrainers of coördinatoren; een vaste trainer kan je afmelden maar niet weghalen. Herinneringen: tekorten die starten binnen `coverage.remind_days` (standaard 3) dagen, één mail per run naar alle coördinatoren en competitietrainers; per activiteit opnieuw enkel als het tekort groter wordt of na een oplossing terugkomt; automatisch hooguit één keer per uur (bestand `storage/coverage-last-run`), na het antwoord.
+- Zwemblok: een lid wordt enkel ingedeeld in een blok waarvoor zijn huidige groep is toegelaten; meerdere blokken per lid kan; wisselt de groep, dan vervalt de indeling. Een zwemschoollid zonder blok staat nergens op een lijst.
+- Trainersplanning: enkel trainingen en wedstrijden (status PLANNED) van actieve competitiegroepen plus clubbrede wedstrijden; zwemschool niet. Nodig = `activities.min_trainers`, anders het hoogste `groups.min_trainers` van de competitiegroepen, standaard 1. Voorbije activiteiten zijn niet meer te wijzigen. Inplannen kan enkel met actieve competitietrainers of coördinatoren; een vaste trainer kan je afmelden maar niet weghalen. Herinneringen: tekorten die starten binnen `coverage.remind_days` (standaard 3) dagen, één mail per run naar alle coördinatoren en competitietrainers; per activiteit opnieuw enkel als het tekort groter wordt of na een oplossing terugkomt.
 - Deellink weekplanning: 128-bit token per competitiegroep, intrekbaar/vernieuwbaar, `noindex`, toont 3 weken trainingen, wedstrijden en clubactiviteiten zonder namen van personen.
-- Statistieken: enkel GET-aanvragen met antwoord 200 tellen; het dashboard en bezoek van beheerders/bestuur op de site tellen niet.
+- Berichten: max. 400 ontvangers per bericht; een trainer enkel voor zijn eigen groepen.
 
-## 10. Testaanpak
-Er is geen PHPUnit-suite. Vanaf v0.12 staat er een end-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `smoke` (hoofdpagina's per rol) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie van een v0.11-database). Oudere releases werden getest met end-to-end shellscripts tegen `php -S` (installatie met demodata, aanmelden met de demo-accounts, formulieren posten en resultaten controleren in HTML en database). Dekking (o.a. nieuw: zwemblokken, statistieken en privacy, opmaak van plakwerk): authenticatie en CSRF, autorisatie per rol, ledenregels (minderjarigen, één groep), groepsbeheer en verwijderen, trainingsreeksen (aanmaken, schrappen, verplaatsen, verwijderen, tonen/verbergen), uitnodigingen en mails, inschrijven en goedkeuren, zwemtestwachtlijst, contactformulier, publieke site en kalender (wat bezoekers wel/niet zien), websitebeheer, paginacontrole, automatische pagina's, terugknop en migraties van bestaande databases. Aanbeveling: de dekking van die oudere scripts geleidelijk als suites toevoegen aan `tests/e2e/`.
+## 9. Testaanpak
+End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `smoke` (hoofdpagina's per rol, verwijderde adressen geven 404, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, vaste trainers, afmelden/overnemen/inplannen, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
 
-## 10b. Responsive
-Publieke site en beheerschermen zijn gecontroleerd op 320, 360, 390, 414, 600, 768, 820, 1024, 1180, 1366 en 1920 px (geen horizontale scroll). Publiek menu klapt in onder 1180 px, het app-menu onder 960 px; onder 820 px blijft in de header enkel het logo; tabellen worden kaarten op telefoon (elke tabel heeft een `thead` voor de labels); formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
+## 10. Responsive
+De app is gecontroleerd van 320 tot 1920 px (geen horizontale scroll). Het menu klapt in onder 960 px; tabellen worden kaarten op telefoon; formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
 
 ## 11. Deployment en exploitatie
-- Apart subdomein of de hoofddomeinnaam met HTTPS; webroot naar `public/`.
-- `config.php` buiten versiebeheer; `debug` uit; `cookie_secure` aan; `app_url` instellen.
+- Subdomein (bv. app.khzs.be) met HTTPS; webroot naar `public/`.
+- `config.php` buiten versiebeheer; `debug` uit; `cookie_secure` aan; `app_url` en `privacy_url` instellen.
 - `public/install.php` na installatie verwijderen.
-- Mail instellen (smtp aanbevolen) en `contact`-adressen per onderwerp. De herinneringen van de trainersplanning gebruiken dezelfde mail en `app_url` voor de link.
-- Dagelijkse back-up van de database en `public/uploads/`; restore testen. De map `storage/` moet schrijfbaar zijn (database, mail, `stats.salt`, `stats-error.log`); `storage/stats.salt` is geheim en per server verschillend.
-- Na een update: controleer onderaan het menu (beheerder) welke commit draait en of het privacybeleid op de site staat.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen fast-forward na goedkeuring); versies in `CHANGELOG.md` (v0.12.0 = deze release, nog op `dev`). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Mail instellen (smtp aanbevolen); de herinneringen van de trainersplanning gebruiken dezelfde mail en `app_url`.
+- Dagelijkse back-up van de database; restore testen. De map `storage/` moet schrijfbaar zijn (database, mail, `coverage-last-run`).
+- Na een update: controleer onderaan het menu (beheerder) welke commit draait.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen na goedkeuring); versies in `CHANGELOG.md` (v0.13.0 = deze release, nog op `dev`). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Opgelet bij de update van een installatie die nog de publieke website draaide: na v0.13 is er geen website meer op dat adres. Zet de website (hzs-basic) eerst elders online of stuur het domein door.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).
-- **Middel:** 2FA is optioneel (afdwingen voor beheerders via config) en zonder QR-code; audit enkel op de belangrijkste mutaties; de e2e-suite in de repository dekt nog niet alle oudere functies; migraties draaien bij elke start (nu ±6 ms; een schemaversie in de database zou netter zijn).
-- **Laag:** routering via queryparameter; geen offline modus of pushmeldingen.
+- **Middel:** 2FA is optioneel en zonder QR-code; audit enkel op de belangrijkste mutaties; oude tabellen (lidgeld, inschrijvingen, …) blijven met persoonsgegevens in bestaande databases staan tot ze bewust gewist worden.
+- **Laag:** geen offline modus of pushmeldingen.
 
 ## 13. Aanbevolen volgende stappen
-Bewaartermijnen en verwerkersovereenkomsten vastleggen en het privacybeleid laten nalezen; Documentenbeheer (reglementen, formulieren uploaden); CSV-import van bestaande leden; clubrecords als tabel; zwemtestmomenten bewerkbaar maken; login, registratie en app-layout in de stijl van de site; afdwingen van 2FA en QR-code; schemaversie in plaats van migraties bij elke start; oudere testscripts aanvullen in `tests/e2e/`; trainersplanning uitbreiden naar de zwemschool en een mail wanneer een tekort opgelost is; geautomatiseerde back-up.
+Bewaartermijnen en verwerkersovereenkomsten vastleggen; beslissen of de oude gegevens (inschrijvingen, zwemtestaanvragen, lidgeld, contactberichten, nieuwsbriefabonnees) gewist of geëxporteerd moeten worden; CSV-import van bestaande leden; afdwingen van 2FA en QR-code; trainersplanning uitbreiden naar de zwemschool en een mail wanneer een tekort opgelost is; geautomatiseerde back-up.

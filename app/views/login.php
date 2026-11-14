@@ -12,5 +12,5 @@
     <button class="btn" type="submit">Aanmelden</button>
   </form>
   <p class="center"><a href="<?= e(url('forgot')) ?>">Wachtwoord vergeten?</a></p>
-  <p class="center">Nog geen lid? <a href="<?= e(url('register')) ?>">Schrijf je in</a></p>
+  <p class="center muted small">Nog geen account? Vraag een uitnodiging aan de trainer of het bestuur.</p>
 </div>

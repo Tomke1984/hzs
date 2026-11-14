@@ -57,29 +57,6 @@ final class SeriesController
         render('series/week', ['cells' => $cells, 'hours' => array_keys($rows), 'unassigned' => count(SeriesService::unassignedSwimMembers())], 'Weekoverzicht zwemschool');
     }
 
-    /** Reeks(en) op de website tonen of verbergen (één reeks via id, meerdere via ids[]). */
-    public static function setPublic(): void
-    {
-        $ids = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
-        if (($one = (int) input('id', '0')) > 0) {
-            $ids = [$one];
-        }
-        $val = input('public') === '1' ? 1 : 0;
-        $n = 0;
-        foreach ($ids as $id) {
-            if (!self::load($id) || (int) Database::val('SELECT is_public FROM activity_series WHERE id = ?', [$id]) === $val) {
-                continue;
-            }
-            Database::exec('UPDATE activity_series SET is_public = ? WHERE id = ?', [$val, $id]);
-            SeriesService::sync($id);
-            audit('UPDATE', 'activity_series', $id, $val ? 'op website' : 'van website');
-            $n++;
-        }
-        flash('success', $n ? sprintf('%d %s %s de website.', $n, $n === 1 ? 'reeks staat' : 'reeksen staan', $val ? 'nu op' : 'niet meer op') : 'Er was niets te wijzigen.');
-        $back = (string) input('back', '');
-        redirect(str_starts_with($back, '?r=series') ? $back : url('series'));
-    }
-
     /** Leden aan een zwemblok koppelen (één of meer leden, vanuit het blok of vanuit de lijst 'nog niet ingedeeld'). */
     public static function memberAdd(): void
     {
@@ -96,12 +73,6 @@ final class SeriesController
         }
         if ($n) {
             audit('UPDATE', 'activity_series', (int) $s['id'], "$n leden ingedeeld");
-        }
-        if ($n && $s['capacity'] !== null) {
-            $cnt = count(SeriesService::blockMembers((int) $s['id']));
-            if ($cnt > (int) $s['capacity']) {
-                flash('warning', 'Let op: dit blok heeft nu ' . $cnt . ' leden bij een capaciteit van ' . (int) $s['capacity'] . '.');
-            }
         }
         flash($n ? 'success' : 'error', $n ? sprintf('%d %s ingedeeld in "%s".', $n, $n === 1 ? 'lid' : 'leden', $s['title']) : 'Niemand ingedeeld: kies een lid uit een groep die in dit blok mag zwemmen.');
         $back = (string) input('back', '');
@@ -180,7 +151,7 @@ final class SeriesController
             $s = [
                 'id' => 0, 'type_id' => (int) Database::val("SELECT id FROM activity_types WHERE code = 'TRAINING'"),
                 'title' => '', 'description' => '', 'location' => '',
-                'start_date' => today(), 'end_date' => date('Y-m-d', strtotime('+6 months')), 'is_active' => 1, 'is_public' => 0, 'capacity' => null,
+                'start_date' => today(), 'end_date' => date('Y-m-d', strtotime('+6 months')), 'is_active' => 1,
             ];
             $selected = [];
             $slots = [];
@@ -203,8 +174,7 @@ final class SeriesController
             'start_date' => input('start_date'),
             'end_date' => input('end_date'),
             'is_active' => $id ? (input('is_active') === '1' ? 1 : 0) : 1,
-            'is_public' => input('is_public') === '1' ? 1 : 0,
-            'capacity' => input('capacity'),
+            'is_public' => 0,
         ];
         $raw = $_POST['group_ids'] ?? [];
         $selected = is_array($raw) ? array_values(array_unique(array_map('intval', $raw))) : [];
@@ -248,13 +218,6 @@ final class SeriesController
             $errors[] = 'De einddatum mag maximaal ongeveer 2 jaar na vandaag liggen.';
         }
         $capacity = null;
-        if ($s['capacity'] !== '') {
-            if (!ctype_digit($s['capacity']) || (int) $s['capacity'] < 1 || (int) $s['capacity'] > 999) {
-                $errors[] = 'Capaciteit moet een getal tussen 1 en 999 zijn (of leeg).';
-            } else {
-                $capacity = (int) $s['capacity'];
-            }
-        }
         if (!$selected) {
             $errors[] = 'Kies minstens één groep.';
         } elseif ((int) Database::val('SELECT COUNT(*) FROM `groups` WHERE is_active = 1 AND id IN (' . Scope::in($selected) . ')', $selected) !== count($selected)) {

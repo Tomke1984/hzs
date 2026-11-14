@@ -1,13 +1,7 @@
 <div class="row-between">
   <h1><?= e($s['title']) ?> <?php if (!(int) $s['is_active']): ?><span class="chip off">Gestopt</span><?php endif; ?>
-    <span class="chip <?= (int) $s['is_public'] ? 'ok' : 'warn' ?>"><?= (int) $s['is_public'] ? 'Op website' : 'Niet op website' ?></span>
     <?php if ($s['end_date'] < today()): ?><span class="chip off">Verlopen</span><?php endif; ?></h1>
   <span class="actions-inline">
-    <form method="post" action="<?= e(url('series_public')) ?>">
-      <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"><input type="hidden" name="back" value="?r=series_show&amp;id=<?= (int) $s['id'] ?>">
-      <input type="hidden" name="public" value="<?= (int) $s['is_public'] ? 0 : 1 ?>">
-      <button class="btn btn-ghost" type="submit"><?= (int) $s['is_public'] ? 'Van website halen' : 'Op website tonen' ?></button>
-    </form>
     <a class="btn btn-ghost" href="<?= e(url('series_bulk')) ?>">Schrappen / verplaatsen</a>
     <a class="btn" href="<?= e(url('series_form', ['id' => $s['id']])) ?>">Reeks wijzigen</a>
     <form method="post" action="<?= e(url('series_delete')) ?>" data-confirm="Reeks &quot;<?= e($s['title']) ?>&quot; definitief verwijderen? Alle trainingen van deze reeks verdwijnen uit de kalender, behalve trainingen waarvan de aanwezigheden al zijn ingevuld (die blijven als losse trainingen bestaan).">
@@ -37,8 +31,7 @@
 </section>
 <?php if ($isSwim && Auth::can('activities.write')): ?>
 <section class="card" id="leden">
-  <h2>Leden in dit blok <span class="muted small">(<?= count($blockMembers) ?><?= $s['capacity'] !== null ? ' van ' . (int) $s['capacity'] : '' ?>)</span>
-    <?php if ($s['capacity'] !== null && count($blockMembers) >= (int) $s['capacity']): ?><span class="chip <?= count($blockMembers) > (int) $s['capacity'] ? 'warn' : 'off' ?>"><?= count($blockMembers) > (int) $s['capacity'] ? 'Over capaciteit' : 'Volzet' ?></span><?php endif; ?></h2>
+  <h2>Leden in dit blok <span class="muted small">(<?= count($blockMembers) ?>)</span></h2>
   <?php if (!$blockMembers): ?>
     <p class="muted">Nog niemand ingedeeld. Leden die niet ingedeeld zijn, staan op geen enkele aanwezigheidslijst van dit blok.</p>
   <?php else: ?>

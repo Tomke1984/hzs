@@ -5,6 +5,15 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit volgt bij de push_
+
+- **App teruggebracht tot de kern:** kalender voor leden en ouders, leden, groepen, gebruikers, trainingsreeksen en zwemblokken, trainersplanning, aanwezigheden, bericht sturen, account (2FA, iCal), auditlog en zoeken.
+- **Verwijderd:** publieke website (pagina's, nieuws, publieke kalender, trainingsuren, contact, SEO/sitemap), websitebeheer, statistieken, lidgeld en seizoenen, inschrijvingen, zwemtestwachtlijst, contactberichten, nieuwsbrief, fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit en wachtlijst per groep/blok, CSV-exports. Velden *Doelstellingen*, *Lidgeld*, *Capaciteit*, *Doorstroomgroep*, *Op website tonen* en *Foto-toestemming* zijn uit de formulieren.
+- `/` stuurt naar *Aanmelden*; oude publieke adressen geven 404. Aanmeldpagina zonder link naar inschrijven. De deellink weekplanning en foutpagina's gebruiken de layout van de app (`layout_public.php`, `site.css` en de lettertypen zijn weg).
+- **Database (schema 13):** nieuwe installaties maken de tabellen van de verwijderde onderdelen niet meer aan. Bestaande databases houden die tabellen en hun gegevens (niets wordt gewist); rechten van verwijderde onderdelen worden opgeruimd. Migraties lopen nu één keer per sessie.
+- Config: `stats`, `registration`, `fees` en `contact` zijn niet meer nodig; `privacy_url` toont de link naar het privacybeleid op de clubwebsite onderaan elke pagina.
+- Tests: suite `smoke` uitgebreid (verwijderde adressen, menu, formulieren, schema, update zonder gegevensverlies); 350 controles. README en analyse herschreven.
+
 _Wordt v0.12.0 – trainersplanning competitie – commit `c16f215`_
 
 - **Trainersplanning competitie** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitie met hun trainers en een status *In orde* / *Trainer gezocht*; tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*. Zwemschool valt erbuiten.

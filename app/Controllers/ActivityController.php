@@ -134,32 +134,11 @@ final class ActivityController
             }
         }
 
-        $isMeet = $activity['type_code'] === 'COMPETITION';
-        $entries = [];
-        $meetResults = [];
-        if ($isMeet) {
-            foreach (Database::all('SELECT * FROM meet_entries WHERE activity_id = ?', [$activity['id']]) as $r) {
-                $entries[(int) $r['member_id']] = $r;
-            }
-            $vis = Scope::memberIds();
-            foreach (Database::all(
-                'SELECT r.*, m.first_name, m.last_name FROM results r JOIN members m ON m.id = r.member_id WHERE r.activity_id = ? ORDER BY m.last_name, m.first_name, r.event',
-                [$activity['id']]
-            ) as $r) {
-                if ($vis === null || in_array((int) $r['member_id'], $vis, true)) {
-                    $meetResults[] = $r;
-                }
-            }
-        }
-        $canMeetEdit = $isMeet && $activity['status'] === 'PLANNED' && $activity['starts_at'] > now();
-        $coachIds = Scope::coachMemberIds();
-        $canResults = $isMeet && Auth::can('attendance.write');
-
         // Trainersplanning competitie: wie geeft deze training / begeleidt deze wedstrijd.
         $coverage = Coverage::canView() ? Coverage::one((int) $activity['id']) : null;
         $coveragePool = $coverage ? Coverage::pool() : [];
 
-        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'isMeet', 'entries', 'meetResults', 'canMeetEdit', 'coachIds', 'canResults', 'coverage', 'coveragePool'), $activity['title']);
+        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'coverage', 'coveragePool'), $activity['title']);
     }
 
     /** Ouder of lid meldt vooraf af voor één activiteit (of trekt de afmelding in). */
@@ -231,14 +210,10 @@ final class ActivityController
             'ends_local' => input('ends_at'),
             'audience' => input('audience'),
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
-            'is_public' => input('is_public') === '1' ? 1 : 0,
+            'is_public' => 0,
             'signup_capacity' => null,
             'min_trainers' => input('min_trainers'),
         ];
-        if (input('signup_open') === '1') {
-            $cap = input('signup_capacity');
-            $activity['signup_capacity'] = $cap === '' ? 0 : (ctype_digit($cap) && (int) $cap <= 9999 ? (int) $cap : -1);
-        }
         $rawGroups = $_POST['group_ids'] ?? [];
         $selected = is_array($rawGroups) ? array_values(array_unique(array_map('intval', $rawGroups))) : [];
 
@@ -273,9 +248,6 @@ final class ActivityController
                     $errors[] = 'Een gekozen groep bestaat niet of is niet actief.';
                 }
             }
-        }
-        if ($activity['signup_capacity'] === -1) {
-            $errors[] = 'Het aantal plaatsen voor online inschrijving moet een getal zijn (leeg = onbeperkt).';
         }
         if ($activity['min_trainers'] !== '' && (!ctype_digit($activity['min_trainers']) || (int) $activity['min_trainers'] > 9)) {
             $errors[] = 'Het aantal trainers nodig is een getal van 0 tot 9 (leeg = volgens de groep).';

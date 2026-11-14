@@ -62,7 +62,6 @@
       </select>
     </label>
   </div>
-  <label class="check"><input type="checkbox" name="photo_consent" value="1" <?= !empty($member['photo_consent']) ? 'checked' : '' ?>> Toestemming om foto’s van dit lid op de website te tonen</label>
   <?php if (Auth::can('members.medical')): ?>
   <fieldset>
     <legend>Noodgegevens <span class="muted small">(enkel zichtbaar voor trainers en bestuur, nooit in een export)</span></legend>

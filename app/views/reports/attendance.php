@@ -1,8 +1,5 @@
 <div class="row-between">
   <h1>Aanwezigheidsrapport</h1>
-  <?php if (Auth::can('export.data')): ?>
-    <a class="btn btn-ghost" href="<?= e(url('export_csv', ['what' => 'attendance', 'from' => $from, 'to' => $to, 'g' => $gid])) ?>">Exporteren (CSV)</a>
-  <?php endif; ?>
 </div>
 <p class="muted">Per lid hoe vaak aanwezig of afwezig op de geregistreerde trainingen. Enkel registraties tellen mee; “onbekend” wordt genegeerd.</p>
 
