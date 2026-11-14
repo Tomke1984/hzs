@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Groepenoverzicht toont de vaste trainers – commit `HASH`_
+_Groepenoverzicht toont de vaste trainers – commit `57d58aa`_
 
 - Elke groepskaart in *Groepen* toont de vaste trainer(s) van de groep (de groepstrainers die standaard training geven), of *Geen trainer* als er nog niemand is.
 - Tests: 1 extra controle in `v12_trainersplanning` (375 in totaal).
