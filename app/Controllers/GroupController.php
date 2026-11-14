@@ -16,6 +16,18 @@ final class GroupController
              FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.name",
             $params
         );
+        // Vaste trainers per groep (de groepstrainers geven standaard de trainingen)
+        $trainers = [];
+        foreach (Database::all(
+            'SELECT gt.group_id, u.display_name FROM group_trainers gt JOIN users u ON u.id = gt.user_id
+             WHERE u.is_active = 1 ORDER BY u.display_name'
+        ) as $t) {
+            $trainers[(int) $t['group_id']][] = $t['display_name'];
+        }
+        foreach ($groups as &$g) {
+            $g['trainers'] = $trainers[(int) $g['id']] ?? [];
+        }
+        unset($g);
         render('groups/index', ['groups' => $groups], 'Groepen');
     }
 

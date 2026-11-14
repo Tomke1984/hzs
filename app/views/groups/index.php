@@ -13,6 +13,9 @@
       <a class="card card-link cat-border-competition <?= (int) $g['is_active'] ? '' : 'is-off' ?>" href="<?= e(url('group', ['id' => $g['id']])) ?>">
         <h2><?= group_chip($g['name']) ?> <?php if (!(int) $g['is_active']): ?><span class="chip off">Inactief</span><?php endif; ?></h2>
         <p class="muted small"><?= e($g['description']) ?></p>
+        <p class="small">Vaste trainer<?= count($g['trainers']) === 1 ? '' : 's' ?>:
+          <?php if ($g['trainers']): ?><strong><?= e(implode(', ', $g['trainers'])) ?></strong><?php else: ?><span class="chip warn">Geen trainer</span><?php endif; ?>
+        </p>
         <p class="small"><strong><?= (int) $g['member_count'] ?></strong> <?= (int) $g['member_count'] === 1 ? 'lid' : 'leden' ?></p>
       </a>
     <?php endforeach; ?>

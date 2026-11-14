@@ -50,6 +50,8 @@ T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 1\/1.*?Kobe Competitie.*
 T::ok(preg_match('/Training Miniemen.*?Tina Trainer/s', $coord->body) === 1, 'Tina staat als vaste trainer op de trainingen van Miniemen');
 $coord->get('/app/trainersplanning/instellingen');
 T::ok($coord->has('Vaste trainers en minimum per groep') && $coord->has('Kobe Competitie') && !$coord->has('Vaste trainers per blok'), 'instellingen tonen de groepstrainers, geen blokken meer');
+$coord->get('/app/groepen');
+T::ok(preg_match('/Wedstrijdploeg.*?Vaste trainer:\s*<strong>Kobe Competitie<\/strong>/s', $coord->body) === 1 && preg_match('/Miniemen.*?Vaste trainer:\s*<strong>Tina Trainer<\/strong>/s', $coord->body) === 1, 'groepenoverzicht toont de vaste trainer per groep');
 $meetDemo = (int) T::val("SELECT id FROM activities WHERE title = 'Interclubwedstrijd'");
 $coord->get('/app/trainersplanning?weeks=8');
 T::ok(preg_match('/id="a' . $meetDemo . '".*?Geen trainer · 0\/1/s', $coord->body) === 1, 'wedstrijden hebben geen vaste trainers');
