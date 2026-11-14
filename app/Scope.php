@@ -209,6 +209,11 @@ final class Scope
             }
         }
 
+        // De coördinator plant trainers voor alle groepen: hij ziet alle actieve groepen en hun activiteiten.
+        if (Auth::hasRole('COORDINATOR')) {
+            $groups = array_merge($groups, array_column(Database::all('SELECT id FROM `groups` WHERE is_active = 1'), 'id'));
+        }
+
         $own = [];
         if (Auth::hasRole('SWIMMER') && $u['member_id']) {
             $own[] = (int) $u['member_id'];

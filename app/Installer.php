@@ -15,7 +15,7 @@ final class Installer
         'mail.send'       => 'Berichten sturen naar groepen, blokken of deelnemers (binnen scope)',
         'members.medical' => 'Noodcontact en medische opmerkingen zien (binnen scope)',
         'audit.read'      => 'Auditlog bekijken (enkel beheerders)',
-        'coverage.manage' => 'Trainersplanning competitie beheren (vaste trainers per blok, minimum per groep, herinneringen)',
+        'coverage.manage' => 'Trainersplanning beheren (minimum per groep, deellinks, herinneringen)',
     ];
 
     public const ROLES = [

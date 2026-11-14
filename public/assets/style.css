@@ -528,3 +528,4 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .bulk-table .check-col { width: 44px; text-align: center; }
 .bulk-table input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--blue); }
 .btn-wrap { white-space: normal; height: auto; text-align: left; max-width: 100%; }
+.input-narrow { max-width: 110px; }

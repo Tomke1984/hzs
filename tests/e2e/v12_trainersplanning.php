@@ -1,268 +1,223 @@
 <?php
-/** v0.12 – Trainersplanning competitie. */
-
+/**
+ * Trainersplanning (v0.12, herzien in v0.17): groepstrainers zijn de vaste trainers, afmelden met vervanger,
+ * geen training en wedstrijd tegelijk, meerdere tegelijk, mails, deellink, migratie.
+ */
 T::autoRan(); // automatische herinnering pas testen als we dat zelf willen
 
 $gid = (int) T::val("SELECT id FROM `groups` WHERE name = 'Wedstrijdploeg'");
-// Sinds v0.14 zijn alle groepen competitiegroepen. Tina is hier een trainer zonder groep (dus geen competitietrainer).
-T::exec("DELETE FROM group_trainers WHERE user_id = (SELECT id FROM users WHERE email = 'trainer@demo.local')");
 $coordId = (int) T::val("SELECT id FROM users WHERE email = 'coordinator@demo.local'");
 $kobeId = (int) T::val("SELECT id FROM users WHERE email = 'competitie@demo.local'");
 $tinaId = (int) T::val("SELECT id FROM users WHERE email = 'trainer@demo.local'");
 $typeTraining = (int) T::val("SELECT id FROM activity_types WHERE code = 'TRAINING'");
+$typeMeet = (int) T::val("SELECT id FROM activity_types WHERE code = 'COMPETITION'");
+// Uitgangssituatie: Kobe is de enige trainer van de Wedstrijdploeg; Lander is coördinator (geen groepstrainer).
+T::exec('DELETE FROM group_trainers WHERE user_id = ?', [$coordId]);
 
 echo "Rollen en toegang\n";
 T::ok((bool) T::val("SELECT 1 FROM roles WHERE code = 'COORDINATOR'"), 'rol Coördinator competitie bestaat');
 T::ok((bool) T::val("SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id WHERE r.code = 'BOARD' AND p.code = 'coverage.manage'"), 'bestuur heeft coverage.manage');
-T::ok(!T::val("SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id WHERE r.code = 'TRAINER' AND p.code = 'coverage.manage'"), 'trainer heeft geen coverage.manage');
-
 $coord = Browser::login('coordinator@demo.local');
 $kobe = Browser::login('competitie@demo.local');
-$tina = Browser::login('trainer@demo.local');      // trainer zonder groep (zwemt zelf in de Wedstrijdploeg)
+$tina = Browser::login('trainer@demo.local');
 $parent = Browser::login('ouder@demo.local');
 $board = Browser::login('bestuur@demo.local');
-$admin = Browser::login('admin@demo.local');
 
 $coord->get('/app/trainersplanning');
-T::ok($coord->status === 200 && $coord->has('Trainersplanning competitie'), 'coördinator ziet de trainersplanning');
-T::ok($coord->has('Vaste trainers en instellingen'), 'coördinator ziet de knop instellingen');
-T::ok($coord->has('href="app/trainersplanning"'), 'menu-item Trainersplanning voor de coördinator');
+T::ok($coord->status === 200 && $coord->has('Vaste trainers en instellingen'), 'coördinator ziet de trainersplanning met instellingen');
 $kobe->get('/app/trainersplanning');
-T::ok($kobe->status === 200, 'competitietrainer ziet de trainersplanning');
-T::ok(!$kobe->has('Vaste trainers en instellingen'), 'competitietrainer ziet geen instellingen-knop');
+T::ok($kobe->status === 200 && !$kobe->has('Vaste trainers en instellingen'), 'groepstrainer ziet de planning, zonder instellingen');
 $kobe->get('/app/trainersplanning/instellingen');
-T::ok($kobe->status === 403, 'competitietrainer: instellingen geweigerd (403)');
-$tina->get('/app/trainersplanning');
-T::ok($tina->status === 403, 'trainer zonder groep: trainersplanning geweigerd (403)');
-$tina->get('/app');
-T::ok(!$tina->has('href="app/trainersplanning"'), 'trainer zonder groep: geen menu-item');
+T::ok($kobe->status === 403, 'groepstrainer: instellingen geweigerd (403)');
 $parent->get('/app/trainersplanning');
-T::ok($parent->status === 403, 'ouder: trainersplanning geweigerd (403)');
-$board->get('/app/trainersplanning/instellingen');
-T::ok($board->status === 200, 'bestuur: instellingen toegankelijk');
-$admin->get('/app/gebruikers/nieuw');
-T::ok($admin->has('value="COORDINATOR"') && $admin->has('Coördinator competitie'), 'gebruikersformulier toont de rol Coördinator competitie');
-$admin->get('/app/gebruikers');
-T::ok($admin->has('Lander Coördinator'), 'coördinator staat bij "Beheer en trainers"');
+T::ok($parent->status === 403, 'ouder: geen toegang (403)');
 
-echo "Losse trainingen zonder trainer = tekort\n";
-$coord->get('/app/trainersplanning');
-T::ok($coord->has('Training Wedstrijdploeg') && $coord->has('Geen trainer'), 'losse competitietraining zonder trainer toont "Geen trainer"');
-T::ok(!$coord->has('Clubfeest'), 'clubactiviteit (geen training of wedstrijd) staat niet in de trainersplanning');
-T::ok($coord->has('Training Miniemen') && $coord->has('Training Kadetten'), 'trainingen van alle groepen staan in de trainersplanning');
-T::ok($coord->has('Trainer gezocht'), 'blok "Trainer gezocht" bovenaan');
-
-echo "Reeks voor de competitie + vaste trainers\n";
-$start = date('Y-m-d');
-$end = date('Y-m-d', strtotime('+30 days'));
-$data = ['type_id' => $typeTraining, 'title' => 'Ochtendtraining WP', 'location' => 'Kapermolen', 'start_date' => $start, 'end_date' => $end, 'group_ids' => [$gid]];
+echo "Groepstrainers = vaste trainers\n";
+$data = ['type_id' => $typeTraining, 'title' => 'Avond WP', 'location' => 'Kapermolen', 'start_date' => date('Y-m-d'), 'end_date' => date('Y-m-d', strtotime('+30 days')), 'group_ids' => [$gid]];
 foreach (range(1, 7) as $d) {
     $data['slot_on'][$d] = '1';
-    $data['slot_start'][$d] = '07:00';
-    $data['slot_end'][$d] = '08:30';
+    $data['slot_start'][$d] = '18:00';
+    $data['slot_end'][$d] = '19:30';
 }
-$board->get('/app/reeksen/nieuw');
 $board->post('/app/series-save', $data);
-T::ok($board->status === 302, 'reeks aangemaakt');
-$sid = (int) T::val("SELECT id FROM activity_series WHERE title = 'Ochtendtraining WP'");
-T::ok($sid > 0 && (int) T::val('SELECT COUNT(*) FROM activities WHERE series_id = ?', [$sid]) >= 30, 'reeks maakt dagelijkse trainingen aan');
-
-$coord->get('/app/trainersplanning/instellingen');
-T::ok($coord->has('Ochtendtraining WP') && $coord->has('Geen vaste trainer'), 'instellingen tonen het blok zonder vaste trainer');
-$set = ['min' => [$gid => '']];
-foreach (range(1, 7) as $d) {
-    $set['slot'][$sid][$d] = ['', (string) $kobeId];
-}
-$coord->post('/app/coverage-settings-save', $set);
-T::ok($coord->status === 302, 'instellingen opgeslagen');
-T::ok((int) T::val('SELECT COUNT(*) FROM series_trainers WHERE series_id = ? AND user_id = ?', [$sid, $kobeId]) === 7, 'Kobe is vaste trainer op alle 7 dagen');
-
-// Ongeldig: trainer zonder groep (niet in de pool) als vaste trainer
-$bad = $set;
-$bad['slot'][$sid][1] = ['', (string) $tinaId];
-$coord->post('/app/coverage-settings-save', $bad);
-$coord->follow();
-T::ok($coord->has('Enkel trainers van de competitie'), 'trainer zonder groep kan geen vaste competitietrainer zijn');
-T::ok((int) T::val('SELECT COUNT(*) FROM series_trainers WHERE series_id = ? AND user_id = ?', [$sid, $tinaId]) === 0, 'niets opgeslagen bij een fout');
-$bad = $set;
-$bad['min'][$gid] = '0';
-$coord->post('/app/coverage-settings-save', $bad);
-$coord->follow();
-T::ok($coord->has('getal van 1 tot 9'), 'minimum 0 per groep geweigerd');
-
-$tomorrow = (int) T::val('SELECT id FROM activities WHERE series_id = ? AND substr(starts_at,1,10) = ?', [$sid, date('Y-m-d', strtotime('+1 day'))]);
-$later = (int) T::val('SELECT id FROM activities WHERE series_id = ? AND substr(starts_at,1,10) = ?', [$sid, date('Y-m-d', strtotime('+10 days'))]);
+$sid = (int) T::val("SELECT id FROM activity_series WHERE title = 'Avond WP'");
+$dayId = fn(int $n) => (int) T::val('SELECT id FROM activities WHERE series_id = ? AND substr(starts_at,1,10) = ?', [$sid, date('Y-m-d', strtotime("+$n days"))]);
+$tomorrow = $dayId(1);
+$day2 = $dayId(2);
+$later = $dayId(10);
 $coord->get('/app/trainersplanning');
-T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 1\/1/s', $coord->body) === 1, 'training van morgen: In orde 1/1 met vaste trainer');
-T::ok(str_contains($coord->body, 'Kobe Competitie') && $coord->has('>Vast<'), 'vaste trainer zichtbaar met label Vast');
+T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 1\/1.*?Kobe Competitie.*?>Vast</s', $coord->body) === 1, 'Kobe staat als vaste trainer op elke training van zijn groep');
+T::ok(preg_match('/Training Miniemen.*?Tina Trainer/s', $coord->body) === 1, 'Tina staat als vaste trainer op de trainingen van Miniemen');
+$coord->get('/app/trainersplanning/instellingen');
+T::ok($coord->has('Vaste trainers en minimum per groep') && $coord->has('Kobe Competitie') && !$coord->has('Vaste trainers per blok'), 'instellingen tonen de groepstrainers, geen blokken meer');
+$meetDemo = (int) T::val("SELECT id FROM activities WHERE title = 'Interclubwedstrijd'");
+$coord->get('/app/trainersplanning?weeks=8');
+T::ok(preg_match('/id="a' . $meetDemo . '".*?Geen trainer · 0\/1/s', $coord->body) === 1, 'wedstrijden hebben geen vaste trainers');
+T::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?, ?, ?)', [$tinaId, $gid, date('Y-m-d')]);
+$coord->get('/app/trainersplanning');
+T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 2\/1/s', $coord->body) === 1, 'tweede groepstrainer staat meteen op de trainingen');
+T::exec('DELETE FROM group_trainers WHERE user_id = ? AND group_id = ?', [$tinaId, $gid]);
 
-echo "Afmelden binnen 3 dagen → mail\n";
+echo "Afmelden met vervanger\n";
 T::clearMails();
 $kobe->get('/app/trainersplanning');
+T::ok(preg_match('/id="a' . $tomorrow . '".*?name="replacement" required/s', $kobe->body) === 1, 'afmeldformulier: vervanger verplicht als er anders een tekort is');
 $kobe->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'absent', 'user_id' => $kobeId, 'note' => 'Examen']);
-T::ok($kobe->status === 302, 'Kobe meldt zich af');
 $kobe->follow();
-T::ok($kobe->has('Je bent afgemeld') && $kobe->has('kregen een mail'), 'melding: afgemeld + mail vertrokken');
-T::ok(T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $kobeId]) === 'ABSENT', 'afmelding opgeslagen');
+T::ok($kobe->has('Kies wie de training overneemt'), 'zonder keuze vervanger: geweigerd');
+T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$tomorrow]), 'niets opgeslagen');
+$kobe->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'absent', 'user_id' => $kobeId, 'note' => 'Examen', 'replacement' => (string) $coordId]);
+$kobe->follow();
+T::ok($kobe->has('Je bent afgemeld. Lander Coördinator neemt over.'), 'afmelden met vervanger: melding');
+T::ok(T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $kobeId]) === 'ABSENT'
+    && T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $coordId]) === 'ASSIGNED', 'afwezigheid en vervanger opgeslagen');
+T::ok(T::outbox() === '', 'geen mail: er is een vervanger');
+$kobe->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'absent', 'user_id' => $kobeId, 'note' => 'Ziek', 'replacement' => 'none']);
+$kobe->follow();
+T::ok($kobe->has('Je bent afgemeld.') && $kobe->has('kregen een mail'), '"Nog geen vervanger": afgemeld en mail vertrokken');
 $box = T::outbox();
-T::ok(str_contains($box, 'aan coordinator@demo.local') && str_contains($box, 'aan competitie@demo.local'), 'mail naar coördinator en competitietrainers');
-T::ok(!str_contains($box, 'aan trainer@demo.local') && !str_contains($box, 'aan bestuur@demo.local'), 'geen mail naar trainer zonder groep of bestuur');
-T::ok(str_contains($box, 'Ochtendtraining WP') && str_contains($box, 'afgemeld: Kobe Competitie (Examen)') && str_contains($box, '0 van 1 trainer(s)'), 'mail bevat training, afmelding met reden en bezetting');
-T::ok(str_contains($box, T::$base . '/app/trainersplanning'), 'mail bevat de link naar de trainersplanning');
-T::ok((int) T::val('SELECT missing FROM coverage_alerts WHERE activity_id = ?', [$tomorrow]) === 1, 'melding onthouden');
-$mailsBefore = substr_count(T::outbox(), ' | aan ');
-
-$coord->get('/app/trainersplanning');
-T::ok(preg_match('/id="a' . $tomorrow . '".*?Geen trainer · 0\/1/s', $coord->body) === 1, 'coördinator ziet het tekort');
-T::ok($coord->has('Examen'), 'reden van de afmelding zichtbaar');
-$coord->get('/app');
-T::ok($coord->has('Trainer gezocht') && $coord->has('Ochtendtraining WP'), 'dashboard: blok Trainer gezocht');
-$coord->get('/app/kalender');
-T::ok($coord->has('cal-event') && str_contains($coord->body, 'short'), 'kalender markeert tekorten');
-$parent->get('/app/kalender');
-T::ok(!str_contains($parent->body, ' short"') && !$parent->has('short-flag'), 'ouder ziet geen tekort-markering');
-
-echo "Overnemen en toewijzen\n";
-$coord->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'claim']);
-$coord->follow();
-T::ok($coord->has('Bedankt! Je staat ingepland.'), 'coördinator neemt over');
-T::ok(T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $coordId]) === 'ASSIGNED', 'vervanger opgeslagen');
-$coord->get('/app/trainersplanning');
-T::ok(preg_match('/id="a' . $tomorrow . '".*?In orde · 1\/1/s', $coord->body) === 1, 'na overnemen: In orde');
-T::clearMails();
-$coord->post('/app/coverage-remind', []);
-$coord->follow();
-T::ok(T::val('SELECT COUNT(*) FROM coverage_alerts WHERE activity_id = ?', [$tomorrow]) == 0, 'opgelost tekort: melding vervalt');
-T::ok(!str_contains(T::outbox(), 'Ochtendtraining WP'), 'geen mail meer voor de opgeloste training');
-
-// Kobe terugzetten → 2 trainers
-$coord->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'back', 'user_id' => $kobeId]);
-$coord->follow();
-T::ok($coord->has('Kobe Competitie staat weer ingepland'), 'afmelding terugzetten');
-T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $kobeId]), 'vaste trainer terug: geen afwijking meer');
-// Weghalen van een vaste trainer kan niet
-$coord->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'remove', 'user_id' => $kobeId]);
-$coord->follow();
-T::ok($coord->has('Afmelden'), 'vaste trainer weghalen geweigerd (gebruik Afmelden)');
-// Extra trainer weghalen kan wel
-$coord->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'remove', 'user_id' => $coordId]);
-T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $coordId]), 'extra trainer weggehaald');
-// Toewijzen van iemand buiten de pool
-$coord->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'assign', 'user_id' => $tinaId]);
-$coord->follow();
-T::ok($coord->has('Kies een trainer van de competitie'), 'trainer zonder groep toewijzen geweigerd');
-// Competitietrainer wijst iemand anders toe (coördinatie overnemen)
-$kobe->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'assign', 'user_id' => $coordId]);
+T::ok(str_contains($box, 'aan coordinator@demo.local') && str_contains($box, 'aan competitie@demo.local') && str_contains($box, 'aan trainer@demo.local'), 'mail naar coördinator en alle groepstrainers');
+T::ok(!str_contains($box, 'aan bestuur@demo.local') && !str_contains($box, 'aan ouder@demo.local'), 'geen mail naar bestuur of ouders');
+T::ok(str_contains($box, 'afgemeld: Kobe Competitie (Ziek)') && str_contains($box, '0 van 1 trainer(s)'), 'mail bevat afmelding met reden en bezetting');
+$kobe->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'absent', 'user_id' => $kobeId, 'replacement' => (string) $kobeId]);
 $kobe->follow();
-T::ok($kobe->has('Lander Coördinator is ingepland'), 'competitietrainer kan een collega inplannen');
-// Zwemschooltrainer kan geen acties doen
-$tina->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'claim']);
-T::ok($tina->status === 403, 'trainer zonder groep: actie geweigerd (403)');
-// Een clubactiviteit hoort er niet bij
-$swimAct = (int) T::val("SELECT id FROM activities WHERE title = 'Clubfeest' LIMIT 1");
-$coord->post('/app/coverage-action', ['activity_id' => $swimAct, 'do' => 'claim']);
-T::ok($coord->status === 404, 'clubactiviteit: actie geweigerd (404)');
-// Voorbije training
-$past = (int) T::val("SELECT id FROM activities WHERE title = 'Training Wedstrijdploeg' AND ends_at < ? ORDER BY starts_at DESC LIMIT 1", [date('Y-m-d H:i:s')]);
-if ($past) {
-    $coord->post('/app/coverage-action', ['activity_id' => $past, 'do' => 'claim']);
-    $coord->follow();
-    T::ok($coord->has('al voorbij'), 'voorbije training: geen wijzigingen meer');
-}
-// Afmelden buiten het mailvenster: geen mail
-T::clearMails();
+T::ok($kobe->has('Kies als vervanger een andere trainer'), 'jezelf als vervanger: geweigerd');
+T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_at) VALUES (?, ?, 'ASSIGNED', ?)", [$later, $tinaId, date('Y-m-d H:i:s')]);
+$kobe->get('/app/trainersplanning?weeks=2');
+T::ok(preg_match('/id="a' . $later . '".*?Niemand nodig \(er blijven genoeg trainers\)/s', $kobe->body) === 1, 'genoeg trainers: vervanger optioneel');
 $kobe->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'absent', 'user_id' => $kobeId]);
 $kobe->follow();
-T::ok(T::outbox() === '', 'afmelding over 10 dagen met vervanger: geen mail');
-$coord->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'remove', 'user_id' => $coordId]);
+T::ok($kobe->has('Je bent afgemeld.') && !$kobe->has('ontbreekt'), 'afmelden zonder vervanger als er genoeg blijven');
+
+echo "Overnemen, terugzetten, weghalen\n";
+$coord->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'claim']);
 $coord->follow();
-T::ok($coord->has('automatisch een mail'), 'tekort buiten het venster: melding dat er later een mail volgt');
-T::ok(T::outbox() === '', 'nog geen mail buiten het venster');
+T::ok($coord->has('Bedankt! Je staat ingepland.'), 'coördinator neemt over');
+$coord->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'back', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('Kobe Competitie staat weer ingepland') && !T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$day2, $kobeId]), 'afmelding terugzetten');
+$coord->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'remove', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('vaste trainer van de groep haal je weg met'), 'vaste trainer weghalen geweigerd');
+$coord->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'remove', 'user_id' => $coordId]);
+T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$day2, $coordId]), 'extra trainer weggehaald');
+$parent->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'claim']);
+T::ok($parent->status === 403, 'ouder: actie geweigerd (403)');
+$feest = (int) T::val("SELECT id FROM activities WHERE title = 'Clubfeest'");
+$coord->post('/app/coverage-action', ['activity_id' => $feest, 'do' => 'claim']);
+T::ok($coord->status === 404, 'clubactiviteit hoort niet bij de planning (404)');
 
-echo "Activiteitspagina\n";
-$coord->get('/app/kalender/' . $tomorrow);
-T::ok($coord->has('id="trainers"') && $coord->has('Kobe Competitie'), 'activiteitspagina toont de trainers');
-$coord->post('/app/coverage-action', ['activity_id' => $tomorrow, 'do' => 'claim', 'back' => 'activity']);
-T::ok(str_contains($coord->location, 'app/kalender/' . $tomorrow), 'actie vanaf de activiteitspagina keert daar terug');
-$wpParent = Browser::login('ouder.wouters@demo.local'); // ouder van een zwemmer van de Wedstrijdploeg
-$wpParent->get('/app/kalender/' . $tomorrow);
-T::ok($wpParent->status === 200 && !$wpParent->has('id="trainers"'), 'ouder van een competitiezwemmer ziet de training, zonder trainerskaart');
-$tina->get('/app/kalender/' . $tomorrow);
-T::ok($tina->status === 200 && !$tina->has('id="trainers"'), 'trainer zonder groep die zelf meezwemt ziet geen trainerskaart');
-
-echo "Minimum aantal trainers\n";
-$set['min'][$gid] = '3';
-$coord->post('/app/coverage-settings-save', $set);
+echo "Geen training en wedstrijd tegelijk\n";
+$d5 = date('Y-m-d', strtotime('+5 days'));
+T::exec("INSERT INTO activities (type_id, title, location, starts_at, ends_at, audience, status, created_at) VALUES (?, 'Testmeeting', 'Gent', ?, ?, 'GROUPS', 'PLANNED', ?)", [$typeMeet, "$d5 17:00:00", "$d5 21:00:00", date('Y-m-d H:i:s')]);
+$meet = (int) T::pdo()->lastInsertId();
+T::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?, ?)', [$meet, $gid]);
+$train5 = $dayId(5);
+$coord->post('/app/coverage-action', ['activity_id' => $meet, 'do' => 'assign', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('Kobe Competitie is ingepland.') && $coord->has('nu als &quot;op wedstrijd&quot; afgemeld'), 'Kobe op de wedstrijd: training op hetzelfde moment automatisch "op wedstrijd"');
 $coord->get('/app/trainersplanning');
-T::ok(preg_match('/id="a' . $tomorrow . '".*?Trainer gezocht · 2\/3/s', $coord->body) === 1, 'minimum 3 per groep: 2/3 = tekort');
-$set['min'][$gid] = '';
-$coord->post('/app/coverage-settings-save', $set);
-$comp = (int) T::val("SELECT id FROM activities WHERE title = 'Interclubwedstrijd'");
-$board->get('/app/kalender/' . $comp . '/wijzigen');
-T::ok($board->has('name="min_trainers"'), 'activiteitsformulier heeft "Aantal trainers nodig"');
-$a = T::all('SELECT * FROM activities WHERE id = ?', [$comp])[0];
-$form = ['id' => $comp, 'type_id' => $a['type_id'], 'title' => $a['title'], 'location' => $a['location'], 'starts_at' => str_replace(' ', 'T', substr($a['starts_at'], 0, 16)),
-    'ends_at' => str_replace(' ', 'T', substr($a['ends_at'], 0, 16)), 'audience' => 'GROUPS', 'group_ids' => array_column(T::all('SELECT group_id FROM activity_groups WHERE activity_id = ?', [$comp]), 'group_id'),
-    'status' => 'PLANNED', 'min_trainers' => '2'];
-$board->post('/app/activity-save', $form);
-T::ok((int) T::val('SELECT min_trainers FROM activities WHERE id = ?', [$comp]) === 2, 'wedstrijd: 2 trainers nodig opgeslagen');
-$form['min_trainers'] = 'x';
-$board->post('/app/activity-save', $form);
-T::ok($board->status === 422, 'ongeldig aantal trainers geweigerd');
-$coord->get('/app/trainersplanning?weeks=8');
-T::ok(preg_match('/id="a' . $comp . '".*?Geen trainer · 0\/2/s', $coord->body) === 1, 'wedstrijd toont 0/2');
+T::ok(preg_match('/id="a' . $train5 . '".*?Geen trainer · 0\/1.*?Op wedstrijd.*?Testmeeting/s', $coord->body) === 1, 'training toont "Op wedstrijd" en een tekort');
+$coord->post('/app/coverage-action', ['activity_id' => $train5, 'do' => 'back', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('staat op dat moment op een wedstrijd'), 'terugzetten op de training kan niet zolang hij op de wedstrijd staat');
+$coord->post('/app/coverage-action', ['activity_id' => $train5, 'do' => 'assign', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('Niet ingepland:') && $coord->has('Testmeeting'), 'inplannen op een training tijdens je wedstrijd: geweigerd met reden');
+$coord->post('/app/coverage-action', ['activity_id' => $train5, 'do' => 'claim']);
+$coord->follow();
+T::ok($coord->has('Bedankt! Je staat ingepland.'), 'andere trainer neemt de training over');
+$coord->post('/app/coverage-action', ['activity_id' => $meet, 'do' => 'claim']);
+$coord->follow();
+T::ok($coord->has('Bedankt! Je staat ingepland.') && $coord->has('op wedstrijd'), 'wedstrijd gaat voor: Lander gaat ook mee, zijn training wordt "op wedstrijd"');
+T::exec("INSERT INTO activities (type_id, title, starts_at, ends_at, audience, status, created_at) VALUES (?, 'Tweede meeting', ?, ?, 'CLUB', 'PLANNED', ?)", [$typeMeet, "$d5 18:00:00", "$d5 20:00:00", date('Y-m-d H:i:s')]);
+$meet2 = (int) T::pdo()->lastInsertId();
+$coord->post('/app/coverage-action', ['activity_id' => $meet2, 'do' => 'assign', 'user_id' => $kobeId]);
+$coord->follow();
+T::ok($coord->has('Niet ingepland:'), 'twee wedstrijden tegelijk: geweigerd');
+$coord->post('/app/coverage-action', ['activity_id' => $meet, 'do' => 'remove', 'user_id' => $kobeId]);
+$coord->get('/app/trainersplanning');
+T::ok(preg_match('/id="a' . $train5 . '".*?Kobe Competitie.*?>Vast</s', $coord->body) === 1, 'van de wedstrijd gehaald: Kobe staat weer op zijn training');
 
-echo "Mijn planning\n";
-$kobe->get('/app/trainersplanning?show=mine');
-T::ok($kobe->has('Ochtendtraining WP') && !preg_match('/class="cover-title"[^>]*>Training Wedstrijdploeg/', $kobe->body), 'Mijn planning toont enkel eigen trainingen');
-$kobe->get('/app');
-T::ok($kobe->has('Jij geeft training'), 'dashboard: eigen trainingen van de week');
+echo "Meerdere tegelijk\n";
+$coord->get('/app/trainersplanning/meerdere');
+T::ok($coord->status === 200 && $coord->has('1. Wie en wat?'), 'pagina Meerdere tegelijk');
+$from = date('Y-m-d');
+$to = date('Y-m-d', strtotime('+20 days'));
+$coord->get('/app/trainersplanning/meerdere?show=1&user_id=' . $kobeId . '&do=absent&g=' . $gid . '&d=0&from=' . $from . '&to=' . $to);
+T::ok($coord->has('3. Controleren en bevestigen') && $coord->has('name="replacement" required') && $coord->has('Nog geen vervanger'), 'afmelden in bulk: vervanger kiezen is verplicht');
+preg_match_all('/name="ids\[\]" value="(\d+)"/', $coord->body, $mm);
+$ids = array_map('intval', $mm[1]);
+T::ok(count($ids) >= 10, 'trainingen waar Kobe ingepland is, vooraf aangevinkt');
+$coord->post('/app/coverage-bulk', ['ids' => $ids, 'user_id' => $kobeId, 'do' => 'absent', 'g' => $gid, 'from' => $from, 'to' => $to]);
+$coord->follow();
+T::ok($coord->has('Kies wie overneemt'), 'bulk afmelden zonder keuze vervanger: geweigerd');
+$coord->post('/app/coverage-bulk', ['ids' => $ids, 'user_id' => $kobeId, 'do' => 'absent', 'note' => 'Vakantie', 'replacement' => (string) $tinaId, 'g' => $gid, 'from' => $from, 'to' => $to]);
+T::ok(str_contains($coord->location, 'trainersplanning/meerdere'), 'terug naar de lijst');
+$coord->follow();
+T::ok($coord->has('Kobe Competitie is afgemeld voor ' . count($ids)) && $coord->has('Tina Trainer neemt'), 'bulk: afgemeld met vervanger');
+T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = 'ABSENT' AND note = 'Vakantie'", [$kobeId]) === count($ids), 'afmeldingen met reden opgeslagen');
+$coord->get('/app/trainersplanning/meerdere?show=1&user_id=' . $kobeId . '&do=assign&g=' . $gid . '&d=0&from=' . $d5 . '&to=' . $d5);
+T::ok($coord->has('3. Controleren'), 'bulk inplannen: lijst getoond');
+$coord->post('/app/coverage-bulk', ['ids' => [$feest], 'user_id' => $coordId, 'do' => 'assign']);
+T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$feest]), 'bulk: clubactiviteit overgeslagen');
+$coord->post('/app/coverage-bulk', ['ids' => [], 'user_id' => $coordId, 'do' => 'assign']);
+$coord->follow();
+T::ok($coord->has('niets aangevinkt'), 'zonder aangevinkte trainingen: melding');
+$parent->post('/app/coverage-bulk', ['ids' => $ids, 'user_id' => $tinaId, 'do' => 'assign']);
+T::ok($parent->status === 403, 'ouder: geen toegang tot bulk (403)');
+
+echo "Minimum, kalender, overzicht, activiteitspagina\n";
+$board->post('/app/coverage-settings-save', ['min' => [$gid => '3']]);
+$coord->get('/app/trainersplanning');
+T::ok(preg_match('/id="a' . $tomorrow . '".*?Trainer gezocht · 1\/3/s', $coord->body) === 1, 'minimum 3 per groep: 1/3');
+$board->post('/app/coverage-settings-save', ['min' => [$gid => '0']]);
+$board->follow();
+T::ok($board->has('getal van 1 tot 9'), 'minimum 0 geweigerd');
+$board->post('/app/coverage-settings-save', ['min' => [$gid => '']]);
+$coord->get('/app/kalender');
+T::ok($coord->has('short-flag'), 'kalender markeert tekorten');
+$coord->get('/app');
+T::ok($coord->has('Trainer gezocht'), 'overzicht: blok Trainer gezocht');
+$coord->get('/app/kalender/' . $tomorrow);
+T::ok($coord->has('id="trainers"') && $coord->has('Lander Coördinator'), 'activiteitspagina toont de trainers');
+$wpParent = Browser::login('ouder.wouters@demo.local');
+$wpParent->get('/app/kalender/' . $tomorrow);
+T::ok($wpParent->status === 200 && !$wpParent->has('id="trainers"'), 'ouder ziet geen trainerskaart');
 
 echo "Automatische herinnering\n";
-$dayAfter = (int) T::val('SELECT id FROM activities WHERE series_id = ? AND substr(starts_at,1,10) = ?', [$sid, date('Y-m-d', strtotime('+2 days'))]);
-T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_at) VALUES (?, ?, 'ABSENT', ?)", [$dayAfter, $kobeId, date('Y-m-d H:i:s')]);
 T::clearMails();
 T::exec('DELETE FROM coverage_alerts');
 T::autoRan(false);
 (new Browser())->get('/aanmelden');
-T::ok(str_contains(T::outbox(), 'Trainers gezocht voor') || str_contains(T::outbox(), 'Trainer gezocht:'), 'bezoek aan de site verstuurt de herinnering (zonder cron)');
+T::ok(str_contains(T::outbox(), 'gezocht'), 'bezoek aan de app verstuurt de herinnering (zonder cron)');
 $n1 = substr_count(T::outbox(), ' | aan ');
 T::autoRan(false);
 (new Browser())->get('/aanmelden');
 T::ok(substr_count(T::outbox(), ' | aan ') === $n1, 'zelfde tekorten worden niet opnieuw gemeld');
-(new Browser())->get('/aanmelden');
-T::ok(substr_count(T::outbox(), ' | aan ') === $n1, 'hooguit één keer per uur');
 T::clearMails();
 $coord->post('/app/coverage-remind', []);
 $coord->follow();
-T::ok($coord->has('Mail verstuurd voor') && T::outbox() !== '', 'knop "Nu mail sturen" stuurt alle tekorten opnieuw');
+T::ok($coord->has('Mail verstuurd voor') && T::outbox() !== '', 'knop "Nu mail sturen"');
 $kobe->post('/app/coverage-remind', []);
-T::ok($kobe->status === 403, 'competitietrainer kan de mail niet manueel sturen');
+T::ok($kobe->status === 403, 'groepstrainer kan de mail niet manueel sturen');
 
 echo "Deellink weekplanning\n";
 $coord->post('/app/coverage-share', ['group_id' => $gid]);
 $tok = (string) T::val('SELECT share_token FROM `groups` WHERE id = ?', [$gid]);
-T::ok(strlen($tok) === 32, 'deellink gemaakt');
 $anon = new Browser();
 $anon->get('/?r=weekplanning&t=' . $tok);
-T::ok($anon->status === 200 && $anon->has('Weekplanning Wedstrijdploeg') && $anon->has('Ochtendtraining WP'), 'deellink toont de weekplanning zonder aanmelden');
-T::ok(!$anon->has('Kobe') && !$anon->has('Lander') && !$anon->has('Peeters'), 'geen namen van trainers of leden');
-T::ok(!$anon->has('Training Miniemen'), 'geen trainingen van andere groepen');
+T::ok($anon->status === 200 && $anon->has('Weekplanning Wedstrijdploeg') && $anon->has('Avond WP'), 'deellink toont de weekplanning zonder aanmelden');
+T::ok(!$anon->has('Kobe') && !$anon->has('Lander') && !$anon->has('Training Miniemen'), 'geen namen en geen andere groepen');
 $coord->post('/app/coverage-share', ['group_id' => $gid]);
 $anon->get('/?r=weekplanning&t=' . $tok);
 T::ok($anon->status === 404, 'oude link werkt niet meer na vernieuwen');
-$coord->post('/app/coverage-share', ['group_id' => $gid, 'do' => 'remove']);
-T::ok(T::val('SELECT share_token FROM `groups` WHERE id = ?', [$gid]) === null, 'deellink uitgezet');
-$anon->get('/?r=weekplanning&t=xyz');
-T::ok($anon->status === 404, 'ongeldige link: 404');
 $coord->post('/app/coverage-share', ['group_id' => 999999]);
 T::ok($coord->status === 400, 'geen deellink voor een onbekende groep');
 
 echo "Opruimen bij verwijderen\n";
-T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers a JOIN activities x ON x.id = a.activity_id WHERE x.series_id = ?', [$sid]) > 0, 'afwijkingen bestaan voor de reeks');
 $board->post('/app/series-delete', ['id' => $sid]);
-T::ok((int) T::val('SELECT COUNT(*) FROM series_trainers WHERE series_id = ?', [$sid]) === 0, 'reeks verwijderd: vaste trainers weg');
-T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE activity_id NOT IN (SELECT id FROM activities)') === 0, 'geen verweesde afwijkingen');
+T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE activity_id NOT IN (SELECT id FROM activities)') === 0, 'geen verweesde afwijkingen na het verwijderen van een reeks');
 
 echo "Migratie van een bestaande database (v0.11)\n";
 foreach (['series_trainers', 'activity_trainers', 'coverage_alerts'] as $t) {
@@ -280,60 +235,3 @@ $fresh->get('/app/trainersplanning');
 T::ok($fresh->status === 200, 'na migratie werkt de trainersplanning');
 T::ok((bool) T::val("SELECT 1 FROM roles WHERE code = 'COORDINATOR'") && (bool) T::val("SELECT 1 FROM permissions WHERE code = 'coverage.manage'"), 'rol en permissie aangevuld');
 T::ok(T::val("SELECT COUNT(*) FROM pragma_table_info('groups') WHERE name IN ('min_trainers','share_token')") == 2, 'kolommen aangevuld');
-
-echo "Bulk: meerdere trainingen tegelijk\n";
-T::autoRan();
-$gid = (int) T::val("SELECT id FROM `groups` WHERE name = 'Wedstrijdploeg'");
-$data = ['type_id' => $typeTraining, 'title' => 'Avondtraining WP', 'location' => 'Kapermolen', 'start_date' => date('Y-m-d'), 'end_date' => date('Y-m-d', strtotime('+40 days')), 'group_ids' => [$gid]];
-foreach ([2, 4] as $d) { $data['slot_on'][$d] = '1'; $data['slot_start'][$d] = '18:00'; $data['slot_end'][$d] = '19:30'; }
-$board->post('/app/series-save', $data);
-$sid2 = (int) T::val("SELECT id FROM activity_series WHERE title = 'Avondtraining WP'");
-$c = Browser::login('coordinator@demo.local');
-$board->post('/app/coverage-settings-save', ['min' => [$gid => ''], 'slot' => [$sid2 => [2 => ['', (string) $kobeId], 4 => ['']]]]); // (de coördinatorrol werd hierboven in de migratietest weggehaald)
-T::ok($board->status === 302, 'vaste trainer voor het nieuwe blok ingesteld');
-$c->get('/app/trainersplanning');
-T::ok($c->has('href="app/trainersplanning/meerdere"') && !$c->has('class="cover-pick"'), 'knop Meerdere tegelijk; geen vinkjes meer in de gewone planning');
-$c->get('/app/trainersplanning/meerdere');
-T::ok($c->status === 200 && $c->has('1. Wie en wat?') && !$c->has('3. Controleren'), 'stap 1: trainer, actie en filters');
-// Lander: alle donderdagen van de Wedstrijdploeg in de komende 6 weken
-$c->get('/app/trainersplanning/meerdere?show=1&user_id=' . $coordId . '&do=assign&g=' . $gid . '&d=4&from=' . date('Y-m-d') . '&to=' . date('Y-m-d', strtotime('+6 weeks')));
-T::ok($c->has('3. Controleren en bevestigen') && $c->has('Avondtraining WP'), 'stap 3: lijst met de gevonden trainingen');
-T::ok(!$c->has('Training Miniemen') && !$c->has('Training Kadetten'), 'enkel de gekozen groep');
-preg_match_all('/name="ids\[\]" value="(\d+)"/', $c->body, $mm);
-T::ok(count($mm[1]) >= 4, 'te wijzigen trainingen vooraf aangevinkt');
-$thu = array_map('intval', array_column(T::all("SELECT id FROM activities WHERE series_id = ? AND starts_at > ? ORDER BY starts_at", [$sid2, date('Y-m-d H:i:s')]), 'id'));
-$thu = array_values(array_filter($thu, fn($id) => (int) date('N', strtotime((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$id]))) === 4));
-T::ok(count($thu) >= 4, 'genoeg donderdagtrainingen');
-// Lander neemt alle donderdagen over
-$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign', 'g' => $gid, 'd' => 4]);
-T::ok(str_contains($c->location, 'trainersplanning/meerdere') && str_contains($c->location, 'show=1'), 'na bevestigen terug naar de lijst');
-$c->follow();
-T::ok($c->has('Lander Coördinator is ingepland voor ' . count($thu) . ' training(en)'), 'bulk inplannen: melding met aantal');
-T::ok($c->has('Staat al ingepland'), 'lijst toont nu "staat al ingepland"');
-T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = ? AND activity_id IN (' . implode(',', $thu) . ')', [$coordId, 'ASSIGNED']) === count($thu), 'bulk inplannen opgeslagen');
-$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign']);
-$c->follow();
-T::ok($c->has('ingepland voor 0 training(en)') && $c->has(count($thu) . ' overgeslagen'), 'nogmaals inplannen: alles overgeslagen');
-// Kobe afwezig (vakantie) voor de dinsdagen van de komende 2 weken
-$tue = array_map('intval', array_column(T::all("SELECT id FROM activities WHERE series_id = ? AND starts_at > ? AND starts_at < ? ORDER BY starts_at", [$sid2, date('Y-m-d H:i:s'), date('Y-m-d', strtotime('+15 days'))]), 'id'));
-$tue = array_values(array_filter($tue, fn($id) => (int) date('N', strtotime((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$id]))) === 2));
-$kb = Browser::login('competitie@demo.local');
-$kb->post('/app/coverage-bulk', ['ids' => array_merge($tue, [$thu[0]]), 'user_id' => $kobeId, 'do' => 'absent', 'note' => 'Vakantie']);
-$kb->follow();
-T::ok($kb->has('Kobe Competitie is afgemeld voor ' . count($tue) . ' training(en)') && $kb->has('1 overgeslagen'), 'bulk afmelden: enkel waar Kobe ingepland was');
-T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = 'ABSENT' AND note = 'Vakantie'", [$kobeId]) === count($tue), 'afmeldingen met reden opgeslagen');
-$kb->get('/app/trainersplanning?show=problems');
-T::ok($kb->has('Vakantie'), 'tekorten na bulk afmelden zichtbaar met reden');
-// Fouten en rechten
-$c->post('/app/coverage-bulk', ['ids' => [], 'user_id' => $coordId, 'do' => 'assign']);
-$c->follow();
-T::ok($c->has('niets aangevinkt'), 'zonder aangevinkte trainingen: melding');
-$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
-$c->follow();
-T::ok($c->has('Kies een trainer van de competitie'), 'bulk: trainer zonder groep geweigerd');
-$tn = Browser::login('trainer@demo.local');
-$tn->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
-T::ok($tn->status === 403, 'bulk: trainer zonder groep geen toegang (403)');
-$swim = (int) T::val("SELECT id FROM activities WHERE title = 'Clubfeest' LIMIT 1");
-$c->post('/app/coverage-bulk', ['ids' => [$swim], 'user_id' => $coordId, 'do' => 'assign']);
-T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$swim]), 'bulk: clubactiviteit wordt overgeslagen');

@@ -43,7 +43,7 @@
           <?= ['PARENT' => '— ziet de kalender van de gekoppelde kinderen en kan ze afmelden',
                'SWIMMER' => '— is zelf lid en ziet de eigen gegevens en groepen (ook voor trainers die zelf lid zijn)',
                'TRAINER' => '— ziet de leden en activiteiten van de toegewezen groepen en de afmeldingen. Is de trainer ook lid? Vink dan ook Zwemmer aan.',
-               'COORDINATOR' => '— beheert de trainersplanning van de competitie (vaste trainers per blok, minimum per groep) en krijgt de mails als er een trainer ontbreekt. Geeft de coördinator zelf training? Vink dan ook Trainer aan.',
+               'COORDINATOR' => '— beheert de trainersplanning van de competitie (minimum per groep, deellinks, herinneringen) en krijgt de mails als er een trainer ontbreekt. Geeft de coördinator zelf training? Vink dan ook Trainer aan.',
                'BOARD' => '— ziet en beheert alle leden, groepen, activiteiten en de trainersplanning (geen gebruikersbeheer)',
                'ADMIN' => '— heeft clubbrede toegang, inclusief gebruikersbeheer'][$code] ?>
         </span>

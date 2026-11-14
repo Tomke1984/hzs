@@ -53,22 +53,32 @@ $hidden = function () use ($a, $back, $keep): string {
     <?php foreach ($a['trainers'] as $t): ?>
       <li class="<?= $t['absent'] ? 'is-absent' : '' ?>">
         <span class="cover-name"><?= e($t['name']) ?><?= $t['id'] === $uid ? ' (jij)' : '' ?></span>
-        <?php if ($t['absent']): ?>
+        <?php if ($t['absent'] && $t['auto']): ?>
+          <span class="chip warn">Op wedstrijd</span> <span class="muted small"><?= e(substr((string) $t['note'], 14)) ?></span>
+        <?php elseif ($t['absent']): ?>
           <span class="chip att-absent">Afgemeld</span><?php if ($t['note']): ?> <span class="muted small"><?= e($t['note']) ?></span><?php endif; ?>
         <?php elseif ($t['default']): ?>
           <span class="chip off">Vast</span>
         <?php else: ?>
           <span class="chip att-present">Ingepland</span>
         <?php endif; ?>
-        <?php if (!$past): ?>
+        <?php if (!$past && !$t['auto']): ?>
         <span class="cover-actions">
           <?php if ($t['absent']): ?>
             <form method="post" action="<?= e(url('coverage_action')) ?>"><?= $hidden() ?><input type="hidden" name="do" value="back"><input type="hidden" name="user_id" value="<?= (int) $t['id'] ?>"><button class="btn btn-small btn-ghost" type="submit">Terugzetten</button></form>
           <?php else: ?>
             <details class="cover-absent">
               <summary class="btn btn-small btn-ghost"><?= $t['id'] === $uid ? 'Ik kan niet' : 'Afmelden' ?></summary>
-              <form method="post" action="<?= e(url('coverage_action')) ?>" class="inline-form">
+              <form method="post" action="<?= e(url('coverage_action')) ?>" class="inline-form cover-absent-form">
                 <?= $hidden() ?><input type="hidden" name="do" value="absent"><input type="hidden" name="user_id" value="<?= (int) $t['id'] ?>">
+                <?php $short = $a['present'] - 1 < $a['required']; ?>
+                <label class="small">Wie neemt over?<?= $short ? ' *' : '' ?>
+                  <select name="replacement"<?= $short ? ' required' : '' ?>>
+                    <option value=""><?= $short ? 'Kies…' : 'Niemand nodig (er blijven genoeg trainers)' ?></option>
+                    <?php foreach ($free as $pid => $pname): if ($pid === $t['id']) { continue; } ?><option value="<?= (int) $pid ?>"><?= e($pname) ?></option><?php endforeach; ?>
+                    <?php if ($short): ?><option value="none">Nog geen vervanger – trainer gezocht</option><?php endif; ?>
+                  </select>
+                </label>
                 <input type="text" name="note" maxlength="200" placeholder="Reden (optioneel)" aria-label="Reden van de afmelding">
                 <button class="btn btn-small" type="submit"><?= $t['id'] === $uid ? 'Afmelden' : e($t['name']) . ' afmelden' ?></button>
               </form>
@@ -84,7 +94,7 @@ $hidden = function () use ($a, $back, $keep): string {
   </ul>
   <?php endif; ?>
 
-  <?php $canClaim = isset($pool[$uid]) && (!$mine || $mine['absent']); ?>
+  <?php $canClaim = isset($pool[$uid]) && (!$mine || ($mine['absent'] && !$mine['auto'])); ?>
   <?php if (!$past && ($canClaim || $free)): ?>
   <div class="cover-foot">
     <?php if ($canClaim): ?>

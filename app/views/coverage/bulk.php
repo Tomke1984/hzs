@@ -66,7 +66,16 @@
     </table></div>
     <?php if ($todo): ?>
       <?php if ($f['do'] === 'absent'): ?>
-        <label>Reden (optioneel, zichtbaar voor de andere trainers) <input name="note" maxlength="200" placeholder="bv. vakantie"></label>
+        <div class="grid2">
+          <label>Wie neemt over? *
+            <select name="replacement" required>
+              <option value="">Kies…</option>
+              <option value="none">Nog geen vervanger – trainer gezocht (mail naar de collega's)</option>
+              <?php foreach ($pool as $pid => $pname): if ($pid === (int) $f['user_id']) { continue; } ?><option value="<?= (int) $pid ?>"><?= e($pname) ?></option><?php endforeach; ?>
+            </select>
+          </label>
+          <label>Reden (optioneel, zichtbaar voor de andere trainers) <input name="note" maxlength="200" placeholder="bv. vakantie"></label>
+        </div>
       <?php endif; ?>
       <div class="actions">
         <button class="btn btn-wrap" type="submit"><?= e($who) ?> <?= $f['do'] === 'assign' ? 'inplannen' : 'afmelden' ?> voor <span data-bulk-count><?= count($todo) ?></span> training(en)</button>

@@ -2,7 +2,7 @@
 /**
  * Trainersplanning competitie (/app/trainersplanning): overzicht van trainingen en wedstrijden met hun trainers,
  * afmelden, overnemen en toewijzen. Toegang: coördinator, bestuur, beheerder (coverage.manage) en elke trainer van
- * een competitiegroep (zij kunnen de coördinatie overnemen wanneer nodig). Vaste trainers per blok, het minimum per
+ * een groep (zij kunnen de coördinatie overnemen wanneer nodig). De vaste trainers zijn de groepstrainers; het minimum per
  * groep, deellinks en herinneringen vragen coverage.manage.
  */
 final class CoverageController
@@ -74,13 +74,47 @@ final class CoverageController
                     flash('error', 'Deze trainer staat niet (meer) ingepland.');
                     redirect($back);
                 }
+                // Vervanger: verplicht kiezen als er anders een trainer tekort is (een collega of bewust "nog geen vervanger").
+                $rep = input('replacement');
+                $short = $a['present'] - 1 < $a['required'];
+                if ($rep === '' && $short) {
+                    flash('error', 'Kies wie de training overneemt, of kies "Nog geen vervanger". Er is anders een trainer te weinig.');
+                    redirect($back);
+                }
+                $repId = ctype_digit($rep) ? (int) $rep : 0;
+                if ($repId) {
+                    if (!isset($pool[$repId]) || $repId === $target || (isset($current[$repId]) && !$current[$repId]['absent'])) {
+                        flash('error', 'Kies als vervanger een andere trainer die nog niet ingepland is.');
+                        redirect($back);
+                    }
+                    if ($c = Coverage::conflict($a, $repId)) {
+                        flash('error', 'Vervanger niet mogelijk: ' . $c);
+                        redirect($back);
+                    }
+                }
                 $reason = mb_substr(input('note'), 0, 200);
-                Coverage::set($aid, $target, 'ABSENT', $reason);
-                $msg = $self ? 'Je bent afgemeld.' : "$name is afgemeld.";
+                Database::tx(function () use ($aid, $a, $target, $reason, $repId) {
+                    Coverage::set($aid, $target, 'ABSENT', $reason);
+                    if ($repId) {
+                        Coverage::isDefault($a, $repId) ? Coverage::set($aid, $repId, null) : Coverage::set($aid, $repId, 'ASSIGNED');
+                    }
+                });
+                $msg = ($self ? 'Je bent afgemeld.' : "$name is afgemeld.") . ($repId ? ' ' . $pool[$repId] . ' neemt over.' : '');
+                if ($repId) {
+                    audit('COVERAGE_ASSIGN', 'activity', $aid, $pool[$repId] . ' (vervanger)');
+                }
                 break;
             case 'back':
                 if (!isset($current[$target]) || !$current[$target]['absent']) {
                     flash('error', 'Deze trainer is niet afgemeld.');
+                    redirect($back);
+                }
+                if ($current[$target]['auto']) {
+                    flash('error', "$name staat op dat moment op een wedstrijd. Haal hem eerst bij de wedstrijd weg.");
+                    redirect($back);
+                }
+                if ($c = Coverage::conflict($a, $target)) {
+                    flash('error', $c);
                     redirect($back);
                 }
                 $isDefault ? Coverage::set($aid, $target, null) : Coverage::set($aid, $target, 'ASSIGNED');
@@ -96,12 +130,19 @@ final class CoverageController
                     flash('info', $self ? 'Je staat al ingepland.' : "$name staat al ingepland.");
                     redirect($back);
                 }
+                if ($c = Coverage::conflict($a, $target)) {
+                    flash('error', 'Niet ingepland: ' . $c);
+                    redirect($back);
+                }
                 $isDefault ? Coverage::set($aid, $target, null) : Coverage::set($aid, $target, 'ASSIGNED');
                 $msg = $self ? 'Bedankt! Je staat ingepland.' : "$name is ingepland.";
+                if ($a['type_code'] === 'COMPETITION' && ($n = self::meetClashes($a, $target))) {
+                    $msg .= " Voor $n training(en) op hetzelfde moment staat " . ($self ? 'je' : $name) . ' nu als "op wedstrijd" afgemeld.';
+                }
                 break;
             case 'remove':
                 if (!isset($current[$target]) || $current[$target]['default']) {
-                    flash('error', 'Een vaste trainer van het blok haal je weg met "Afmelden".');
+                    flash('error', 'Een vaste trainer van de groep haal je weg met "Afmelden".');
                     redirect($back);
                 }
                 Coverage::set($aid, $target, null);
@@ -113,14 +154,33 @@ final class CoverageController
         audit('COVERAGE_' . strtoupper($do), 'activity', $aid, $name);
 
         $after = Coverage::one($aid);
-        if ($after && $after['missing'] > 0 && $after['starts_at'] < date('Y-m-d H:i:s', strtotime('+' . Coverage::remindDays() . ' days'))) {
-            $n = Coverage::remind();
-            $msg .= $n ? ' Er ontbreekt nu een trainer: de coördinator en de competitietrainers kregen een mail.' : ' Er ontbreekt nog een trainer.';
-        } elseif ($after && $after['missing'] > 0) {
-            $msg .= ' Er ontbreekt nog een trainer; staat dat binnen ' . Coverage::remindDays() . ' dagen nog open, dan volgt automatisch een mail.';
+        $mailed = Coverage::remind(); // ook tekorten elders (bv. trainingen tijdens een wedstrijd)
+        if ($after && $after['missing'] > 0) {
+            $soon = $after['starts_at'] < date('Y-m-d H:i:s', strtotime('+' . Coverage::remindDays() . ' days'));
+            $msg .= $soon
+                ? ($mailed ? ' Er ontbreekt nu een trainer: de coördinator en de competitietrainers kregen een mail.' : ' Er ontbreekt nog een trainer.')
+                : ' Er ontbreekt nog een trainer; staat dat binnen ' . Coverage::remindDays() . ' dagen nog open, dan volgt automatisch een mail.';
+        } elseif ($mailed) {
+            $msg .= ' Er ontbreekt nu een trainer bij een training op hetzelfde moment: de coördinator en de competitietrainers kregen een mail.';
         }
         flash('success', $msg);
         redirect($back);
+    }
+
+    /** Aantal trainingen waar de trainer door deze wedstrijd nu "op wedstrijd" staat. */
+    private static function meetClashes(array $meet, int $userId): int
+    {
+        $ids = array_map('intval', array_column(Database::all(
+            "SELECT id FROM activities WHERE id <> ? AND status = 'PLANNED' AND starts_at < ? AND ends_at > ?",
+            [(int) $meet['id'], $meet['ends_at'], $meet['starts_at']]
+        ), 'id'));
+        $n = 0;
+        foreach ($ids ? Coverage::list('0000-00-00', '9999-12-31', $ids) : [] as $o) {
+            foreach ($o['trainers'] as $t) {
+                $n += ($t['id'] === $userId && $t['auto']) ? 1 : 0;
+            }
+        }
+        return $n;
     }
 
     /**
@@ -157,14 +217,14 @@ final class CoverageController
                     }
                 }
                 if ($f['do'] === 'assign') {
-                    $a['skip'] = $cur && !$cur['absent'] ? 'staat al ingepland' : null;
+                    $a['skip'] = $cur && !$cur['absent'] ? 'staat al ingepland' : (Coverage::conflict($a, $target) ? 'staat dan al op een andere training of wedstrijd' : null);
                 } else {
                     $a['skip'] = !$cur || $cur['absent'] ? ($cur ? 'al afgemeld' : 'staat niet ingepland') : null;
                 }
                 $rows[] = $a;
             }
         }
-        render('coverage/bulk', ['pool' => $pool, 'f' => $f, 'groups' => $groups, 'rows' => $rows, 'shown' => isset($_GET['show']) && isset($pool[$target])], 'Meerdere tegelijk');
+        render('coverage/bulk', ['pool' => $pool, 'f' => $f, 'free' => $pool, 'groups' => $groups, 'rows' => $rows, 'shown' => isset($_GET['show']) && isset($pool[$target])], 'Meerdere tegelijk');
     }
 
     /** Gevalideerde filters voor "Meerdere tegelijk" (uit GET of POST). */
@@ -211,51 +271,78 @@ final class CoverageController
             redirect($back);
         }
         $note = mb_substr(input('note'), 0, 200);
+        $rep = $do === 'absent' ? input('replacement') : '';
+        if ($do === 'absent' && $rep === '') {
+            flash('error', 'Kies wie overneemt, of kies "Nog geen vervanger".');
+            redirect($back);
+        }
+        $repId = ctype_digit($rep) ? (int) $rep : 0;
+        if ($repId && (!isset($pool[$repId]) || $repId === $target)) {
+            flash('error', 'Kies als vervanger een andere trainer.');
+            redirect($back);
+        }
         $done = 0;
-        $alertSoon = false;
-        $soon = date('Y-m-d H:i:s', strtotime('+' . Coverage::remindDays() . ' days'));
-        Database::tx(function () use ($ids, $do, $target, $note, &$done) {
+        $clash = [];
+        $repDone = 0;
+        $repFail = [];
+        Database::tx(function () use ($ids, $do, $target, $note, $repId, &$done, &$clash, &$repDone, &$repFail) {
             foreach (Coverage::list('0000-00-00', '9999-12-31', $ids) as $a) {
                 if ($a['ends_at'] <= now()) {
                     continue;
                 }
                 $cur = null;
+                $repCur = null;
                 foreach ($a['trainers'] as $t) {
-                    if ($t['id'] === $target) {
-                        $cur = $t;
-                    }
+                    $cur = $t['id'] === $target ? $t : $cur;
+                    $repCur = $t['id'] === $repId ? $t : $repCur;
                 }
-                $default = Coverage::isDefault($a, $target);
+                $when = fmt_date($a['starts_at']) . ' ' . fmt_time($a['starts_at']);
                 if ($do === 'assign') {
                     if ($cur && !$cur['absent']) {
                         continue;
                     }
-                    $default ? Coverage::set((int) $a['id'], $target, null) : Coverage::set((int) $a['id'], $target, 'ASSIGNED');
+                    if (Coverage::conflict($a, $target)) {
+                        $clash[] = $when;
+                        continue;
+                    }
+                    Coverage::isDefault($a, $target) ? Coverage::set((int) $a['id'], $target, null) : Coverage::set((int) $a['id'], $target, 'ASSIGNED');
                 } else {
                     if (!$cur || $cur['absent']) {
                         continue;
                     }
                     Coverage::set((int) $a['id'], $target, 'ABSENT', $note);
+                    if ($repId) {
+                        if (($repCur && !$repCur['absent']) || Coverage::conflict($a, $repId)) {
+                            $repFail[] = $when;
+                        } else {
+                            Coverage::isDefault($a, $repId) ? Coverage::set((int) $a['id'], $repId, null) : Coverage::set((int) $a['id'], $repId, 'ASSIGNED');
+                            $repDone++;
+                        }
+                    }
                 }
                 $done++;
             }
         });
-        $skipped = count($ids) - $done; // al (niet) ingepland, voorbij of niet in de planning
-        audit('COVERAGE_BULK_' . strtoupper($do), 'user', $target, $done . ' activiteiten');
+        $skipped = count($ids) - $done - count($clash);
+        audit('COVERAGE_BULK_' . strtoupper($do), 'user', $target, $done . ' activiteiten' . ($repId ? ', vervanger ' . $pool[$repId] : ''));
         $name = $pool[$target];
         $msg = $do === 'assign'
             ? "$name is ingepland voor $done training(en) of wedstrijd(en)."
             : "$name is afgemeld voor $done training(en) of wedstrijd(en).";
+        if ($repId && $repDone) {
+            $msg .= ' ' . $pool[$repId] . " neemt $repDone daarvan over.";
+        }
         if ($skipped) {
             $msg .= " $skipped overgeslagen (" . ($do === 'assign' ? 'al ingepland' : 'niet ingepland') . ', voorbij of niet in de planning).';
         }
-        if ($do === 'absent' && $done) {
-            foreach (Coverage::list(now(), $soon, $ids) as $a) {
-                $alertSoon = $alertSoon || $a['missing'] > 0;
-            }
-            if ($alertSoon && Coverage::remind()) {
-                $msg .= ' Er ontbreekt nu binnenkort een trainer: de coördinator en de competitietrainers kregen een mail.';
-            }
+        if ($clash) {
+            $msg .= ' Niet ingepland wegens een andere training of wedstrijd op hetzelfde moment: ' . implode(', ', $clash) . '.';
+        }
+        if ($repFail) {
+            $msg .= ' ' . $pool[$repId] . ' kon niet overnemen op ' . implode(', ', $repFail) . ' (staat dan al elders): daar wordt nog een trainer gezocht.';
+        }
+        if (Coverage::remind()) {
+            $msg .= ' Er ontbreekt nu binnenkort een trainer: de coördinator en de competitietrainers kregen een mail.';
         }
         flash($done ? 'success' : 'info', $msg);
         redirect($back);
@@ -263,96 +350,44 @@ final class CoverageController
 
     public static function settings(): void
     {
-        $groups = Database::all("SELECT id, name, min_trainers, share_token, color FROM `groups` WHERE category = 'COMPETITION' AND is_active = 1 ORDER BY name");
-        $series = Database::all(
-            "SELECT DISTINCT s.id, s.title, s.start_date, s.end_date FROM activity_series s
-             JOIN activity_series_groups sg ON sg.series_id = s.id JOIN `groups` g ON g.id = sg.group_id
-             WHERE s.is_active = 1 AND s.end_date >= ? AND g.category = 'COMPETITION' AND g.is_active = 1 ORDER BY s.title",
-            [today()]
-        );
-        foreach ($series as &$s) {
-            $s['slots'] = Database::all('SELECT weekday, start_time, end_time, location FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$s['id']]);
-            $s['groups'] = implode(', ', array_column(Database::all('SELECT g.name FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]), 'name'));
-            $s['trainers'] = [];
-            foreach (Database::all('SELECT weekday, user_id FROM series_trainers WHERE series_id = ?', [$s['id']]) as $t) {
-                $s['trainers'][(int) $t['weekday']][] = (int) $t['user_id'];
-            }
+        $groups = Database::all("SELECT id, name, min_trainers, share_token, color FROM `groups` WHERE is_active = 1 ORDER BY name");
+        foreach ($groups as &$g) {
+            $g['trainers'] = array_column(Database::all(
+                'SELECT u.display_name FROM group_trainers gt JOIN users u ON u.id = gt.user_id WHERE gt.group_id = ? AND u.is_active = 1 ORDER BY u.display_name',
+                [$g['id']]
+            ), 'display_name');
         }
-        unset($s);
+        unset($g);
         render('coverage/settings', [
             'groups' => $groups,
-            'series' => $series,
-            'pool' => Coverage::pool(),
             'base' => Invites::baseUrl(),
             'remindDays' => Coverage::remindDays(),
         ], 'Trainersplanning: instellingen');
     }
 
-    /** Vaste trainers per blok en het minimum aantal trainers per competitiegroep. */
+    /** Minimum aantal trainers per groep. (De vaste trainers zijn de trainers van de groep: in te stellen bij Groep wijzigen.) */
     public static function settingsSave(): void
     {
-        $pool = Coverage::pool();
         $min = $_POST['min'] ?? [];
-        $slots = $_POST['slot'] ?? [];
-        if (!is_array($min) || !is_array($slots)) {
+        if (!is_array($min)) {
             abort(400, 'Ongeldige aanvraag.');
         }
-        $compGroups = array_map('intval', array_column(Database::all("SELECT id FROM `groups` WHERE category = 'COMPETITION'"), 'id'));
-        $errors = [];
+        $known = array_map('intval', array_column(Database::all('SELECT id FROM `groups`'), 'id'));
         foreach ($min as $gid => $v) {
             $v = trim((string) $v);
-            if (!in_array((int) $gid, $compGroups, true) || ($v !== '' && (!ctype_digit($v) || (int) $v < 1 || (int) $v > 9))) {
-                $errors[] = 'Het minimum aantal trainers is een getal van 1 tot 9 (leeg = 1).';
-                break;
+            if (!in_array((int) $gid, $known, true) || ($v !== '' && (!ctype_digit($v) || (int) $v < 1 || (int) $v > 9))) {
+                flash('error', 'Het minimum aantal trainers is een getal van 1 tot 9 (leeg = 1).');
+                redirect(url('coverage_settings'));
             }
         }
-        $clean = [];
-        foreach ($slots as $sid => $days) {
-            $sid = (int) $sid;
-            if (!is_array($days) || !Database::val(
-                "SELECT 1 FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? AND g.category = 'COMPETITION'",
-                [$sid]
-            )) {
-                abort(400, 'Ongeldig trainingsblok.');
-            }
-            $valid = array_map('intval', array_column(Database::all('SELECT weekday FROM activity_series_slots WHERE series_id = ?', [$sid]), 'weekday'));
-            $clean[$sid] = [];
-            foreach ($days as $wd => $uids) {
-                if (!in_array((int) $wd, $valid, true) || !is_array($uids)) {
-                    abort(400, 'Ongeldige weekdag.');
-                }
-                foreach ($uids as $uid) {
-                    if ($uid === '' || $uid === '0') {
-                        continue;
-                    }
-                    if (!isset($pool[(int) $uid])) {
-                        $errors[] = 'Enkel trainers van de competitie kunnen vaste trainer van een blok zijn.';
-                        break 3;
-                    }
-                    $clean[$sid][(int) $wd][(int) $uid] = true;
-                }
-            }
-        }
-        if ($errors) {
-            flash('error', $errors[0]);
-            redirect(url('coverage_settings'));
-        }
-        Database::tx(function () use ($min, $clean) {
+        Database::tx(function () use ($min) {
             foreach ($min as $gid => $v) {
                 $v = trim((string) $v);
                 Database::exec('UPDATE `groups` SET min_trainers = ? WHERE id = ?', [$v === '' ? null : (int) $v, (int) $gid]);
             }
-            foreach ($clean as $sid => $days) {
-                Database::exec('DELETE FROM series_trainers WHERE series_id = ?', [$sid]);
-                foreach ($days as $wd => $uids) {
-                    foreach (array_keys($uids) as $uid) {
-                        Database::exec('INSERT INTO series_trainers (series_id, weekday, user_id) VALUES (?,?,?)', [$sid, $wd, $uid]);
-                    }
-                }
-            }
         });
-        audit('COVERAGE_SETTINGS', 'coverage', null, count($clean) . ' blokken');
-        flash('success', 'Instellingen opgeslagen. De vaste trainers gelden meteen voor alle komende trainingen van die blokken.');
+        audit('COVERAGE_SETTINGS', 'coverage', null, 'minimum per groep');
+        flash('success', 'Instellingen opgeslagen.');
         redirect(url('coverage_settings'));
     }
 

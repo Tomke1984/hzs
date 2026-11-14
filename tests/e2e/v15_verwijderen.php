@@ -43,11 +43,10 @@ $data = ['type_id' => $typeTraining, 'title' => 'Ochtend WP', 'location' => 'Kap
 $data['slot_on'][3] = '1'; $data['slot_start'][3] = '07:00'; $data['slot_end'][3] = '08:00';
 $board->post('/app/series-save', $data);
 $sid = (int) T::val("SELECT id FROM activity_series WHERE title = 'Ochtend WP'");
-$board->post('/app/coverage-settings-save', ['min' => [$gid => ''], 'slot' => [$sid => [3 => ['', (string) $kobe]]]]);
 $future = (int) T::val('SELECT id FROM activities WHERE series_id = ? AND starts_at > ? ORDER BY starts_at LIMIT 1', [$sid, date('Y-m-d H:i:s')]);
 T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_by, updated_at) VALUES (?, ?, 'ABSENT', ?, ?)", [$future, $kobe, $kobe, date('Y-m-d H:i:s')]);
 T::exec('UPDATE activities SET created_by = ? WHERE id = ?', [$kobe, $future]);
-T::ok((bool) T::val('SELECT 1 FROM series_trainers WHERE user_id = ?', [$kobe]) && (bool) T::val('SELECT 1 FROM group_trainers WHERE user_id = ?', [$kobe]), 'Kobe is vaste trainer en groepstrainer');
+T::ok((bool) T::val('SELECT 1 FROM group_trainers WHERE user_id = ?', [$kobe]) && (bool) T::val('SELECT 1 FROM activity_trainers WHERE user_id = ?', [$kobe]), 'Kobe is groepstrainer en staat in de trainersplanning');
 
 $admin->get('/app/gebruikers/' . $kobe . '/wijzigen');
 T::ok($admin->has('Gebruiker verwijderen'), 'beheerder ziet Gebruiker verwijderen');

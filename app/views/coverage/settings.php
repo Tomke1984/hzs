@@ -1,53 +1,30 @@
-<h1>Trainersplanning: vaste trainers en instellingen</h1>
-<p class="muted">De vaste trainers van een blok staan automatisch op elke training van dat blok. Meldt een vaste trainer zich af, dan toont de trainersplanning een tekort
-  en krijgen de coördinator en de competitietrainers <?= (int) $remindDays ?> dagen vooraf een mail als er nog niemand overgenomen heeft.</p>
+<h1>Trainersplanning: instellingen</h1>
+<p class="muted">De <strong>vaste trainers</strong> zijn de trainers van de groep: ze staan automatisch op elke training van hun groep. Je stelt ze in bij <em>Groepen → groep → Wijzigen</em>.
+  Meldt een vaste trainer zich af, dan kiest hij wie overneemt; is er nog niemand, dan krijgen de coördinator en de trainers <?= (int) $remindDays ?> dagen vooraf een mail.
+  Wie op een wedstrijd ingepland is, staat automatisch afgemeld voor trainingen op hetzelfde moment.</p>
 
-<?php if (!$pool): ?>
-  <div class="alert alert-warning">Er zijn nog geen competitietrainers. Koppel trainers aan een competitiegroep (Gebruikers → trainer → groepen) of geef iemand de rol <em>Coördinator competitie</em>.</div>
-<?php endif; ?>
-
-<form method="post" action="<?= e(url('coverage_settings_save')) ?>" class="form">
+<form method="post" action="<?= e(url('coverage_settings_save')) ?>" class="card form">
   <?= csrf_field() ?>
-  <section class="card">
-    <h2>Minimum aantal trainers per groep</h2>
-    <?php if (!$groups): ?>
-      <p class="muted">Geen actieve competitiegroepen.</p>
-    <?php else: ?>
-    <div class="cover-grid">
-      <?php foreach ($groups as $g): ?>
-        <label><?= group_chip($g['name']) ?>
-          <input type="number" name="min[<?= (int) $g['id'] ?>]" min="1" max="9" value="<?= e((string) ($g['min_trainers'] ?? '')) ?>" placeholder="1" inputmode="numeric">
-        </label>
-      <?php endforeach; ?>
-    </div>
-    <p class="muted small">Leeg = 1. Bij een wedstrijd kan je per wedstrijd een ander aantal ingeven (Activiteit wijzigen).</p>
-    <?php endif; ?>
-  </section>
-
-  <section class="card">
-    <h2>Vaste trainers per blok</h2>
-    <?php if (!$series): ?>
-      <p class="muted">Er zijn geen lopende trainingsreeksen voor de competitie. Maak ze aan via <a href="<?= e(url('series')) ?>">Trainingsreeksen</a>.</p>
-    <?php endif; ?>
-    <?php foreach ($series as $s): ?>
-      <fieldset class="cover-block">
-        <legend><?= e($s['title']) ?> <span class="muted small"><?= e($s['groups']) ?> · tot <?= e(fmt_date($s['end_date'])) ?></span></legend>
-        <?php foreach ($s['slots'] as $sl): $wd = (int) $sl['weekday']; $chosen = $s['trainers'][$wd] ?? []; ?>
-          <div class="cover-slot">
-            <strong><?= e(ucfirst(SeriesService::DAYS[$wd])) ?> <?= e($sl['start_time']) ?>–<?= e($sl['end_time']) ?></strong>
-            <input type="hidden" name="slot[<?= (int) $s['id'] ?>][<?= $wd ?>][]" value="">
-            <span class="cover-checks">
-              <?php foreach ($pool as $pid => $pname): ?>
-                <label class="check"><input type="checkbox" name="slot[<?= (int) $s['id'] ?>][<?= $wd ?>][]" value="<?= (int) $pid ?>"<?= in_array($pid, $chosen, true) ? ' checked' : '' ?>> <?= e($pname) ?></label>
-              <?php endforeach; ?>
-              <?php if (!$chosen): ?><span class="chip bad">Geen vaste trainer</span><?php endif; ?>
-            </span>
-          </div>
-        <?php endforeach; ?>
-      </fieldset>
+  <h2>Vaste trainers en minimum per groep</h2>
+  <?php if (!$groups): ?>
+    <p class="muted">Geen actieve groepen.</p>
+  <?php else: ?>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Groep</th><th>Vaste trainers</th><th>Minimum aantal trainers</th></tr></thead>
+    <tbody>
+    <?php foreach ($groups as $g): ?>
+      <tr>
+        <td><?= group_chip($g['name']) ?></td>
+        <td><?= $g['trainers'] ? e(implode(', ', $g['trainers'])) : '<span class="chip bad">Geen trainer</span>' ?>
+          <?php if (Auth::can('groups.write')): ?> <a class="small" href="<?= e(url('group_form', ['id' => $g['id']])) ?>">wijzigen</a><?php endif; ?></td>
+        <td><input type="number" name="min[<?= (int) $g['id'] ?>]" min="1" max="9" value="<?= e((string) ($g['min_trainers'] ?? '')) ?>" placeholder="1" inputmode="numeric" aria-label="Minimum aantal trainers voor <?= e($g['name']) ?>" class="input-narrow"></td>
+      </tr>
     <?php endforeach; ?>
-  </section>
+    </tbody>
+  </table></div>
+  <p class="muted small">Minimum leeg = 1. Bij een wedstrijd kan je per wedstrijd een ander aantal ingeven (Activiteit wijzigen).</p>
   <div class="actions"><button class="btn" type="submit">Opslaan</button></div>
+  <?php endif; ?>
 </form>
 
 <section class="card" id="delen">

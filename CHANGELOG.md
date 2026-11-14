@@ -5,6 +5,14 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedstrijd tegelijk – commit `HASH`_
+
+- **De trainers van een groep zijn de vaste trainers** van alle trainingen van die groep (aanpassen via *Groep wijzigen*). De aparte instelling *vaste trainer per blok* is weg; *Vaste trainers en instellingen* toont per groep de trainers en het minimum.
+- **Afmelden vraagt een vervanger** als er anders een tekort is: kies wie overneemt, of *Nog geen vervanger – trainer gezocht* (dan gaat er meteen een mail naar de collega's). Ook bij *Meerdere tegelijk*.
+- **Niet op training en wedstrijd tegelijk:** wie op een wedstrijd staat, staat op trainingen op hetzelfde moment automatisch *Op wedstrijd*. Inplannen op een training tijdens je wedstrijd of op twee wedstrijden tegelijk wordt geweigerd.
+- De coördinator ziet nu alle groepen in kalender en activiteiten.
+- Tests: `v12_trainersplanning` herschreven (67 controles, 374 in totaal).
+
 _Meerdere tegelijk: duidelijkere werkwijze – commit `7b6eacd`_
 
 - **Bulk toewijzen herwerkt** tot een aparte pagina *Meerdere trainingen tegelijk* (knop bovenaan de trainersplanning) met 3 stappen: 1) trainer en actie (inplannen of afmelden), 2) groep, dag en periode, 3) een lijst met wat er verandert, vooraf aangevinkt, met één knop "X inplannen voor N trainingen". Trainingen waar niets verandert staan grijs met de reden.

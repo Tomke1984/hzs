@@ -2,9 +2,9 @@
 /**
  * Trainersplanning competitie: wie geeft welke training of begeleidt welke wedstrijd, en waar ontbreekt een trainer.
  *
- * Bezetting van een activiteit = vaste trainers van het blok (reeks + weekdag, tabel series_trainers)
+ * Bezetting van een activiteit = vaste trainers (de trainers van de groepen, enkel bij trainingen)
  * + extra toegewezen trainers, min de trainers die zich afgemeld hebben. Afwijkingen per activiteit staan in
- * activity_trainers (ASSIGNED = vervanger/extra, ABSENT = afgemeld). Wijzigt de vaste trainer van een blok,
+ * activity_trainers (ASSIGNED = vervanger/extra, ABSENT = afgemeld). Wijzigen de trainers van een groep,
  * dan geldt dat meteen voor alle komende trainingen; afwijkingen per training blijven staan.
  *
  * Alle groepen zijn competitiegroepen (sinds v0.14); trainingen en wedstrijden van actieve groepen en clubbrede wedstrijden tellen mee.
@@ -98,7 +98,7 @@ final class Coverage
 
     /**
      * Voegt aan elke activiteit toe: groups, trainers (lijst), present, required, missing.
-     * Een trainer: id, name, default (vaste trainer van het blok), absent (afgemeld), note.
+     * Een trainer: id, name, default (vaste trainer = groepstrainer), absent (afgemeld), auto (afgemeld omdat hij op een wedstrijd staat), note.
      */
     public static function enrich(array $rows): array
     {
@@ -122,12 +122,13 @@ final class Coverage
             $users[(int) $u['id']] = $u['display_name'];
         }
 
-        $seriesIds = array_values(array_unique(array_filter(array_map('intval', array_column($rows, 'series_id')))));
-        $defaults = [];
-        if ($seriesIds) {
-            foreach (Database::all('SELECT series_id, weekday, user_id FROM series_trainers WHERE series_id IN (' . Scope::in($seriesIds) . ')', $seriesIds) as $d) {
-                $defaults[(int) $d['series_id']][(int) $d['weekday']][] = (int) $d['user_id'];
-            }
+        // Vaste trainers = de trainers van de groep(en) van een training (wedstrijden hebben geen vaste trainers).
+        $groupTrainers = [];
+        foreach (Database::all(
+            "SELECT ag.activity_id, gt.user_id FROM activity_groups ag JOIN group_trainers gt ON gt.group_id = ag.group_id WHERE ag.activity_id IN ($in)",
+            $ids
+        ) as $d) {
+            $groupTrainers[(int) $d['activity_id']][(int) $d['user_id']] = true;
         }
 
         $over = [];
@@ -135,14 +136,26 @@ final class Coverage
             $over[(int) $o['activity_id']][] = $o;
         }
 
+        // Trainers die op een wedstrijd ingepland zijn, kunnen niet tegelijk op een training staan.
+        $minStart = min(array_column($rows, 'starts_at'));
+        $maxEnd = max(array_column($rows, 'ends_at'));
+        $onMeet = [];
+        foreach (Database::all(
+            "SELECT at.user_id, a.id, a.title, a.starts_at, a.ends_at FROM activity_trainers at
+             JOIN activities a ON a.id = at.activity_id JOIN activity_types t ON t.id = a.type_id
+             WHERE at.status = 'ASSIGNED' AND t.code = 'COMPETITION' AND a.status = 'PLANNED' AND a.starts_at < ? AND a.ends_at > ?",
+            [$maxEnd, $minStart]
+        ) as $m) {
+            $onMeet[(int) $m['user_id']][] = $m;
+        }
+
         foreach ($rows as &$r) {
             $aid = (int) $r['id'];
             $list = [];
-            if (!empty($r['series_id'])) {
-                $wd = (int) date('N', strtotime(substr($r['starts_at'], 0, 10)));
-                foreach ($defaults[(int) $r['series_id']][$wd] ?? [] as $uid) {
+            if (($r['type_code'] ?? '') === 'TRAINING') {
+                foreach (array_keys($groupTrainers[$aid] ?? []) as $uid) {
                     if (isset($users[$uid])) {
-                        $list[$uid] = ['id' => $uid, 'name' => $users[$uid], 'default' => true, 'absent' => false, 'note' => null];
+                        $list[$uid] = ['id' => $uid, 'name' => $users[$uid], 'default' => true, 'absent' => false, 'note' => null, 'auto' => false];
                     }
                 }
             }
@@ -151,9 +164,21 @@ final class Coverage
                 if (!isset($users[$uid])) {
                     continue;
                 }
-                $list[$uid] ??= ['id' => $uid, 'name' => $users[$uid], 'default' => false, 'absent' => false, 'note' => null];
+                $list[$uid] ??= ['id' => $uid, 'name' => $users[$uid], 'default' => false, 'absent' => false, 'note' => null, 'auto' => false];
                 $list[$uid]['absent'] = $o['status'] === 'ABSENT';
                 $list[$uid]['note'] = $o['note'];
+            }
+            if (($r['type_code'] ?? '') !== 'COMPETITION') {
+                foreach ($list as $uid => $t) {
+                    foreach ($onMeet[$uid] ?? [] as $m) {
+                        if (!$t['absent'] && (int) $m['id'] !== $aid && $m['starts_at'] < $r['ends_at'] && $m['ends_at'] > $r['starts_at']) {
+                            $list[$uid]['absent'] = true;
+                            $list[$uid]['auto'] = true;
+                            $list[$uid]['note'] = 'Op wedstrijd: ' . $m['title'];
+                            break;
+                        }
+                    }
+                }
             }
             uasort($list, fn($x, $y) => [$x['absent'], $x['name']] <=> [$y['absent'], $y['name']]);
             $r['trainers'] = array_values($list);
@@ -182,16 +207,43 @@ final class Coverage
         return $n;
     }
 
-    /** Is deze trainer een vaste trainer van het blok op de dag van de activiteit? */
+    /** Is deze trainer een vaste trainer van deze activiteit (trainer van een van de groepen van een training)? */
     public static function isDefault(array $activity, int $userId): bool
     {
-        if (empty($activity['series_id'])) {
+        if (($activity['type_code'] ?? '') !== 'TRAINING') {
             return false;
         }
         return (bool) Database::val(
-            'SELECT 1 FROM series_trainers WHERE series_id = ? AND weekday = ? AND user_id = ?',
-            [(int) $activity['series_id'], (int) date('N', strtotime(substr($activity['starts_at'], 0, 10))), $userId]
+            'SELECT 1 FROM activity_groups ag JOIN group_trainers gt ON gt.group_id = ag.group_id WHERE ag.activity_id = ? AND gt.user_id = ?',
+            [(int) $activity['id'], $userId]
         );
+    }
+
+    /**
+     * Kan deze trainer niet bij deze activiteit zijn omdat hij op hetzelfde moment al elders staat? Geeft de reden of null.
+     * Een wedstrijd gaat voor op een training: wie op een wedstrijd ingepland wordt, is voor overlappende trainingen
+     * automatisch afgemeld ("op wedstrijd"); omgekeerd kan je hem niet op die training inplannen.
+     */
+    public static function conflict(array $activity, int $userId): ?string
+    {
+        $ids = array_map('intval', array_column(Database::all(
+            "SELECT id FROM activities WHERE id <> ? AND status = 'PLANNED' AND starts_at < ? AND ends_at > ?",
+            [(int) $activity['id'], $activity['ends_at'], $activity['starts_at']]
+        ), 'id'));
+        if (!$ids) {
+            return null;
+        }
+        foreach (self::list('0000-00-00', '9999-12-31', $ids) as $o) {
+            if ($activity['type_code'] === 'COMPETITION' && $o['type_code'] === 'TRAINING') {
+                continue; // die training wordt automatisch "op wedstrijd"
+            }
+            foreach ($o['trainers'] as $t) {
+                if ($t['id'] === $userId && !$t['absent']) {
+                    return $t['name'] . ' staat op dat moment al op ' . $o['title'] . ' (' . fmt_date($o['starts_at']) . ' ' . fmt_time($o['starts_at']) . '–' . fmt_time($o['ends_at']) . ').';
+                }
+            }
+        }
+        return null;
     }
 
     /** Afwijking voor één trainer bij één activiteit vastleggen (ASSIGNED of ABSENT), of wissen met null. */
