@@ -5,6 +5,8 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Wordt v0.12.0 – trainersplanning competitie – commit `c16f215`_
+
 - **Trainersplanning competitie** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitie met hun trainers en een status *In orde* / *Trainer gezocht*; tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*. Zwemschool valt erbuiten.
 - **Vaste trainer per blok** (reeks + weekdag) en **minimum aantal trainers** per competitiegroep (*Vaste trainers en instellingen*); per wedstrijd/activiteit een eigen aantal (*Aantal trainers nodig*).
 - **Afmelden, overnemen en inplannen** per training of wedstrijd (met reden). Elke competitietrainer kan dit, ook voor een collega, zodat iedereen de coördinatie kan overnemen. Vaste trainers afmelden, extra trainers weghalen.
