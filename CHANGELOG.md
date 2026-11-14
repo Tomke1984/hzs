@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedstrijd tegelijk – commit `HASH`_
+_Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedstrijd tegelijk – commit `75ede6b`_
 
 - **De trainers van een groep zijn de vaste trainers** van alle trainingen van die groep (aanpassen via *Groep wijzigen*). De aparte instelling *vaste trainer per blok* is weg; *Vaste trainers en instellingen* toont per groep de trainers en het minimum.
 - **Afmelden vraagt een vervanger** als er anders een tekort is: kies wie overneemt, of *Nog geen vervanger – trainer gezocht* (dan gaat er meteen een mail naar de collega's). Ook bij *Meerdere tegelijk*.
