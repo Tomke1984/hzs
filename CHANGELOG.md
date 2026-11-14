@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit volgt bij de push_
+_Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit `1aebc7c`_
 
 - **App teruggebracht tot de kern:** kalender voor leden en ouders, leden, groepen, gebruikers, trainingsreeksen en zwemblokken, trainersplanning, aanwezigheden, bericht sturen, account (2FA, iCal), auditlog en zoeken.
 - **Verwijderd:** publieke website (pagina's, nieuws, publieke kalender, trainingsuren, contact, SEO/sitemap), websitebeheer, statistieken, lidgeld en seizoenen, inschrijvingen, zwemtestwachtlijst, contactberichten, nieuwsbrief, fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit en wachtlijst per groep/blok, CSV-exports. Velden *Doelstellingen*, *Lidgeld*, *Capaciteit*, *Doorstroomgroep*, *Op website tonen* en *Foto-toestemming* zijn uit de formulieren.
