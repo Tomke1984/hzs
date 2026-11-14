@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Reeksen importeren weer verwijderd – commit volgt bij de push_
+_Reeksen importeren weer verwijderd – commit `79b3156`_
 
 - **Reeksen importeren** (commit `fa9b2f8`) is teruggedraaid: geen knop *Importeren* meer bij Trainingsreeksen, `SeriesImport` en de testsuite `v16_import` zijn weg. Reeksen maak je zoals voorheen via *+ Nieuwe reeks*.
 
