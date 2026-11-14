@@ -26,6 +26,8 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 | Beheerder | je eigen account | alles, clubbreed |
 | Bestuur | `bestuur@demo.local` | alle leden, groepen, kalender en inschrijvingen (geen gebruikersbeheer) |
 | Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid); persoonlijke kalender met die groepen |
+| Coördinator competitie | `coordinator@demo.local` | Coördinator + Trainer van de Wedstrijdploeg: trainersplanning, vaste trainers per blok, mails bij tekorten |
+| Competitietrainer | `competitie@demo.local` | Trainer van de Wedstrijdploeg: trainersplanning (afmelden, overnemen, collega inplannen) |
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
 | Ouder | `ouder@demo.local` | enkel het gekoppelde kind |
 
@@ -96,6 +98,17 @@ HZS Clubapp is twee dingen in één: de **publieke clubwebsite** (vervanger van 
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
+### Trainersplanning competitie (v0.12)
+- **Doel:** nooit meer een competitietraining zonder trainer. Zwemschool valt (voorlopig) buiten deze planning.
+- **Trainersplanning** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitiegroepen (en clubbrede wedstrijden) met hun trainers en een status *In orde* of *Trainer gezocht* (x/y). Tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*; periode 1–8 weken.
+- **Vaste trainer per blok:** de coördinator kiest per trainingsreeks en weekdag de vaste trainer(s) (*Vaste trainers en instellingen*). Die staan automatisch op elke training van dat blok; een wijziging geldt meteen voor alle komende trainingen.
+- **Afmelden en overnemen:** een trainer meldt zich af (met reden) voor één training of wedstrijd; de anderen zien meteen het tekort en klikken *Ik neem over*, of plannen een collega in. Elke competitietrainer kan dit doen (ook voor een ander), zodat iedereen de coördinatie kan overnemen wanneer nodig. *Weghalen* is voor extra/per vergissing ingeplande trainers; een vaste trainer meld je af.
+- **Minimum aantal trainers** per competitiegroep (standaard 1) en per activiteit (*Activiteit wijzigen → Aantal trainers nodig*, bv. 2 begeleiders voor een wedstrijd).
+- **Mail vooraf:** staat er binnen 3 dagen (`coverage.remind_days`) een training of wedstrijd zonder genoeg trainers, dan krijgen de coördinator(en) en alle competitietrainers één mail met de lijst en een link. Elke training wordt één keer gemeld (opnieuw als het tekort groter wordt of na een oplossing opnieuw ontstaat). De app doet dit zelf, hooguit één keer per uur bij een bezoek (geen cron nodig); met een cron-taak kan het ook via `php tools/coverage-reminders.php` (zet dan `coverage.auto_remind` op `false`). Knop *Nu mail sturen* voor de coördinator.
+- **Zichtbaar waar nodig:** rode rand en `!` in de kalender, blok *Trainer gezocht* en *Jij geeft training* op het overzicht, kaart *Trainers* op de activiteitspagina, teller in het menu (tekorten in de komende 7 dagen). Ouders en zwemmers zien geen trainersnamen.
+- **Weekplanning delen met ouders:** per competitiegroep een geheime, intrekbare link (`?r=weekplanning&t=…`) met de trainingen en wedstrijden van de komende 3 weken (ook geschrapte), zonder namen van trainers of leden. Handig in de oudergroep zolang niet iedereen een account heeft. De kalender zelf blijft privé.
+- **Rol *Coördinator competitie*** (permissie `coverage.manage`, ook voor bestuur en beheerder). Geeft de coördinator zelf training, vink dan ook *Trainer* aan. Wie in de trainersplanning staat: actieve trainers van een competitiegroep en coördinatoren.
+
 ### Uitbreidingen v0.11
 - **Aanwezigheid en communicatie:** aanwezigheidsrapport per groep/periode met lijst *Nog in te vullen*; **bericht sturen** naar groep, trainingsblok, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
 - **Lidgeld en seizoen:** seizoenen, bedrag per groep, rekeningen met Belgische **gestructureerde mededeling**, betaalstatus, herinneringen, **seizoensovergang** naar de doorstroomgroep (`fees.manage`, config `fees`).
@@ -118,15 +131,17 @@ public/install.php      eenmalige installer (vergrendelt zichzelf)
 app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
 app/Controllers/        Auth, Dashboard, Member, Group, Activity, Series, User, Invite, Registration,
-                        SwimTest, Contact, Content (website-beheer), Site (publieke site), Stats
+                        SwimTest, Contact, Content (website-beheer), Site (publieke site), Stats, Coverage (trainersplanning)
 app/Installer.php       installatie, migraties bij elke start, referentiedata (rollen/permissies)
 app/Markup.php          veilige opmaak voor paginateksten (tolerant bij plakken); app/PageCheck.php = paginacontrole
+app/Coverage.php        trainersplanning competitie: bezetting per activiteit, tekorten, herinneringsmails
 app/Stats.php           anonieme bezoekersteller en rapportage (StatsController + views/stats)
 app/SiteSeed.php        startinhoud khzs.be; app/CompetitionSeed.php = competitie-uren
 app/views/              PHP-templates met escaping via e() (site/ = publieke site)
 db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
 docs/                   functionele en technische analyse
-tools/                  seed-demo.php (demodata), seed-site.php (ontwikkelhulp: startinhoud khzs.be en competitie-uren), sync-scripts
+tests/e2e/              end-to-end tests (php tests/e2e/run.php)
+tools/                  coverage-reminders.php (herinneringen via cron), seed-demo.php (demodata), seed-site.php (ontwikkelhulp: startinhoud khzs.be en competitie-uren), sync-scripts
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
@@ -136,6 +151,16 @@ Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur, HSTS bi
 - `php tools/seed-site.php privacy` zet de ingebouwde tekst van het privacybeleid (overschrijft de pagina of maakt ze aan).
 - Beheerders zien onderaan het menu klein de branch en commit die draait (bv. `dev 29b3a79`), handig om te controleren of een update binnen is.
 - De CSP verbiedt inline stijl: gebruik CSS-klassen of SVG-attributen (zoals in de statistiekengrafiek), geen `style="…"`.
+
+## Tests
+
+```bash
+php tests/e2e/run.php                       # alle suites
+php tests/e2e/run.php v12_trainersplanning  # één suite
+KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
+```
+
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout) en `v12_trainersplanning`.
 
 ## Werkwijze met GitHub
 

@@ -403,12 +403,14 @@ final class SeriesController
                 }
                 Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$a['id']]);
                 Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+                Coverage::forgetActivity((int) $a['id']);
                 Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
                 $removed++;
             }
             Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
             Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$s['id']]);
             Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$s['id']]);
+            Coverage::forgetSeries((int) $s['id']);
             Database::exec('DELETE FROM activity_series WHERE id = ?', [$s['id']]);
         });
         audit('DELETE', 'activity_series', (int) $s['id'], $s['title'] . ": $removed trainingen verwijderd, $kept bewaard");

@@ -54,10 +54,10 @@ $todayStr = today();
         <?php endif; ?>
       </div>
       <?php foreach ($events as $ev): ?>
-        <<?= $ev['open'] ? 'a' : 'span' ?> class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> g-<?= e($ev['gcolor']) ?> <?= $ev['type_code'] === 'COMPETITION' ? 'is-comp' : '' ?> <?= $ev['mine'] ? '' : 'other' ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?>"
-           title="<?= e($ev['type_name'] . ' · ' . $ev['gnames'] . ' · ' . ($ev['mine'] ? '' : 'Niet voor jouw groep. ') . ($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? ''))) ?>"
+        <<?= $ev['open'] ? 'a' : 'span' ?> class="cal-event type-<?= e(strtolower($ev['type_code'])) ?> g-<?= e($ev['gcolor']) ?> <?= $ev['type_code'] === 'COMPETITION' ? 'is-comp' : '' ?> <?= $ev['mine'] ? '' : 'other' ?> <?= $ev['status'] === 'CANCELLED' ? 'cancelled' : '' ?> <?= !empty($ev['short']) ? 'short' : '' ?>"
+           title="<?= e((!empty($ev['short']) ? 'Trainer gezocht (' . $ev['short'] . ') · ' : '') . $ev['type_name'] . ' · ' . $ev['gnames'] . ' · ' . ($ev['mine'] ? '' : 'Niet voor jouw groep. ') . ($ev['status'] === 'CANCELLED' ? 'Geschrapt' . ($ev['status_note'] ? ': ' . $ev['status_note'] : '') : ($ev['location'] ?? ''))) ?>"
            <?= $ev['open'] ? 'href="' . e(url('activity', ['id' => $ev['id']])) . '"' : '' ?>>
-          <span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?><?php if ($ev['gnames'] !== ''): ?><span class="grp"><?= e($ev['gnames']) ?></span><?php endif; ?>
+          <?php if (!empty($ev['short'])): ?><span class="short-flag" aria-label="Trainer gezocht">!</span><?php endif; ?><span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= e($ev['title']) ?><?php if ($ev['gnames'] !== ''): ?><span class="grp"><?= e($ev['gnames']) ?></span><?php endif; ?>
         </<?= $ev['open'] ? 'a' : 'span' ?>>
       <?php endforeach; ?>
     </div>
@@ -68,6 +68,7 @@ $todayStr = today();
 <ul class="cal-legend" aria-label="Legende">
   <?php foreach ($legend as [$lname, $lcol]): ?><li><span class="swatch g-<?= e($lcol) ?>"></span><?= e($lname) ?></li><?php endforeach; ?>
   <li><span class="swatch is-comp-sw"></span>Wedstrijd (gele rand)</li>
+  <?php if (!empty($hasShort)): ?><li><span class="swatch short-sw"></span>Trainer gezocht (rode rand, <a href="<?= e(url('coverage', ['show' => 'problems'])) ?>">trainersplanning</a>)</li><?php endif; ?>
 </ul>
 <?php endif; ?>
 

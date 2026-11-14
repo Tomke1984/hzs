@@ -5,7 +5,15 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_(niets nieuws sinds v0.11.0)_
+- **Trainersplanning competitie** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitie met hun trainers en een status *In orde* / *Trainer gezocht*; tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*. Zwemschool valt erbuiten.
+- **Vaste trainer per blok** (reeks + weekdag) en **minimum aantal trainers** per competitiegroep (*Vaste trainers en instellingen*); per wedstrijd/activiteit een eigen aantal (*Aantal trainers nodig*).
+- **Afmelden, overnemen en inplannen** per training of wedstrijd (met reden). Elke competitietrainer kan dit, ook voor een collega, zodat iedereen de coördinatie kan overnemen. Vaste trainers afmelden, extra trainers weghalen.
+- **Mail vooraf bij een tekort:** binnen 3 dagen (`coverage.remind_days`) zonder genoeg trainers → één mail naar coördinator(en) en competitietrainers, elk tekort één keer (opnieuw als het groter wordt of terugkomt). Automatisch hooguit één keer per uur bij een bezoek (geen cron nodig), of via `tools/coverage-reminders.php`; knop *Nu mail sturen*. Na een afmelding binnen het venster vertrekt de mail meteen.
+- **Zichtbaarheid:** rode rand en `!` in de kalender, blokken *Trainer gezocht* en *Jij geeft training* op het overzicht, kaart *Trainers* op de activiteitspagina, teller in het menu. Ouders en zwemmers zien geen trainersnamen.
+- **Weekplanning delen met ouders:** geheime, intrekbare link per competitiegroep (3 weken trainingen, wedstrijden en clubactiviteiten, ook geschrapte; zonder namen). De kalender zelf blijft privé.
+- **Nieuwe rol *Coördinator competitie*** en permissie `coverage.manage` (ook bestuur en beheerder). Demo-accounts `coordinator@demo.local` en `competitie@demo.local`.
+- Database (schema 12, automatisch bij de eerste aanvraag): tabellen `series_trainers`, `activity_trainers`, `coverage_alerts`; kolommen `groups.min_trainers`, `groups.share_token`, `activities.min_trainers`. Opruimen bij het verwijderen van activiteiten, reeksen en groepen.
+- **Testsuite in de repository:** `php tests/e2e/run.php` (suites `smoke` en `v12_trainersplanning`, 296 controles). README en analyse bijgewerkt.
 
 ## Op main
 

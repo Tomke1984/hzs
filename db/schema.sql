@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS `groups` (
   capacity INT NULL,
   fee_cents INT NULL,
   next_group_id INT NULL,
+  min_trainers INT NULL,
+  share_token VARCHAR(40) NULL,
   CHECK (category IN ('SWIM_SCHOOL','COMPETITION'))
 ){{ENGINE}};
 
@@ -140,6 +142,7 @@ CREATE TABLE IF NOT EXISTS activities (
   status_note VARCHAR(200) NULL,
   is_public TINYINT NOT NULL DEFAULT 0,
   signup_capacity INT NULL,
+  min_trainers INT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
 ){{ENGINE}};
@@ -493,4 +496,28 @@ CREATE TABLE IF NOT EXISTS photo_members (
   PRIMARY KEY (photo_id, member_id),
   FOREIGN KEY (photo_id) REFERENCES gallery_photos(id),
   FOREIGN KEY (member_id) REFERENCES members(id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS series_trainers (
+  series_id INT NOT NULL,
+  weekday INT NOT NULL,
+  user_id INT NOT NULL,
+  PRIMARY KEY (series_id, weekday, user_id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS activity_trainers (
+  id {{PK}},
+  activity_id INT NOT NULL,
+  user_id INT NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'ASSIGNED' CHECK (status IN ('ASSIGNED','ABSENT')),
+  note VARCHAR(200) NULL,
+  updated_by INT NULL,
+  updated_at VARCHAR(19) NOT NULL,
+  UNIQUE (activity_id, user_id)
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS coverage_alerts (
+  activity_id INT NOT NULL PRIMARY KEY,
+  missing INT NOT NULL,
+  sent_at VARCHAR(19) NOT NULL
 ){{ENGINE}};

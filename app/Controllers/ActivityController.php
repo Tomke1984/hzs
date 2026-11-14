@@ -69,8 +69,26 @@ final class ActivityController
             $byDay[substr($r['starts_at'], 0, 10)][] = $r;
         }
 
+        // Trainersplanning: tekorten aan trainers in rood (enkel voor wie de trainersplanning ziet).
+        $short = [];
+        if ($rows && Coverage::canView()) {
+            foreach (Coverage::list($first->format('Y-m-d 00:00:00'), $next->format('Y-m-d 00:00:00'), array_map('intval', array_column($rows, 'id'))) as $c) {
+                if ($c['missing'] > 0 && $c['ends_at'] > now()) {
+                    $short[(int) $c['id']] = $c['present'] . '/' . $c['required'];
+                }
+            }
+            foreach ($byDay as &$evs) {
+                foreach ($evs as &$ev) {
+                    $ev['short'] = $short[(int) $ev['id']] ?? null;
+                }
+                unset($ev);
+            }
+            unset($evs);
+        }
+
         ksort($legend);
         render('activities/calendar', [
+            'hasShort' => (bool) $short,
             'legend' => $legend,
             'first' => $first,
             'prev' => $first->modify('-1 month')->format('Y-m'),
@@ -137,7 +155,11 @@ final class ActivityController
         $coachIds = Scope::coachMemberIds();
         $canResults = $isMeet && Auth::can('attendance.write');
 
-        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'isMeet', 'entries', 'meetResults', 'canMeetEdit', 'coachIds', 'canResults'), $activity['title']);
+        // Trainersplanning competitie: wie geeft deze training / begeleidt deze wedstrijd.
+        $coverage = Coverage::canView() ? Coverage::one((int) $activity['id']) : null;
+        $coveragePool = $coverage ? Coverage::pool() : [];
+
+        render('activities/show', compact('activity', 'groups', 'roster', 'statusByMember', 'canRegister', 'canSeeAttendance', 'registrable', 'absences', 'ownIds', 'canAbsence', 'medical', 'isMeet', 'entries', 'meetResults', 'canMeetEdit', 'coachIds', 'canResults', 'coverage', 'coveragePool'), $activity['title']);
     }
 
     /** Ouder of lid meldt vooraf af voor één activiteit (of trekt de afmelding in). */
@@ -185,7 +207,7 @@ final class ActivityController
             $activity = [
                 'id' => 0, 'type_id' => $type, 'title' => '', 'description' => '', 'location' => '',
                 'starts_local' => $date . 'T18:00', 'ends_local' => $date . 'T19:00',
-                'audience' => 'GROUPS', 'status' => 'PLANNED', 'is_public' => 0, 'signup_capacity' => null,
+                'audience' => 'GROUPS', 'status' => 'PLANNED', 'is_public' => 0, 'signup_capacity' => null, 'min_trainers' => null,
             ];
             $selected = [];
         }
@@ -211,6 +233,7 @@ final class ActivityController
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
             'is_public' => input('is_public') === '1' ? 1 : 0,
             'signup_capacity' => null,
+            'min_trainers' => input('min_trainers'),
         ];
         if (input('signup_open') === '1') {
             $cap = input('signup_capacity');
@@ -254,6 +277,9 @@ final class ActivityController
         if ($activity['signup_capacity'] === -1) {
             $errors[] = 'Het aantal plaatsen voor online inschrijving moet een getal zijn (leeg = onbeperkt).';
         }
+        if ($activity['min_trainers'] !== '' && (!ctype_digit($activity['min_trainers']) || (int) $activity['min_trainers'] > 9)) {
+            $errors[] = 'Het aantal trainers nodig is een getal van 0 tot 9 (leeg = volgens de groep).';
+        }
         if (!in_array($activity['status'], ['PLANNED', 'CANCELLED'], true)) {
             $errors[] = 'Status is ongeldig.';
         }
@@ -267,8 +293,9 @@ final class ActivityController
         $groupIds = $activity['audience'] === 'GROUPS' ? $selected : [];
         $desc = $activity['description'] === '' ? null : $activity['description'];
         $loc = $activity['location'] === '' ? null : $activity['location'];
+        $minTrainers = $activity['min_trainers'] === '' ? null : (int) $activity['min_trainers'];
 
-        $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds) {
+        $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds, $minTrainers) {
             if ($id) {
                 Database::exec(
                     'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=?, is_public=?, signup_capacity=? WHERE id=?',
@@ -290,6 +317,7 @@ final class ActivityController
             foreach ($groupIds as $gid) {
                 Database::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?,?)', [$id, $gid]);
             }
+            Database::exec('UPDATE activities SET min_trainers = ? WHERE id = ?', [$minTrainers, $id]);
             return $id;
         });
 

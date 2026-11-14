@@ -31,8 +31,23 @@ final class DashboardController
             compact('upcoming', 'stats', 'guardianMissing', 'newRegistrations'),
             self::family(),
             self::coach(),
-            self::office()
+            self::office(),
+            self::coverage()
         ), 'Overzicht');
+    }
+
+    /** Trainersplanning competitie: tekorten in de komende 14 dagen en de eigen trainingen van deze week. */
+    private static function coverage(): array
+    {
+        if (!Coverage::canView()) {
+            return ['coverShort' => [], 'coverMine' => [], 'coverView' => false];
+        }
+        $uid = (int) Auth::user()['id'];
+        $rows = Coverage::list(now(), date('Y-m-d H:i:s', strtotime('+14 days')));
+        $short = array_values(array_filter($rows, fn($a) => $a['missing'] > 0));
+        $mine = array_values(array_filter($rows, fn($a) => $a['starts_at'] < date('Y-m-d H:i:s', strtotime('+7 days'))
+            && (bool) array_filter($a['trainers'], fn($t) => $t['id'] === $uid && !$t['absent'])));
+        return ['coverShort' => $short, 'coverMine' => $mine, 'coverView' => true];
     }
 
     /** Ouder of lid: wat staat er open voor mijn kinderen of mezelf. */

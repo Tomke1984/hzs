@@ -68,6 +68,11 @@
     <span class="muted small">Het formulier verschijnt bij de activiteit in de publieke kalender. Telt het aantal personen, niet het aantal inschrijvingen.</span>
   </fieldset>
 
+  <label>Aantal trainers nodig (trainersplanning competitie)
+    <input name="min_trainers" inputmode="numeric" maxlength="1" value="<?= e((string) ($activity['min_trainers'] ?? '')) ?>" placeholder="volgens de groep">
+    <span class="muted small">Enkel voor trainingen en wedstrijden van de competitie. Leeg = het minimum van de groep (standaard 1).</span>
+  </label>
+
   <?php if ($activity['id']): ?>
   <label>Status
     <select name="status">

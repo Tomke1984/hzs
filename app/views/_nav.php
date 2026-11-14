@@ -16,11 +16,14 @@ $icons = [
     'shield' => '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6z"/><path d="m9 12 2.2 2.2L15 10"/>',
     'send' => '<path d="M21 4 3 11l6.5 2.5L12 20z"/><path d="m9.5 13.5 11-9.5"/>',
     'report' => '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    'roster' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 17c.4-2 1.8-3.2 3.5-3.2s3.1 1.2 3.5 3.2"/>',
     'globe' => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
 ];
 $nReg = Auth::can('registrations.manage') ? (int) Database::val("SELECT COUNT(*) FROM registrations WHERE status = 'PENDING'") : 0;
 $nWait = Auth::can('registrations.manage') ? (int) Database::val("SELECT COUNT(*) FROM swimtest_requests WHERE status = 'WAITING'") : 0;
 $nMsg = Auth::can('registrations.manage') ? (int) Database::val('SELECT COUNT(*) FROM contact_messages WHERE handled_at IS NULL') : 0;
+$coverView = Coverage::canView();
+$nShort = $coverView ? count(Coverage::problems(7)) : 0;
 $cur = (string) ($_GET['r'] ?? 'home');
 $menu = [
     [null, [
@@ -38,6 +41,7 @@ $menu = [
     ['Planning', [
         ['Kalender', 'calendar', 'calendar', 'activities.read', ['calendar', 'activity', 'activity_form', 'activity_save', 'attendance_save'], 0],
         ['Trainingsreeksen', 'series', 'repeat', 'activities.write', ['series', 'series_show', 'series_form', 'series_save', 'series_bulk', 'series_delete', 'series_public', 'occurrence'], 0],
+        ['Trainersplanning', 'coverage', 'roster', 'coverage.view', ['coverage', 'coverage_settings', 'coverage_action', 'coverage_settings_save', 'coverage_share', 'coverage_remind'], $nShort],
         ['Aanwezigheden', 'attendance_report', 'report', 'attendance.read', ['attendance_report'], 0],
         ['Bericht sturen', 'mail', 'send', 'mail.send', ['mail', 'mail_send', 'mail_edit'], 0],
     ]],
@@ -55,7 +59,7 @@ $menu = [
 ?>
 <nav class="side-nav" id="app-nav" aria-label="Hoofdmenu">
   <?php foreach ($menu as [$label, $items]):
-      $items = array_values(array_filter($items, fn($i) => $i[3] === null || Auth::can($i[3])));
+      $items = array_values(array_filter($items, fn($i) => $i[3] === null || ($i[3] === 'coverage.view' ? $coverView : Auth::can($i[3]))));
       if (!$items) { continue; } ?>
     <div class="side-section">
       <?php if ($label): ?><div class="side-label"><?= e($label) ?></div><?php endif; ?>

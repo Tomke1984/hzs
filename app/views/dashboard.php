@@ -28,6 +28,34 @@
 </section>
 <?php endif; ?>
 
+<?php if ($coverShort): ?>
+<section class="card cover-problems">
+  <div class="row-between"><h2>Trainer gezocht <span class="badge"><?= count($coverShort) ?></span></h2><a href="<?= e(url('coverage', ['show' => 'problems'])) ?>">Trainersplanning →</a></div>
+  <ul class="list">
+  <?php foreach ($coverShort as $c): ?>
+    <li><a href="<?= e(url('coverage', ['show' => 'problems'])) ?>#a<?= (int) $c['id'] ?>"><strong><?= e(fmt_date($c['starts_at'])) ?> <?= e(fmt_time($c['starts_at'])) ?></strong> · <?= e($c['title']) ?></a>
+      <span class="muted"><?= e($c['gnames']) ?> · <?= (int) $c['present'] ?> van <?= (int) $c['required'] ?> trainer(s)</span></li>
+  <?php endforeach; ?>
+  </ul>
+</section>
+<?php endif; ?>
+
+<?php if ($coverView): ?>
+<section class="card">
+  <div class="row-between"><h2>Jij geeft training (komende 7 dagen)</h2><a href="<?= e(url('coverage', ['show' => 'mine'])) ?>">Mijn planning →</a></div>
+  <?php if (!$coverMine): ?>
+    <p class="muted">Je staat de komende 7 dagen nergens ingepland.</p>
+  <?php else: ?>
+  <ul class="list">
+  <?php foreach ($coverMine as $c): ?>
+    <li><a href="<?= e(url('activity', ['id' => $c['id']])) ?>#trainers"><strong><?= e(fmt_date($c['starts_at'])) ?> <?= e(fmt_time($c['starts_at'])) ?></strong> · <?= e($c['title']) ?></a>
+      <span class="muted"><?= e($c['gnames']) ?></span></li>
+  <?php endforeach; ?>
+  </ul>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
+
 <?php if ($unfilled): ?>
 <section class="card">
   <div class="row-between"><h2>Aanwezigheid nog in te vullen</h2><a href="<?= e(url('attendance_report')) ?>">Rapport →</a></div>

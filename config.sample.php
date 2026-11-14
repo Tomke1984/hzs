@@ -38,6 +38,9 @@ return [
     'security' => ['require_2fa_admin' => false],
     // Naar welk adres gaan berichten van het contactformulier? Leeg = het adres bij 'registration' hierboven.
     'contact' => ['swimschool_email' => '', 'competition_email' => '', 'other_email' => ''],
+    // Trainersplanning competitie: hoeveel dagen vooraf een mail vertrekt als er nog een trainer ontbreekt, en of de app
+    // dat zelf doet (hooguit één keer per uur, bij een bezoek). Met een cron-taak: auto_remind false + tools/coverage-reminders.php.
+    'coverage' => ['remind_days' => 3, 'auto_remind' => true],
 
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting

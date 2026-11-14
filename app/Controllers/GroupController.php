@@ -408,6 +408,7 @@ final class GroupController
                 Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$sid]);
                 Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$sid]);
                 Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$sid]);
+                Coverage::forgetSeries((int) $sid);
                 Database::exec('DELETE FROM activity_series WHERE id = ?', [$sid]);
             }
             Database::exec('DELETE FROM group_memberships WHERE group_id = ?', [$id]);
@@ -431,6 +432,7 @@ final class GroupController
     {
         Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$id]);
         Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$id]);
+        Coverage::forgetActivity($id);
         Database::exec('DELETE FROM activities WHERE id = ?', [$id]);
     }
 

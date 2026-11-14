@@ -7,3 +7,4 @@ public/uploads/*
 !public/uploads/.gitkeep
 storage/stats.salt
 storage/stats-error.log
+storage/coverage-last-run

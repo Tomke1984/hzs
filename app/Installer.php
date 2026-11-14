@@ -20,14 +20,16 @@ final class Installer
         'fees.manage'     => 'Lidgeld en seizoenen beheren',
         'members.medical' => 'Noodcontact en medische opmerkingen zien (binnen scope)',
         'audit.read'      => 'Auditlog bekijken (enkel beheerders)',
+        'coverage.manage' => 'Trainersplanning competitie beheren (vaste trainers per blok, minimum per groep, herinneringen)',
     ];
 
     public const ROLES = [
         'ADMIN'   => ['Beheerder', ['*']],
         'BOARD'   => ['Bestuur', ['members.read', 'members.write', 'members.contact', 'groups.read', 'groups.write',
                                   'activities.read', 'activities.write', 'attendance.read', 'attendance.write', 'registrations.manage', 'content.manage',
-                                  'mail.send', 'export.data', 'fees.manage', 'members.medical']],
+                                  'mail.send', 'export.data', 'fees.manage', 'members.medical', 'coverage.manage']],
         'TRAINER' => ['Trainer', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'attendance.write', 'mail.send', 'members.medical']],
+        'COORDINATOR' => ['Coördinator competitie', ['members.read', 'groups.read', 'activities.read', 'attendance.read', 'coverage.manage']],
         'SWIMMER' => ['Zwemmer', ['members.read', 'activities.read', 'attendance.read']],
         'PARENT'  => ['Ouder', ['members.read', 'activities.read', 'attendance.read']],
     ];
@@ -156,7 +158,7 @@ final class Installer
     }
 
     /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
-    public const SCHEMA = 11;
+    public const SCHEMA = 12;
 
     /** Nieuwe tabellen en kolommen van v0.11 (rapporten, lidgeld, wachtlijst, resultaten, nieuwsbrief, galerij, 2FA). */
     private static function migrateV11(): void
@@ -199,7 +201,28 @@ final class Installer
         } catch (Throwable $e) {
             // pagina's bestaan nog niet: niets te doen
         }
+        self::migrateV12();
         $_SESSION['schema'] = self::SCHEMA;
+    }
+
+    /** v0.12: trainersplanning competitie (vaste trainers per blok, trainers per activiteit, herinneringen, deellink per groep). */
+    private static function migrateV12(): void
+    {
+        foreach (['series_trainers', 'activity_trainers', 'coverage_alerts'] as $table) {
+            try {
+                Database::val("SELECT 1 FROM $table LIMIT 1");
+            } catch (Throwable $e) {
+                self::createSchema();
+                break;
+            }
+        }
+        foreach ([['`groups`', 'min_trainers', 'INT NULL'], ['`groups`', 'share_token', 'VARCHAR(40) NULL'], ['activities', 'min_trainers', 'INT NULL']] as [$table, $col, $def]) {
+            try {
+                Database::val("SELECT $col FROM $table LIMIT 1");
+            } catch (Throwable $e) {
+                Database::exec("ALTER TABLE $table ADD COLUMN $col $def");
+            }
+        }
     }
 
     public static function syncReferenceData(): void
@@ -334,6 +357,14 @@ final class Installer
                 [$trainer, 'SWIMMER']
             );
             Database::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$trainerMember, $groups['Wedstrijdploeg'], '2025-09-01']);
+
+            // Competitie: een coördinator (ook trainer) en een tweede competitietrainer voor de trainersplanning.
+            $coord = self::createUser('coordinator@demo.local', 'Demo1234!', 'Lander Coördinator', 'COORDINATOR');
+            Database::exec('INSERT INTO user_roles (user_id, role_id) VALUES (?, (SELECT id FROM roles WHERE code = ?))', [$coord, 'TRAINER']);
+            $comp = self::createUser('competitie@demo.local', 'Demo1234!', 'Kobe Competitie', 'TRAINER');
+            foreach ([$coord, $comp] as $u) {
+                Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$u, $groups['Wedstrijdploeg'], '2025-09-01']);
+            }
 
             self::createUser('bestuur@demo.local', 'Demo1234!', 'Bea Bestuur', 'BOARD');
             self::createUser('zwemmer@demo.local', 'Demo1234!', 'Emma Peeters', 'SWIMMER', $memberIds[0]);

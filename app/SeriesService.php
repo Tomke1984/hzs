@@ -47,6 +47,7 @@ final class SeriesService
             }
             Database::exec('DELETE FROM attendance WHERE activity_id = ?', [$a['id']]);
             Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+            Coverage::forgetActivity((int) $a['id']);
             Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
         });
         return 'deleted';
@@ -163,6 +164,13 @@ final class SeriesService
         }
         $groupIds = array_map('intval', array_column(Database::all('SELECT group_id FROM activity_series_groups WHERE series_id = ?', [$seriesId]), 'group_id'));
         $today = today();
+        // Vaste trainers van een weekdag die niet meer in het schema staat, vervallen.
+        if ($slots) {
+            $wds = array_keys($slots);
+            Database::exec('DELETE FROM series_trainers WHERE series_id = ? AND weekday NOT IN (' . Scope::in($wds) . ')', array_merge([$seriesId], $wds));
+        } else {
+            Coverage::forgetSeries($seriesId);
+        }
 
         // Gewenste trainingen: elke datum vanaf vandaag waarop een weekdag-slot past.
         $desired = [];
@@ -209,6 +217,7 @@ final class SeriesService
                     $hasAtt = (int) Database::val('SELECT COUNT(*) FROM attendance WHERE activity_id = ?', [$a['id']]) > 0;
                     if ((int) $a['is_custom'] === 0 && !$hasAtt) {
                         Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$a['id']]);
+                        Coverage::forgetActivity((int) $a['id']);
                         Database::exec('DELETE FROM activities WHERE id = ?', [$a['id']]);
                         $out['removed']++;
                     } else {

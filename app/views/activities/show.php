@@ -40,6 +40,14 @@
   <?php endif; ?>
 </section>
 
+<?php if ($coverage): ?>
+<section class="card" id="trainers">
+  <div class="row-between"><h2>Trainers</h2><a href="<?= e(url('coverage')) ?>#a<?= (int) $activity['id'] ?>">Trainersplanning →</a></div>
+  <?php $a = $coverage; $pool = $coveragePool; $uid = (int) Auth::user()['id']; $back = 'activity'; $keep = [];
+      require APP_ROOT . '/app/views/coverage/_card.php'; ?>
+</section>
+<?php endif; ?>
+
 <?php if ($canSeeAttendance): ?>
 <section class="card">
   <h2>Aanwezigheid</h2>

@@ -105,6 +105,13 @@ $routes = [
     'series_save'      => ['POST' => ['SeriesController', 'save', 'activities.write']],
     'series_bulk'      => ['GET' => ['SeriesController', 'bulkForm', 'activities.write'], 'POST' => ['SeriesController', 'bulk', 'activities.write']],
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
+    'coverage'         => ['GET' => ['CoverageController', 'index', null]],
+    'coverage_action'  => ['POST' => ['CoverageController', 'action', null]],
+    'coverage_settings' => ['GET' => ['CoverageController', 'settings', 'coverage.manage']],
+    'coverage_settings_save' => ['POST' => ['CoverageController', 'settingsSave', 'coverage.manage']],
+    'coverage_share'   => ['POST' => ['CoverageController', 'share', 'coverage.manage']],
+    'coverage_remind'  => ['POST' => ['CoverageController', 'remindNow', 'coverage.manage']],
+    'weekplanning'     => ['GET' => ['CoverageController', 'week', 'public']],
     'stats'            => ['GET' => ['StatsController', 'index', 'stats.read']],
     'attendance_save'  => ['POST' => ['ActivityController', 'saveAttendance', 'attendance.write']],
     'absence'          => ['POST' => ['ActivityController', 'absence', 'activities.read']],
@@ -221,4 +228,5 @@ if ($permission !== 'public') {
 }
 
 Stats::track($route);
+Coverage::autoRemind(); // mail als er binnenkort een trainer ontbreekt (hooguit één keer per uur, na het antwoord)
 $class::$action();

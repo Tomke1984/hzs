@@ -33,7 +33,7 @@ function base_path(): string
 /** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
 const PRETTY_ROUTES = ['agenda' => 'kalender', 'trainingstimes' => 'trainingsuren', 'swimtest' => 'zwemtest', 'register' => 'inschrijven', 'login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten', 'gallery' => 'fotos'];
 /** Routes die bewust op ?r= blijven (bevestigingslinks in mails, formulierdoel). */
-const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news', 'event', 'event_signup', 'newsletter_subscribe', 'newsletter_confirm', 'newsletter_unsub'];
+const PLAIN_ROUTES = ['swimtest_confirm', 'register_confirm', 'contact_send', 'news', 'event', 'event_signup', 'newsletter_subscribe', 'newsletter_confirm', 'newsletter_unsub', 'weekplanning'];
 /**
  * Leesbare adressen voor de beheer-app (onder /app): route => [adres met id, adres zonder id (nieuw)].
  * Alle andere app-routes (vooral POST-acties) krijgen /app/<route-met-streepjes>.
@@ -48,6 +48,7 @@ const APP_PATHS = [
     'registrations' => ['app/inschrijvingen'], 'registration' => ['app/inschrijvingen/{id}'],
     'swimtests' => ['app/wachtlijst'], 'swimtest_show' => ['app/wachtlijst/{id}'],
     'messages' => ['app/berichten'], 'stats' => ['app/statistieken'],
+    'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
     'export' => ['app/exporteren'], 'account' => ['app/account'], 'fees' => ['app/lidgeld'], 'season_rollover' => ['app/seizoensovergang'],
     'event_signups' => ['app/activiteit-inschrijvingen'], 'newsletter' => ['app/nieuwsbrief'], 'gallery_admin' => ['app/fotogalerij'], 'gallery_album' => ['app/fotogalerij/{id}'],
@@ -339,7 +340,7 @@ function members_label(): string
 
 function role_label(string $code): string
 {
-    return ['ADMIN' => 'Beheerder', 'BOARD' => 'Bestuur', 'TRAINER' => 'Trainer', 'SWIMMER' => 'Zwemmer', 'PARENT' => 'Ouder'][$code] ?? $code;
+    return ['ADMIN' => 'Beheerder', 'BOARD' => 'Bestuur', 'TRAINER' => 'Trainer', 'COORDINATOR' => 'Coördinator competitie', 'SWIMMER' => 'Zwemmer', 'PARENT' => 'Ouder'][$code] ?? $code;
 }
 
 function audit(string $action, string $entity, ?int $entityId = null, ?string $detail = null): void
@@ -388,7 +389,7 @@ function group_filter_fields(string $cat, int $gid, array $groupOptions): string
 }
 
 /** Hoofdpagina's uit het menu: daar is geen "Terug" nodig. */
-const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees', 'newsletter', 'gallery_admin'];
+const BACK_TOP_ROUTES = ['dashboard', 'members', 'groups', 'users', 'calendar', 'series', 'registrations', 'swimtests', 'messages', 'content', 'stats', 'attendance_report', 'audit', 'search', 'mail', 'export', 'account', 'fees', 'newsletter', 'gallery_admin', 'coverage'];
 
 /** Onthoudt de laatst bekeken filters/maand/tab van een lijstpagina, zodat "Terug" er precies naar terugkeert. */
 function remember_list_context(string $route, array $get): void
@@ -430,6 +431,7 @@ function back_url(string $route, array $get): string
         'series_show' => list_url('series'),
         'series_form', 'series_save' => $id ? url('series_show', ['id' => $id]) : list_url('series'),
         'series_bulk' => list_url('series'),
+        'coverage_settings' => list_url('coverage'),
         'post_form', 'post_save' => url('content', ['tab' => 'news']),
         'page_form', 'page_save' => url('content', ['tab' => 'pages']),
         default => url('dashboard'),
