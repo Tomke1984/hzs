@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Meerdere tegelijk: duidelijkere werkwijze – commit volgt bij de push_
+
+- **Bulk toewijzen herwerkt** tot een aparte pagina *Meerdere trainingen tegelijk* (knop bovenaan de trainersplanning) met 3 stappen: 1) trainer en actie (inplannen of afmelden), 2) groep, dag en periode, 3) een lijst met wat er verandert, vooraf aangevinkt, met één knop "X inplannen voor N trainingen". Trainingen waar niets verandert staan grijs met de reden.
+- De vinkjes per kaart en het bulkvak in de gewone trainersplanning zijn weg. Werkt ook op telefoon.
+
 _Reeksen importeren weer verwijderd – commit `79b3156`_
 
 - **Reeksen importeren** (commit `fa9b2f8`) is teruggedraaid: geen knop *Importeren* meer bij Trainingsreeksen, `SeriesImport` en de testsuite `v16_import` zijn weg. Reeksen maak je zoals voorheen via *+ Nieuwe reeks*.

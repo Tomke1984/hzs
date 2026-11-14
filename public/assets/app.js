@@ -25,38 +25,20 @@
     if (window.matchMedia) window.matchMedia('(min-width: 960px)').addEventListener('change', function (e) { if (e.matches) setNav(false); });
   }
 
-  // Trainersplanning: meerdere trainingen aanvinken (teller, alles / tekorten / blok)
+  // Trainersplanning "Meerdere tegelijk": teller op de knop, alles aan/uit
   var bulk = document.getElementById('cover-bulk');
   if (bulk) {
-    var coverPicks = function () { return document.querySelectorAll('input.cover-pick'); };
+    var coverPicks = function () { return bulk.querySelectorAll('input.cover-pick'); };
     var coverCount = bulk.querySelector('[data-bulk-count]');
-    var tools = bulk.querySelector('[data-bulk-tools]');
     var coverUpdate = function () {
       var n = 0;
       coverPicks().forEach(function (c) { if (c.checked) n++; });
-      if (coverCount) coverCount.textContent = n ? ' (' + n + ')' : '';
+      if (coverCount) coverCount.textContent = String(n);
+      bulk.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = n === 0; });
     };
-    if (tools) tools.hidden = false;
-    document.addEventListener('change', function (ev) { if (ev.target.classList && ev.target.classList.contains('cover-pick')) coverUpdate(); });
-    bulk.addEventListener('click', function (ev) {
-      var b = ev.target.closest && ev.target.closest('[data-bulk-select]');
-      if (!b) return;
-      var mode = b.getAttribute('data-bulk-select');
-      coverPicks().forEach(function (c) { c.checked = mode === 'all' || (mode === 'short' && c.getAttribute('data-short') === '1'); });
+    bulk.addEventListener('change', function (ev) {
+      if (ev.target.id === 'cover-all') coverPicks().forEach(function (c) { c.checked = ev.target.checked; });
       coverUpdate();
-    });
-    var blockSel = bulk.querySelector('[data-bulk-block]');
-    if (blockSel) blockSel.addEventListener('change', function () {
-      var key = blockSel.value;
-      if (!key) return;
-      coverPicks().forEach(function (c) { if (c.getAttribute('data-block') === key) c.checked = true; });
-      blockSel.value = '';
-      coverUpdate();
-    });
-    bulk.addEventListener('submit', function (ev) {
-      var n = 0;
-      coverPicks().forEach(function (c) { if (c.checked) n++; });
-      if (!n) { ev.preventDefault(); window.alert('Vink eerst de trainingen of wedstrijden aan.'); }
     });
     coverUpdate();
   }

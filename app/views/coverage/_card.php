@@ -28,11 +28,6 @@ $hidden = function () use ($a, $back, $keep): string {
 <article class="cover-card<?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?>" id="a<?= (int) $a['id'] ?>">
   <div class="cover-head">
     <div>
-      <?php if (!$past && $back === ''): ?>
-        <input type="checkbox" class="cover-pick" name="ids[]" value="<?= (int) $a['id'] ?>" form="cover-bulk"
-          data-short="<?= $a['missing'] > 0 ? '1' : '0' ?>" data-block="<?= $a['series_id'] ? (int) $a['series_id'] . '-' . (int) date('N', strtotime(substr($a['starts_at'], 0, 10))) : '' ?>"
-          aria-label="Selecteer <?= e($a['title'] . ' ' . fmt_dt($a['starts_at'])) ?>">
-      <?php endif; ?>
       <span class="cover-when"><?= e(fmt_date($a['starts_at'])) ?> · <?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
       <?php if ($back === ''): ?>
         <a class="cover-title" href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e($a['title']) ?></a>

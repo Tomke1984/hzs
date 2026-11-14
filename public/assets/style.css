@@ -522,3 +522,9 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .btn-danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 .btn-ghost.btn-danger { background: #fff; color: var(--bad); border-color: var(--bad); }
 .danger-zone { border-left: 5px solid var(--bad); }
+.bulk-do { border: 0; padding: 0; margin: 0; }
+.bulk-do legend { font-weight: 600; margin-bottom: 4px; }
+.bulk-do .check { margin: 2px 0; }
+.bulk-table .check-col { width: 44px; text-align: center; }
+.bulk-table input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--blue); }
+.btn-wrap { white-space: normal; height: auto; text-align: left; max-width: 100%; }

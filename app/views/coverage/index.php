@@ -9,6 +9,8 @@
     </span>
   <?php endif; ?>
 </div>
+<p><a class="btn btn-ghost" href="<?= e(url('coverage_bulk_form')) ?>">Meerdere trainingen tegelijk…</a>
+  <span class="muted small">Eén trainer in één keer inplannen of afmelden, bv. alle dinsdagen overnemen of een vakantie doorgeven.</span></p>
 <p class="muted">Wie geeft welke training en wie begeleidt welke wedstrijd. Kan je niet? Meld je af, dan zien de andere trainers meteen dat er iemand nodig is.
   Staat er binnen <?= (int) $remindDays ?> dagen nog een training of wedstrijd zonder genoeg trainers, dan krijgen de coördinator en alle competitietrainers automatisch een mail.</p>
 
@@ -45,43 +47,6 @@
   <button class="btn btn-small" type="submit">Tonen</button>
 </form>
 
-<?php if ($byWeek): ?>
-<form id="cover-bulk" class="card cover-bulk" method="post" action="<?= e(url('coverage_bulk')) ?>">
-  <?= csrf_field() ?>
-  <?php if ($show !== ''): ?><input type="hidden" name="show" value="<?= e($show) ?>"><?php endif; ?>
-  <?php if ($weeks !== 4): ?><input type="hidden" name="weeks" value="<?= (int) $weeks ?>"><?php endif; ?>
-  <h2>Meerdere tegelijk</h2>
-  <p class="muted small">Vink hieronder de trainingen of wedstrijden aan (☐ links bij elke kaart) en plan in één keer een trainer in, of meld een trainer af, bv. voor een vakantie. Wat al zo staat of voorbij is, wordt overgeslagen.</p>
-  <div class="cover-bulk-row">
-    <label>Trainer
-      <select name="user_id" required>
-        <option value="">Kies…</option>
-        <?php foreach ($pool as $pid => $pname): ?><option value="<?= (int) $pid ?>"<?= $pid === $uid ? ' selected' : '' ?>><?= e($pname) ?><?= $pid === $uid ? ' (jij)' : '' ?></option><?php endforeach; ?>
-      </select>
-    </label>
-    <label>Actie
-      <select name="do">
-        <option value="assign">inplannen</option>
-        <option value="absent">afmelden</option>
-      </select>
-    </label>
-    <label>Reden bij afmelden <input name="note" maxlength="200" placeholder="optioneel, bv. vakantie"></label>
-    <button class="btn" type="submit">Toepassen op aangevinkte<span class="cover-count" data-bulk-count></span></button>
-  </div>
-  <div class="cover-bulk-select" data-bulk-tools hidden>
-    <span class="muted small">Aanvinken:</span>
-    <button class="btn btn-small btn-ghost" type="button" data-bulk-select="short">Alle tekorten</button>
-    <button class="btn btn-small btn-ghost" type="button" data-bulk-select="all">Alles</button>
-    <button class="btn btn-small btn-ghost" type="button" data-bulk-select="none">Niets</button>
-    <?php if ($blocks): ?>
-      <select data-bulk-block aria-label="Alle trainingen van een blok aanvinken">
-        <option value="">Alle trainingen van een blok…</option>
-        <?php foreach ($blocks as $key => $label): ?><option value="<?= e($key) ?>"><?= e($label) ?></option><?php endforeach; ?>
-      </select>
-    <?php endif; ?>
-  </div>
-</form>
-<?php endif; ?>
 
 <?php if (!$byWeek): ?>
   <p class="muted"><?= $show === 'mine' ? 'Je staat in deze periode nergens ingepland.' : ($show === 'problems' ? 'Geen tekorten in deze periode.' : 'Geen trainingen of wedstrijden van de competitie in deze periode.') ?></p>

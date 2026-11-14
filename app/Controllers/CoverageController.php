@@ -29,17 +29,7 @@ final class CoverageController
             $monday = date('Y-m-d', strtotime('monday this week', strtotime(substr($a['starts_at'], 0, 10))));
             $byWeek[$monday][] = $a;
         }
-        // Blokken (reeks + weekdag) in de lijst, om ze in één keer aan te vinken.
-        $blocks = [];
-        foreach ($rows as $a) {
-            if ($a['series_id'] && $a['ends_at'] > now()) {
-                $wd = (int) date('N', strtotime(substr($a['starts_at'], 0, 10)));
-                $blocks[(int) $a['series_id'] . '-' . $wd] ??= $a['title'] . ' · ' . SeriesService::DAYS[$wd] . ' ' . fmt_time($a['starts_at']);
-            }
-        }
-        asort($blocks);
         render('coverage/index', [
-            'blocks' => $blocks,
             'byWeek' => $byWeek,
             'problems' => $problems,
             'pool' => Coverage::pool(),
@@ -134,13 +124,73 @@ final class CoverageController
     }
 
     /**
+     * Pagina "Meerdere tegelijk": stap 1 kies trainer + actie + welke trainingen (groep, dag, periode),
+     * stap 2 een lijst met wat er zal veranderen (vooraf aangevinkt), stap 3 bevestigen (POST naar bulk()).
+     */
+    public static function bulkForm(): void
+    {
+        self::requireView();
+        $pool = Coverage::pool();
+        $f = self::bulkFilters($_GET);
+        $uid = (int) Auth::user()['id'];
+        if (!isset($_GET['user_id']) && isset($pool[$uid])) {
+            $f['user_id'] = $uid;
+        }
+        $groups = Database::all("SELECT id, name FROM `groups` WHERE is_active = 1 ORDER BY name");
+        $rows = [];
+        $target = (int) ($f['user_id'] ?? 0);
+        if (isset($pool[$target]) && isset($_GET['show'])) {
+            foreach (Coverage::list($f['from'] . ' 00:00:00', date('Y-m-d', strtotime($f['to'] . ' +1 day')) . ' 00:00:00') as $a) {
+                if ($a['ends_at'] <= now()) {
+                    continue;
+                }
+                if ($f['g'] && !in_array($f['g'], array_map('intval', array_column($a['groups'], 'id')), true)) {
+                    continue;
+                }
+                if ($f['d'] && (int) date('N', strtotime(substr($a['starts_at'], 0, 10))) !== $f['d']) {
+                    continue;
+                }
+                $cur = null;
+                foreach ($a['trainers'] as $t) {
+                    if ($t['id'] === $target) {
+                        $cur = $t;
+                    }
+                }
+                if ($f['do'] === 'assign') {
+                    $a['skip'] = $cur && !$cur['absent'] ? 'staat al ingepland' : null;
+                } else {
+                    $a['skip'] = !$cur || $cur['absent'] ? ($cur ? 'al afgemeld' : 'staat niet ingepland') : null;
+                }
+                $rows[] = $a;
+            }
+        }
+        render('coverage/bulk', ['pool' => $pool, 'f' => $f, 'groups' => $groups, 'rows' => $rows, 'shown' => isset($_GET['show']) && isset($pool[$target])], 'Meerdere tegelijk');
+    }
+
+    /** Gevalideerde filters voor "Meerdere tegelijk" (uit GET of POST). */
+    private static function bulkFilters(array $in): array
+    {
+        $from = valid_date((string) ($in['from'] ?? '')) ? (string) $in['from'] : today();
+        $to = valid_date((string) ($in['to'] ?? '')) ? (string) $in['to'] : date('Y-m-d', strtotime('+4 weeks'));
+        if ($to < $from) {
+            $to = $from;
+        }
+        if ((strtotime($to) - strtotime($from)) / 86400 > 366) {
+            $to = date('Y-m-d', strtotime($from . ' +1 year'));
+        }
+        $out = ['user_id' => (int) ($in['user_id'] ?? 0), 'do' => ($in['do'] ?? '') === 'absent' ? 'absent' : 'assign',
+                'g' => (int) ($in['g'] ?? 0), 'd' => max(0, min(7, (int) ($in['d'] ?? 0))), 'from' => $from, 'to' => $to];
+        return array_filter($out, fn($v) => $v !== 0) + ['g' => 0, 'd' => 0];
+    }
+
+    /**
      * Bulk: één trainer inplannen of afmelden voor meerdere trainingen/wedstrijden tegelijk (bv. een blok overnemen,
      * of afwezig tijdens een vakantie). Wat niet kan (voorbij, al ingepland, niet ingepland) wordt overgeslagen.
      */
     public static function bulk(): void
     {
         self::requireView();
-        $back = url('coverage', array_filter(['weeks' => input('weeks'), 'show' => input('show')]));
+        $back = url('coverage_bulk_form', self::bulkFilters($_POST) + ['show' => 1]);
         $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
         $do = input('do');
         $target = (int) input('user_id', '0');
@@ -149,7 +199,7 @@ final class CoverageController
             abort(400, 'Onbekende actie.');
         }
         if (!$ids) {
-            flash('error', 'Vink eerst de trainingen of wedstrijden aan.');
+            flash('error', 'Er was niets aangevinkt; er is niets gewijzigd.');
             redirect($back);
         }
         if (!isset($pool[$target])) {

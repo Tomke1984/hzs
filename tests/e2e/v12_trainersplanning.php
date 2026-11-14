@@ -291,16 +291,25 @@ $sid2 = (int) T::val("SELECT id FROM activity_series WHERE title = 'Avondtrainin
 $c = Browser::login('coordinator@demo.local');
 $board->post('/app/coverage-settings-save', ['min' => [$gid => ''], 'slot' => [$sid2 => [2 => ['', (string) $kobeId], 4 => ['']]]]); // (de coördinatorrol werd hierboven in de migratietest weggehaald)
 T::ok($board->status === 302, 'vaste trainer voor het nieuwe blok ingesteld');
-$c->get('/app/trainersplanning?weeks=8');
-T::ok($c->has('id="cover-bulk"') && $c->has('class="cover-pick"'), 'bulkformulier en vinkjes per kaart');
-T::ok($c->has('Avondtraining WP · dinsdag 18:00') && $c->has('Avondtraining WP · donderdag 18:00'), 'blokken om in één keer aan te vinken');
+$c->get('/app/trainersplanning');
+T::ok($c->has('href="app/trainersplanning/meerdere"') && !$c->has('class="cover-pick"'), 'knop Meerdere tegelijk; geen vinkjes meer in de gewone planning');
+$c->get('/app/trainersplanning/meerdere');
+T::ok($c->status === 200 && $c->has('1. Wie en wat?') && !$c->has('3. Controleren'), 'stap 1: trainer, actie en filters');
+// Lander: alle donderdagen van de Wedstrijdploeg in de komende 6 weken
+$c->get('/app/trainersplanning/meerdere?show=1&user_id=' . $coordId . '&do=assign&g=' . $gid . '&d=4&from=' . date('Y-m-d') . '&to=' . date('Y-m-d', strtotime('+6 weeks')));
+T::ok($c->has('3. Controleren en bevestigen') && $c->has('Avondtraining WP'), 'stap 3: lijst met de gevonden trainingen');
+T::ok(!$c->has('Training Miniemen') && !$c->has('Training Kadetten'), 'enkel de gekozen groep');
+preg_match_all('/name="ids\[\]" value="(\d+)"/', $c->body, $mm);
+T::ok(count($mm[1]) >= 4, 'te wijzigen trainingen vooraf aangevinkt');
 $thu = array_map('intval', array_column(T::all("SELECT id FROM activities WHERE series_id = ? AND starts_at > ? ORDER BY starts_at", [$sid2, date('Y-m-d H:i:s')]), 'id'));
 $thu = array_values(array_filter($thu, fn($id) => (int) date('N', strtotime((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$id]))) === 4));
 T::ok(count($thu) >= 4, 'genoeg donderdagtrainingen');
 // Lander neemt alle donderdagen over
-$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign']);
+$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign', 'g' => $gid, 'd' => 4]);
+T::ok(str_contains($c->location, 'trainersplanning/meerdere') && str_contains($c->location, 'show=1'), 'na bevestigen terug naar de lijst');
 $c->follow();
 T::ok($c->has('Lander Coördinator is ingepland voor ' . count($thu) . ' training(en)'), 'bulk inplannen: melding met aantal');
+T::ok($c->has('Staat al ingepland'), 'lijst toont nu "staat al ingepland"');
 T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = ? AND activity_id IN (' . implode(',', $thu) . ')', [$coordId, 'ASSIGNED']) === count($thu), 'bulk inplannen opgeslagen');
 $c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign']);
 $c->follow();
@@ -318,7 +327,7 @@ T::ok($kb->has('Vakantie'), 'tekorten na bulk afmelden zichtbaar met reden');
 // Fouten en rechten
 $c->post('/app/coverage-bulk', ['ids' => [], 'user_id' => $coordId, 'do' => 'assign']);
 $c->follow();
-T::ok($c->has('Vink eerst'), 'zonder aangevinkte trainingen: foutmelding');
+T::ok($c->has('niets aangevinkt'), 'zonder aangevinkte trainingen: melding');
 $c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
 $c->follow();
 T::ok($c->has('Kies een trainer van de competitie'), 'bulk: trainer zonder groep geweigerd');
