@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Trainersplanning: trainers in bulk toewijzen – commit volgt bij de push_
+
+- **Meerdere tegelijk** in de trainersplanning: vinkje per training/wedstrijd, snel aanvinken (*Alle tekorten*, *Alles*, *Niets*, alle trainingen van een blok) en in één keer een trainer **inplannen** of **afmelden** met reden (bv. vakantie). Overgeslagen gevallen worden geteld in de melding; ontstaat er een tekort binnen 3 dagen, dan vertrekt meteen de mail.
+- Ongebruikte JavaScript van het oude inschrijfformulier verwijderd. Tests: 14 extra controles (364 in totaal).
+
 _Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit `1aebc7c`_
 
 - **App teruggebracht tot de kern:** kalender voor leden en ouders, leden, groepen, gebruikers, trainingsreeksen en zwemblokken, trainersplanning, aanwezigheden, bericht sturen, account (2FA, iCal), auditlog en zoeken.

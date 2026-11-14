@@ -29,7 +29,17 @@ final class CoverageController
             $monday = date('Y-m-d', strtotime('monday this week', strtotime(substr($a['starts_at'], 0, 10))));
             $byWeek[$monday][] = $a;
         }
+        // Blokken (reeks + weekdag) in de lijst, om ze in één keer aan te vinken.
+        $blocks = [];
+        foreach ($rows as $a) {
+            if ($a['series_id'] && $a['ends_at'] > now()) {
+                $wd = (int) date('N', strtotime(substr($a['starts_at'], 0, 10)));
+                $blocks[(int) $a['series_id'] . '-' . $wd] ??= $a['title'] . ' · ' . SeriesService::DAYS[$wd] . ' ' . fmt_time($a['starts_at']);
+            }
+        }
+        asort($blocks);
         render('coverage/index', [
+            'blocks' => $blocks,
             'byWeek' => $byWeek,
             'problems' => $problems,
             'pool' => Coverage::pool(),
@@ -120,6 +130,84 @@ final class CoverageController
             $msg .= ' Er ontbreekt nog een trainer; staat dat binnen ' . Coverage::remindDays() . ' dagen nog open, dan volgt automatisch een mail.';
         }
         flash('success', $msg);
+        redirect($back);
+    }
+
+    /**
+     * Bulk: één trainer inplannen of afmelden voor meerdere trainingen/wedstrijden tegelijk (bv. een blok overnemen,
+     * of afwezig tijdens een vakantie). Wat niet kan (voorbij, al ingepland, niet ingepland) wordt overgeslagen.
+     */
+    public static function bulk(): void
+    {
+        self::requireView();
+        $back = url('coverage', array_filter(['weeks' => input('weeks'), 'show' => input('show')]));
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+        $do = input('do');
+        $target = (int) input('user_id', '0');
+        $pool = Coverage::pool();
+        if (!in_array($do, ['assign', 'absent'], true)) {
+            abort(400, 'Onbekende actie.');
+        }
+        if (!$ids) {
+            flash('error', 'Vink eerst de trainingen of wedstrijden aan.');
+            redirect($back);
+        }
+        if (!isset($pool[$target])) {
+            flash('error', 'Kies een trainer van de competitie.');
+            redirect($back);
+        }
+        if (count($ids) > 200) {
+            flash('error', 'Kies maximaal 200 trainingen of wedstrijden tegelijk.');
+            redirect($back);
+        }
+        $note = mb_substr(input('note'), 0, 200);
+        $done = 0;
+        $alertSoon = false;
+        $soon = date('Y-m-d H:i:s', strtotime('+' . Coverage::remindDays() . ' days'));
+        Database::tx(function () use ($ids, $do, $target, $note, &$done) {
+            foreach (Coverage::list('0000-00-00', '9999-12-31', $ids) as $a) {
+                if ($a['ends_at'] <= now()) {
+                    continue;
+                }
+                $cur = null;
+                foreach ($a['trainers'] as $t) {
+                    if ($t['id'] === $target) {
+                        $cur = $t;
+                    }
+                }
+                $default = Coverage::isDefault($a, $target);
+                if ($do === 'assign') {
+                    if ($cur && !$cur['absent']) {
+                        continue;
+                    }
+                    $default ? Coverage::set((int) $a['id'], $target, null) : Coverage::set((int) $a['id'], $target, 'ASSIGNED');
+                } else {
+                    if (!$cur || $cur['absent']) {
+                        continue;
+                    }
+                    Coverage::set((int) $a['id'], $target, 'ABSENT', $note);
+                }
+                $done++;
+            }
+        });
+        $skipped = count($ids) - $done; // al (niet) ingepland, voorbij of niet in de planning
+        audit('COVERAGE_BULK_' . strtoupper($do), 'user', $target, $done . ' activiteiten');
+        $name = $pool[$target];
+        $msg = $do === 'assign'
+            ? "$name is ingepland voor $done training(en) of wedstrijd(en)."
+            : "$name is afgemeld voor $done training(en) of wedstrijd(en).";
+        if ($skipped) {
+            $msg .= " $skipped overgeslagen (" . ($do === 'assign' ? 'al ingepland' : 'niet ingepland') . ', voorbij of niet in de planning).';
+        }
+        if ($do === 'absent' && $done) {
+            foreach (Coverage::list(now(), $soon, $ids) as $a) {
+                $alertSoon = $alertSoon || $a['missing'] > 0;
+            }
+            if ($alertSoon && Coverage::remind()) {
+                $msg .= ' Er ontbreekt nu binnenkort een trainer: de coördinator en de competitietrainers kregen een mail.';
+            }
+        }
+        flash($done ? 'success' : 'info', $msg);
         redirect($back);
     }
 

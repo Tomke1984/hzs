@@ -279,3 +279,51 @@ $fresh->get('/app/trainersplanning');
 T::ok($fresh->status === 200, 'na migratie werkt de trainersplanning');
 T::ok((bool) T::val("SELECT 1 FROM roles WHERE code = 'COORDINATOR'") && (bool) T::val("SELECT 1 FROM permissions WHERE code = 'coverage.manage'"), 'rol en permissie aangevuld');
 T::ok(T::val("SELECT COUNT(*) FROM pragma_table_info('groups') WHERE name IN ('min_trainers','share_token')") == 2, 'kolommen aangevuld');
+
+echo "Bulk: meerdere trainingen tegelijk\n";
+T::autoRan();
+$gid = (int) T::val("SELECT id FROM `groups` WHERE name = 'Wedstrijdploeg'");
+$data = ['type_id' => $typeTraining, 'title' => 'Avondtraining WP', 'location' => 'Kapermolen', 'start_date' => date('Y-m-d'), 'end_date' => date('Y-m-d', strtotime('+40 days')), 'group_ids' => [$gid]];
+foreach ([2, 4] as $d) { $data['slot_on'][$d] = '1'; $data['slot_start'][$d] = '18:00'; $data['slot_end'][$d] = '19:30'; }
+$board->post('/app/series-save', $data);
+$sid2 = (int) T::val("SELECT id FROM activity_series WHERE title = 'Avondtraining WP'");
+$c = Browser::login('coordinator@demo.local');
+$board->post('/app/coverage-settings-save', ['min' => [$gid => ''], 'slot' => [$sid2 => [2 => ['', (string) $kobeId], 4 => ['']]]]); // (de coördinatorrol werd hierboven in de migratietest weggehaald)
+T::ok($board->status === 302, 'vaste trainer voor het nieuwe blok ingesteld');
+$c->get('/app/trainersplanning?weeks=8');
+T::ok($c->has('id="cover-bulk"') && $c->has('class="cover-pick"'), 'bulkformulier en vinkjes per kaart');
+T::ok($c->has('Avondtraining WP · dinsdag 18:00') && $c->has('Avondtraining WP · donderdag 18:00'), 'blokken om in één keer aan te vinken');
+$thu = array_map('intval', array_column(T::all("SELECT id FROM activities WHERE series_id = ? AND starts_at > ? ORDER BY starts_at", [$sid2, date('Y-m-d H:i:s')]), 'id'));
+$thu = array_values(array_filter($thu, fn($id) => (int) date('N', strtotime((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$id]))) === 4));
+T::ok(count($thu) >= 4, 'genoeg donderdagtrainingen');
+// Lander neemt alle donderdagen over
+$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign']);
+$c->follow();
+T::ok($c->has('Lander Coördinator is ingepland voor ' . count($thu) . ' training(en)'), 'bulk inplannen: melding met aantal');
+T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = ? AND activity_id IN (' . implode(',', $thu) . ')', [$coordId, 'ASSIGNED']) === count($thu), 'bulk inplannen opgeslagen');
+$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $coordId, 'do' => 'assign']);
+$c->follow();
+T::ok($c->has('ingepland voor 0 training(en)') && $c->has(count($thu) . ' overgeslagen'), 'nogmaals inplannen: alles overgeslagen');
+// Kobe afwezig (vakantie) voor de dinsdagen van de komende 2 weken
+$tue = array_map('intval', array_column(T::all("SELECT id FROM activities WHERE series_id = ? AND starts_at > ? AND starts_at < ? ORDER BY starts_at", [$sid2, date('Y-m-d H:i:s'), date('Y-m-d', strtotime('+15 days'))]), 'id'));
+$tue = array_values(array_filter($tue, fn($id) => (int) date('N', strtotime((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$id]))) === 2));
+$kb = Browser::login('competitie@demo.local');
+$kb->post('/app/coverage-bulk', ['ids' => array_merge($tue, [$thu[0]]), 'user_id' => $kobeId, 'do' => 'absent', 'note' => 'Vakantie']);
+$kb->follow();
+T::ok($kb->has('Kobe Competitie is afgemeld voor ' . count($tue) . ' training(en)') && $kb->has('1 overgeslagen'), 'bulk afmelden: enkel waar Kobe ingepland was');
+T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE user_id = ? AND status = 'ABSENT' AND note = 'Vakantie'", [$kobeId]) === count($tue), 'afmeldingen met reden opgeslagen');
+$kb->get('/app/trainersplanning?show=problems');
+T::ok($kb->has('Vakantie'), 'tekorten na bulk afmelden zichtbaar met reden');
+// Fouten en rechten
+$c->post('/app/coverage-bulk', ['ids' => [], 'user_id' => $coordId, 'do' => 'assign']);
+$c->follow();
+T::ok($c->has('Vink eerst'), 'zonder aangevinkte trainingen: foutmelding');
+$c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
+$c->follow();
+T::ok($c->has('Kies een trainer van de competitie'), 'bulk: zwemschooltrainer geweigerd');
+$tn = Browser::login('trainer@demo.local');
+$tn->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
+T::ok($tn->status === 403, 'bulk: zwemschooltrainer geen toegang (403)');
+$swim = (int) T::val("SELECT id FROM activities WHERE title = 'Training Beginners' AND starts_at > ? LIMIT 1", [date('Y-m-d H:i:s')]);
+$c->post('/app/coverage-bulk', ['ids' => [$swim], 'user_id' => $coordId, 'do' => 'assign']);
+T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$swim]), 'bulk: zwemschooltraining wordt overgeslagen');

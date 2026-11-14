@@ -65,6 +65,7 @@ $routes = [
     'occurrence'       => ['POST' => ['SeriesController', 'occurrence', 'activities.write']],
     'coverage'         => ['GET' => ['CoverageController', 'index', null]],
     'coverage_action'  => ['POST' => ['CoverageController', 'action', null]],
+    'coverage_bulk'    => ['POST' => ['CoverageController', 'bulk', null]],
     'coverage_settings' => ['GET' => ['CoverageController', 'settings', 'coverage.manage']],
     'coverage_settings_save' => ['POST' => ['CoverageController', 'settingsSave', 'coverage.manage']],
     'coverage_share'   => ['POST' => ['CoverageController', 'share', 'coverage.manage']],

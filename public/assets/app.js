@@ -9,20 +9,6 @@
     });
   });
 
-  // Inschrijfformulier: velden tonen naargelang "mijn kind" of "mezelf"
-  var typeRadios = document.querySelectorAll('input[name=applicant_type]');
-  if (typeRadios.length) {
-    var syncType = function () {
-      var sel = document.querySelector('input[name=applicant_type]:checked');
-      var v = sel ? sel.value : 'PARENT';
-      document.querySelectorAll('[data-show-for]').forEach(function (el) { el.hidden = el.getAttribute('data-show-for') !== v; });
-      var nm = document.querySelector('input[name=contact_name]');
-      if (nm) nm.required = v === 'PARENT';
-    };
-    typeRadios.forEach(function (r) { r.addEventListener('change', syncType); });
-    syncType();
-  }
-
   // Beheer-app: menu als uitschuifbaar paneel op smalle schermen
   var appBtn = document.querySelector('.app-menu-btn'), appOverlay = document.querySelector('.app-overlay');
   if (appBtn) {
@@ -37,6 +23,42 @@
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && document.body.classList.contains('nav-open')) setNav(false); });
     document.querySelectorAll('#app-nav a').forEach(function (a) { a.addEventListener('click', function () { setNav(false); }); });
     if (window.matchMedia) window.matchMedia('(min-width: 960px)').addEventListener('change', function (e) { if (e.matches) setNav(false); });
+  }
+
+  // Trainersplanning: meerdere trainingen aanvinken (teller, alles / tekorten / blok)
+  var bulk = document.getElementById('cover-bulk');
+  if (bulk) {
+    var coverPicks = function () { return document.querySelectorAll('input.cover-pick'); };
+    var coverCount = bulk.querySelector('[data-bulk-count]');
+    var tools = bulk.querySelector('[data-bulk-tools]');
+    var coverUpdate = function () {
+      var n = 0;
+      coverPicks().forEach(function (c) { if (c.checked) n++; });
+      if (coverCount) coverCount.textContent = n ? ' (' + n + ')' : '';
+    };
+    if (tools) tools.hidden = false;
+    document.addEventListener('change', function (ev) { if (ev.target.classList && ev.target.classList.contains('cover-pick')) coverUpdate(); });
+    bulk.addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('[data-bulk-select]');
+      if (!b) return;
+      var mode = b.getAttribute('data-bulk-select');
+      coverPicks().forEach(function (c) { c.checked = mode === 'all' || (mode === 'short' && c.getAttribute('data-short') === '1'); });
+      coverUpdate();
+    });
+    var blockSel = bulk.querySelector('[data-bulk-block]');
+    if (blockSel) blockSel.addEventListener('change', function () {
+      var key = blockSel.value;
+      if (!key) return;
+      coverPicks().forEach(function (c) { if (c.getAttribute('data-block') === key) c.checked = true; });
+      blockSel.value = '';
+      coverUpdate();
+    });
+    bulk.addEventListener('submit', function (ev) {
+      var n = 0;
+      coverPicks().forEach(function (c) { if (c.checked) n++; });
+      if (!n) { ev.preventDefault(); window.alert('Vink eerst de trainingen of wedstrijden aan.'); }
+    });
+    coverUpdate();
   }
 
   // Bevestiging voor formulieren met data-confirm
