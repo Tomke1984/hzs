@@ -27,7 +27,7 @@ $menu = [
     ]],
     ['Planning', [
         ['Kalender', 'calendar', 'calendar', 'activities.read', ['calendar', 'activity', 'activity_form', 'activity_save', 'attendance_save'], 0],
-        ['Trainingsreeksen', 'series', 'repeat', 'activities.write', ['series', 'series_show', 'series_form', 'series_save', 'series_bulk', 'series_delete', 'occurrence'], 0],
+        ['Trainingsreeksen', 'series', 'repeat', 'activities.write', ['series', 'series_show', 'series_form', 'series_save', 'series_bulk', 'series_import', 'series_delete', 'occurrence'], 0],
         ['Trainersplanning', 'coverage', 'roster', 'coverage.view', ['coverage', 'coverage_settings', 'coverage_action', 'coverage_bulk', 'coverage_settings_save', 'coverage_share', 'coverage_remind'], $nShort],
         ['Aanwezigheden', 'attendance_report', 'report', feature('attendance') ? 'attendance.read' : 'feature.off', ['attendance_report'], 0],
         ['Bericht sturen', 'mail', 'send', 'mail.send', ['mail', 'mail_send', 'mail_edit'], 0],

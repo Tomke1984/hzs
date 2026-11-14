@@ -61,6 +61,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 - **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op groep.
 - **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen = annuleren en verwijderen (met aanwezigheden blijft ze geannuleerd bewaard); **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
 - **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Alle getoonde reeksen in één keer **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen. Het overzicht toont de reeksen per groep.
+- **Reeksen importeren** (*Trainingsreeksen → Importeren*, `/app/reeksen/importeren`): plak per regel `Groep;Dag;Begin;Einde;Titel;Locatie;Vaste trainers` (ook tabs uit Excel, `|` of `18:30-20:00` in één kolom; dagen voluit of `ma`…`zo`). Regels met dezelfde groep en titel worden één reeks; *Voorbeeld bekijken* toont wat er aangemaakt wordt (met fouten per regel en onbekende trainers), *Reeksen aanmaken* maakt alles in één keer met de trainingen en de vaste trainers voor de trainersplanning. Reeksen die al bestaan (zelfde groep en titel) worden overgeslagen. Knop *Uurrooster van khzs.be invullen* zet het competitierooster van de website klaar.
 - Elke groep heeft een vast trainingsschema; alle leden van de groep staan op de lijsten van hun groep.
 - **Aanwezigheden (voorlopig verborgen):** presentielijst met Onbekend / Aanwezig / Afwezig, aanwezigheidsrapport en het blok *Aanwezigheid nog in te vullen* staan standaard uit. Zet ze aan met `'features' => ['attendance' => true]` in `config.php`. Zolang ze uit staan, toont een activiteit *Deelnemers en afmeldingen*: ouders en leden kunnen zich nog altijd afmelden en trainers/bestuur zien wie afgemeld is.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
@@ -122,7 +123,7 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning` en `v15_verwijderen`.
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning` en `v15_verwijderen` en `v16_import`.
 
 ## Werkwijze met GitHub
 
