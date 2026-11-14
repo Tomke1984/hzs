@@ -294,38 +294,23 @@ function audit(string $action, string $entity, ?int $entityId = null, ?string $d
     );
 }
 
-/** Groepscategorieën: zwemschool of competitie. */
+/** Sinds v0.14 zijn alle groepen competitiegroepen (de zwemschool zit niet meer in de app). */
 function group_categories(): array
 {
-    return ['SWIM_SCHOOL' => 'Zwemschool', 'COMPETITION' => 'Competitie'];
+    return ['COMPETITION' => 'Competitie'];
 }
 
 function group_category_label(?string $code): string
 {
-    return group_categories()[$code ?? ''] ?? 'Zwemschool';
+    return 'Competitie';
 }
 
-/** Filtervelden Zwemschool/Competitie + groep (voor ledenlijst en kalender). */
+/** Filterveld groep (ledenlijst, kalender, reeksen, aanwezigheden). $cat wordt niet meer gebruikt. */
 function group_filter_fields(string $cat, int $gid, array $groupOptions): string
 {
-    $h = '<select name="cat" aria-label="Soort groep"><option value="">Zwemschool + competitie</option>';
-    foreach (group_categories() as $code => $label) {
-        $h .= '<option value="' . e($code) . '"' . ($cat === $code ? ' selected' : '') . '>' . e($label) . '</option>';
-    }
-    $h .= '</select><select name="g" aria-label="Groep"><option value="0">Alle groepen</option>';
-    $last = null;
+    $h = '<select name="g" aria-label="Groep"><option value="0">Alle groepen</option>';
     foreach ($groupOptions as $g) {
-        if ($last !== $g['category']) {
-            if ($last !== null) {
-                $h .= '</optgroup>';
-            }
-            $last = $g['category'];
-            $h .= '<optgroup label="' . e(group_category_label($g['category'])) . '">';
-        }
         $h .= '<option value="' . (int) $g['id'] . '"' . ((int) $g['id'] === $gid ? ' selected' : '') . '>' . e($g['name']) . '</option>';
-    }
-    if ($last !== null) {
-        $h .= '</optgroup>';
     }
     return $h . '</select>';
 }

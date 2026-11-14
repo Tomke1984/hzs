@@ -4,7 +4,8 @@
 T::autoRan(); // automatische herinnering pas testen als we dat zelf willen
 
 $gid = (int) T::val("SELECT id FROM `groups` WHERE name = 'Wedstrijdploeg'");
-$swimGid = (int) T::val("SELECT id FROM `groups` WHERE name = 'Beginners'");
+// Sinds v0.14 zijn alle groepen competitiegroepen. Tina is hier een trainer zonder groep (dus geen competitietrainer).
+T::exec("DELETE FROM group_trainers WHERE user_id = (SELECT id FROM users WHERE email = 'trainer@demo.local')");
 $coordId = (int) T::val("SELECT id FROM users WHERE email = 'coordinator@demo.local'");
 $kobeId = (int) T::val("SELECT id FROM users WHERE email = 'competitie@demo.local'");
 $tinaId = (int) T::val("SELECT id FROM users WHERE email = 'trainer@demo.local'");
@@ -17,7 +18,7 @@ T::ok(!T::val("SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_
 
 $coord = Browser::login('coordinator@demo.local');
 $kobe = Browser::login('competitie@demo.local');
-$tina = Browser::login('trainer@demo.local');      // zwemschooltrainer (zwemt zelf in de Wedstrijdploeg)
+$tina = Browser::login('trainer@demo.local');      // trainer zonder groep (zwemt zelf in de Wedstrijdploeg)
 $parent = Browser::login('ouder@demo.local');
 $board = Browser::login('bestuur@demo.local');
 $admin = Browser::login('admin@demo.local');
@@ -32,9 +33,9 @@ T::ok(!$kobe->has('Vaste trainers en instellingen'), 'competitietrainer ziet gee
 $kobe->get('/app/trainersplanning/instellingen');
 T::ok($kobe->status === 403, 'competitietrainer: instellingen geweigerd (403)');
 $tina->get('/app/trainersplanning');
-T::ok($tina->status === 403, 'zwemschooltrainer: trainersplanning geweigerd (403)');
+T::ok($tina->status === 403, 'trainer zonder groep: trainersplanning geweigerd (403)');
 $tina->get('/app');
-T::ok(!$tina->has('href="app/trainersplanning"'), 'zwemschooltrainer: geen menu-item');
+T::ok(!$tina->has('href="app/trainersplanning"'), 'trainer zonder groep: geen menu-item');
 $parent->get('/app/trainersplanning');
 T::ok($parent->status === 403, 'ouder: trainersplanning geweigerd (403)');
 $board->get('/app/trainersplanning/instellingen');
@@ -47,7 +48,8 @@ T::ok($admin->has('Lander Coördinator'), 'coördinator staat bij "Beheer en tra
 echo "Losse trainingen zonder trainer = tekort\n";
 $coord->get('/app/trainersplanning');
 T::ok($coord->has('Training Wedstrijdploeg') && $coord->has('Geen trainer'), 'losse competitietraining zonder trainer toont "Geen trainer"');
-T::ok(!$coord->has('Training Beginners'), 'zwemschooltraining staat niet in de trainersplanning');
+T::ok(!$coord->has('Clubfeest'), 'clubactiviteit (geen training of wedstrijd) staat niet in de trainersplanning');
+T::ok($coord->has('Training Miniemen') && $coord->has('Training Kadetten'), 'trainingen van alle groepen staan in de trainersplanning');
 T::ok($coord->has('Trainer gezocht'), 'blok "Trainer gezocht" bovenaan');
 
 echo "Reeks voor de competitie + vaste trainers\n";
@@ -67,7 +69,6 @@ T::ok($sid > 0 && (int) T::val('SELECT COUNT(*) FROM activities WHERE series_id 
 
 $coord->get('/app/trainersplanning/instellingen');
 T::ok($coord->has('Ochtendtraining WP') && $coord->has('Geen vaste trainer'), 'instellingen tonen het blok zonder vaste trainer');
-T::ok(!$coord->has('Training Beginners'), 'instellingen tonen geen zwemschoolblokken');
 $set = ['min' => [$gid => '']];
 foreach (range(1, 7) as $d) {
     $set['slot'][$sid][$d] = ['', (string) $kobeId];
@@ -76,12 +77,12 @@ $coord->post('/app/coverage-settings-save', $set);
 T::ok($coord->status === 302, 'instellingen opgeslagen');
 T::ok((int) T::val('SELECT COUNT(*) FROM series_trainers WHERE series_id = ? AND user_id = ?', [$sid, $kobeId]) === 7, 'Kobe is vaste trainer op alle 7 dagen');
 
-// Ongeldig: zwemschooltrainer (niet in de pool) als vaste trainer
+// Ongeldig: trainer zonder groep (niet in de pool) als vaste trainer
 $bad = $set;
 $bad['slot'][$sid][1] = ['', (string) $tinaId];
 $coord->post('/app/coverage-settings-save', $bad);
 $coord->follow();
-T::ok($coord->has('Enkel trainers van de competitie'), 'zwemschooltrainer kan geen vaste competitietrainer zijn');
+T::ok($coord->has('Enkel trainers van de competitie'), 'trainer zonder groep kan geen vaste competitietrainer zijn');
 T::ok((int) T::val('SELECT COUNT(*) FROM series_trainers WHERE series_id = ? AND user_id = ?', [$sid, $tinaId]) === 0, 'niets opgeslagen bij een fout');
 $bad = $set;
 $bad['min'][$gid] = '0';
@@ -105,7 +106,7 @@ T::ok($kobe->has('Je bent afgemeld') && $kobe->has('kregen een mail'), 'melding:
 T::ok(T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$tomorrow, $kobeId]) === 'ABSENT', 'afmelding opgeslagen');
 $box = T::outbox();
 T::ok(str_contains($box, 'aan coordinator@demo.local') && str_contains($box, 'aan competitie@demo.local'), 'mail naar coördinator en competitietrainers');
-T::ok(!str_contains($box, 'aan trainer@demo.local') && !str_contains($box, 'aan bestuur@demo.local'), 'geen mail naar zwemschooltrainer of bestuur');
+T::ok(!str_contains($box, 'aan trainer@demo.local') && !str_contains($box, 'aan bestuur@demo.local'), 'geen mail naar trainer zonder groep of bestuur');
 T::ok(str_contains($box, 'Ochtendtraining WP') && str_contains($box, 'afgemeld: Kobe Competitie (Examen)') && str_contains($box, '0 van 1 trainer(s)'), 'mail bevat training, afmelding met reden en bezetting');
 T::ok(str_contains($box, T::$base . '/app/trainersplanning'), 'mail bevat de link naar de trainersplanning');
 T::ok((int) T::val('SELECT missing FROM coverage_alerts WHERE activity_id = ?', [$tomorrow]) === 1, 'melding onthouden');
@@ -149,18 +150,18 @@ T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ? AND user_id
 // Toewijzen van iemand buiten de pool
 $coord->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'assign', 'user_id' => $tinaId]);
 $coord->follow();
-T::ok($coord->has('Kies een trainer van de competitie'), 'zwemschooltrainer toewijzen geweigerd');
+T::ok($coord->has('Kies een trainer van de competitie'), 'trainer zonder groep toewijzen geweigerd');
 // Competitietrainer wijst iemand anders toe (coördinatie overnemen)
 $kobe->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'assign', 'user_id' => $coordId]);
 $kobe->follow();
 T::ok($kobe->has('Lander Coördinator is ingepland'), 'competitietrainer kan een collega inplannen');
 // Zwemschooltrainer kan geen acties doen
 $tina->post('/app/coverage-action', ['activity_id' => $later, 'do' => 'claim']);
-T::ok($tina->status === 403, 'zwemschooltrainer: actie geweigerd (403)');
-// Zwemschooltraining hoort er niet bij
-$swimAct = (int) T::val("SELECT id FROM activities WHERE title = 'Training Beginners' AND starts_at > ? ORDER BY starts_at LIMIT 1", [date('Y-m-d H:i:s')]);
+T::ok($tina->status === 403, 'trainer zonder groep: actie geweigerd (403)');
+// Een clubactiviteit hoort er niet bij
+$swimAct = (int) T::val("SELECT id FROM activities WHERE title = 'Clubfeest' LIMIT 1");
 $coord->post('/app/coverage-action', ['activity_id' => $swimAct, 'do' => 'claim']);
-T::ok($coord->status === 404, 'zwemschooltraining: actie geweigerd (404)');
+T::ok($coord->status === 404, 'clubactiviteit: actie geweigerd (404)');
 // Voorbije training
 $past = (int) T::val("SELECT id FROM activities WHERE title = 'Training Wedstrijdploeg' AND ends_at < ? ORDER BY starts_at DESC LIMIT 1", [date('Y-m-d H:i:s')]);
 if ($past) {
@@ -187,7 +188,7 @@ $wpParent = Browser::login('ouder.wouters@demo.local'); // ouder van een zwemmer
 $wpParent->get('/app/kalender/' . $tomorrow);
 T::ok($wpParent->status === 200 && !$wpParent->has('id="trainers"'), 'ouder van een competitiezwemmer ziet de training, zonder trainerskaart');
 $tina->get('/app/kalender/' . $tomorrow);
-T::ok($tina->status === 200 && !$tina->has('id="trainers"'), 'zwemschooltrainer die zelf meezwemt ziet geen trainerskaart');
+T::ok($tina->status === 200 && !$tina->has('id="trainers"'), 'trainer zonder groep die zelf meezwemt ziet geen trainerskaart');
 
 echo "Minimum aantal trainers\n";
 $set['min'][$gid] = '3';
@@ -246,7 +247,7 @@ $anon = new Browser();
 $anon->get('/?r=weekplanning&t=' . $tok);
 T::ok($anon->status === 200 && $anon->has('Weekplanning Wedstrijdploeg') && $anon->has('Ochtendtraining WP'), 'deellink toont de weekplanning zonder aanmelden');
 T::ok(!$anon->has('Kobe') && !$anon->has('Lander') && !$anon->has('Peeters'), 'geen namen van trainers of leden');
-T::ok(!$anon->has('Training Beginners'), 'geen trainingen van andere groepen');
+T::ok(!$anon->has('Training Miniemen'), 'geen trainingen van andere groepen');
 $coord->post('/app/coverage-share', ['group_id' => $gid]);
 $anon->get('/?r=weekplanning&t=' . $tok);
 T::ok($anon->status === 404, 'oude link werkt niet meer na vernieuwen');
@@ -254,8 +255,8 @@ $coord->post('/app/coverage-share', ['group_id' => $gid, 'do' => 'remove']);
 T::ok(T::val('SELECT share_token FROM `groups` WHERE id = ?', [$gid]) === null, 'deellink uitgezet');
 $anon->get('/?r=weekplanning&t=xyz');
 T::ok($anon->status === 404, 'ongeldige link: 404');
-$coord->post('/app/coverage-share', ['group_id' => $swimGid]);
-T::ok($coord->status === 400, 'geen deellink voor zwemschoolgroepen');
+$coord->post('/app/coverage-share', ['group_id' => 999999]);
+T::ok($coord->status === 400, 'geen deellink voor een onbekende groep');
 
 echo "Opruimen bij verwijderen\n";
 T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers a JOIN activities x ON x.id = a.activity_id WHERE x.series_id = ?', [$sid]) > 0, 'afwijkingen bestaan voor de reeks');
@@ -320,10 +321,10 @@ $c->follow();
 T::ok($c->has('Vink eerst'), 'zonder aangevinkte trainingen: foutmelding');
 $c->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
 $c->follow();
-T::ok($c->has('Kies een trainer van de competitie'), 'bulk: zwemschooltrainer geweigerd');
+T::ok($c->has('Kies een trainer van de competitie'), 'bulk: trainer zonder groep geweigerd');
 $tn = Browser::login('trainer@demo.local');
 $tn->post('/app/coverage-bulk', ['ids' => $thu, 'user_id' => $tinaId, 'do' => 'assign']);
-T::ok($tn->status === 403, 'bulk: zwemschooltrainer geen toegang (403)');
-$swim = (int) T::val("SELECT id FROM activities WHERE title = 'Training Beginners' AND starts_at > ? LIMIT 1", [date('Y-m-d H:i:s')]);
+T::ok($tn->status === 403, 'bulk: trainer zonder groep geen toegang (403)');
+$swim = (int) T::val("SELECT id FROM activities WHERE title = 'Clubfeest' LIMIT 1");
 $c->post('/app/coverage-bulk', ['ids' => [$swim], 'user_id' => $coordId, 'do' => 'assign']);
-T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$swim]), 'bulk: zwemschooltraining wordt overgeslagen');
+T::ok(!T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$swim]), 'bulk: clubactiviteit wordt overgeslagen');

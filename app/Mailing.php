@@ -1,6 +1,6 @@
 <?php
 /**
- * Berichten van trainers en bestuur naar groepen, trainingsblokken en deelnemers van een activiteit.
+ * Berichten van trainers en bestuur naar groepen, trainingsreeksen en deelnemers van een activiteit.
  * Wie ontvangt wat wordt altijd berekend binnen de scope van de afzender (een trainer bereikt enkel de eigen groepen).
  */
 final class Mailing
@@ -29,7 +29,7 @@ final class Mailing
             $sw = $gids === null ? '1=1' : 'EXISTS (SELECT 1 FROM activity_series_groups x WHERE x.series_id = s.id AND x.group_id IN (' . Scope::in($gids) . '))';
             foreach (Database::all("SELECT s.id, s.title FROM activity_series s WHERE s.is_active = 1 AND s.end_date >= ? AND $sw ORDER BY s.title", array_merge([today()], $gids ?? [])) as $s) {
                 $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$s['id']]);
-                $opts['s:' . $s['id']] = ['Trainingsblokken', ucfirst(SeriesService::summary($slots)) . ' – ' . $s['title']];
+                $opts['s:' . $s['id']] = ['Trainingsreeksen', ucfirst(SeriesService::summary($slots)) . ' – ' . $s['title']];
             }
         }
         return $opts;
@@ -61,16 +61,12 @@ final class Mailing
             ) > 0);
             if ($allowed) {
                 $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$s['id']]);
-                $label = 'Blok ' . SeriesService::summary($slots) . ' (' . $s['title'] . ')';
-                if (SeriesService::isSwim((int) $s['id'])) {
-                    $ids = array_map('intval', array_column(SeriesService::blockMembers((int) $s['id']), 'id'));
-                } else {
-                    $ids = array_map('intval', array_column(Database::all(
-                        "SELECT DISTINCT m.id FROM members m JOIN group_memberships gm ON gm.member_id = m.id
-                         JOIN activity_series_groups sg ON sg.group_id = gm.group_id WHERE sg.series_id = ? AND m.status = 'ACTIVE'",
-                        [$s['id']]
-                    ), 'id'));
-                }
+                $label = 'Reeks ' . SeriesService::summary($slots) . ' (' . $s['title'] . ')';
+                $ids = array_map('intval', array_column(Database::all(
+                    "SELECT DISTINCT m.id FROM members m JOIN group_memberships gm ON gm.member_id = m.id
+                     JOIN activity_series_groups sg ON sg.group_id = gm.group_id WHERE sg.series_id = ? AND m.status = 'ACTIVE'",
+                    [$s['id']]
+                ), 'id'));
             }
         } elseif (preg_match('/^a:(\d+)$/', $key, $m)) {
             $a = Scope::findActivity((int) $m[1]);

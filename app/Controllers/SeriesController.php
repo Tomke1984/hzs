@@ -6,17 +6,9 @@ final class SeriesController
         [$cat, $gid] = GroupController::readFilter();
         $where = '1=1';
         $fp = [];
-        if ($cat !== '' || $gid) {
-            $where = 'EXISTS (SELECT 1 FROM activity_series_groups fsg JOIN `groups` fg ON fg.id = fsg.group_id WHERE fsg.series_id = s.id';
-            if ($cat !== '') {
-                $where .= ' AND fg.category = ?';
-                $fp[] = $cat;
-            }
-            if ($gid) {
-                $where .= ' AND fg.id = ?';
-                $fp[] = $gid;
-            }
-            $where .= ')';
+        if ($gid) {
+            $where = 'EXISTS (SELECT 1 FROM activity_series_groups fsg WHERE fsg.series_id = s.id AND fsg.group_id = ?)';
+            $fp[] = $gid;
         }
         $series = Database::all(
             "SELECT s.*, t.name AS type_name,
@@ -31,61 +23,7 @@ final class SeriesController
             $s['slots'] = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]);
         }
         unset($s);
-        render('series/index', ['unassigned' => Auth::can('activities.write') ? SeriesService::unassignedSwimMembers() : [], 'series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
-    }
-
-    /** Weekoverzicht van de zwemblokken: dagen als kolommen, uurblokken als rijen. */
-    public static function week(): void
-    {
-        $cells = [];
-        $rows = [];
-        foreach (Database::all('SELECT * FROM activity_series WHERE is_active = 1 AND end_date >= ? ORDER BY title', [today()]) as $s) {
-            if (!SeriesService::isSwim((int) $s['id'])) {
-                continue;
-            }
-            $groups = Database::all('SELECT g.id, g.name FROM activity_series_groups sg JOIN `groups` g ON g.id = sg.group_id WHERE sg.series_id = ? ORDER BY g.name', [$s['id']]);
-            foreach (Database::all('SELECT * FROM activity_series_slots WHERE series_id = ?', [$s['id']]) as $sl) {
-                $hour = $sl['start_time'] . '–' . $sl['end_time'];
-                $rows[$hour] = true;
-                $cells[(int) $sl['weekday']][$hour][] = [
-                    'id' => (int) $s['id'], 'title' => $s['title'], 'groups' => $groups,
-                    'count' => (int) Database::val('SELECT COUNT(DISTINCT member_id) FROM member_series WHERE series_id = ? AND (weekday = 0 OR weekday = ?)', [$s['id'], (int) $sl['weekday']]),
-                ];
-            }
-        }
-        ksort($rows);
-        render('series/week', ['cells' => $cells, 'hours' => array_keys($rows), 'unassigned' => count(SeriesService::unassignedSwimMembers())], 'Weekoverzicht zwemschool');
-    }
-
-    /** Leden aan een zwemblok koppelen (één of meer leden, vanuit het blok of vanuit de lijst 'nog niet ingedeeld'). */
-    public static function memberAdd(): void
-    {
-        $s = self::load((int) input('series_id', '0'));
-        $ids = array_filter(array_map('intval', (array) ($_POST['member_ids'] ?? [])));
-        if (($one = (int) input('member_id', '0')) > 0) {
-            $ids = [$one];
-        }
-        $n = 0;
-        foreach ($ids as $mid) {
-            if (SeriesService::assign($mid, (int) $s['id'])) {
-                $n++;
-            }
-        }
-        if ($n) {
-            audit('UPDATE', 'activity_series', (int) $s['id'], "$n leden ingedeeld");
-        }
-        flash($n ? 'success' : 'error', $n ? sprintf('%d %s ingedeeld in "%s".', $n, $n === 1 ? 'lid' : 'leden', $s['title']) : 'Niemand ingedeeld: kies een lid uit een groep die in dit blok mag zwemmen.');
-        $back = (string) input('back', '');
-        redirect(str_starts_with($back, '?r=series') ? $back : url('series_show', ['id' => $s['id']]) . '#leden');
-    }
-
-    public static function memberRemove(): void
-    {
-        $s = self::load((int) input('series_id', '0'));
-        Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id = ?', [(int) input('member_id', '0'), $s['id']]);
-        audit('UPDATE', 'activity_series', (int) $s['id'], 'lid uit blok gehaald');
-        flash('success', 'Lid uit het blok gehaald.');
-        redirect(url('series_show', ['id' => $s['id']]) . '#leden');
+        render('series/index', ['series' => $series, 'cat' => $cat, 'gid' => $gid, 'groupOptions' => GroupController::filterOptions()], 'Trainingsreeksen');
     }
 
     /** Reeks(en) verlengen tot een nieuwe einddatum; de extra trainingen worden meteen aangemaakt (geschrapte dagen blijven weg). */
@@ -131,10 +69,7 @@ final class SeriesController
             'SELECT id, starts_at, ends_at, location, status, status_note, is_custom FROM activities WHERE series_id = ? AND starts_at >= ? ORDER BY starts_at LIMIT 80',
             [$s['id'], today() . ' 00:00:00']
         );
-        $isSwim = SeriesService::isSwim((int) $s['id']);
-        $blockMembers = $isSwim ? SeriesService::blockMembers((int) $s['id']) : [];
-        $blockCandidates = $isSwim ? SeriesService::blockCandidates((int) $s['id']) : [];
-        render('series/show', compact('s', 'occ', 'isSwim', 'blockMembers', 'blockCandidates'), $s['title']);
+        render('series/show', compact('s', 'occ'), $s['title']);
     }
 
     public static function form(): void

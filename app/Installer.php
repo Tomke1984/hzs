@@ -47,7 +47,7 @@ final class Installer
     }
 
     /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
-    public const SCHEMA = 13;
+    public const SCHEMA = 14;
 
     /**
      * Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL), één keer per sessie.
@@ -82,7 +82,7 @@ final class Installer
             ['activities', 'series_id', 'INT NULL'], ['activities', 'is_custom', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'status_note', 'VARCHAR(200) NULL'],
             ['activities', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'signup_capacity', 'INT NULL'], ['activities', 'min_trainers', 'INT NULL'],
             ['activity_series', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activity_series', 'capacity', 'INT NULL'],
-            ['groups', 'color', 'INT NULL'], ['groups', 'category', "VARCHAR(20) NOT NULL DEFAULT 'SWIM_SCHOOL'"], ['groups', 'goals', 'TEXT NULL'],
+            ['groups', 'color', 'INT NULL'], ['groups', 'category', "VARCHAR(20) NOT NULL DEFAULT 'COMPETITION'"], ['groups', 'goals', 'TEXT NULL'],
             ['groups', 'capacity', 'INT NULL'], ['groups', 'fee_cents', 'INT NULL'], ['groups', 'next_group_id', 'INT NULL'],
             ['groups', 'min_trainers', 'INT NULL'], ['groups', 'share_token', 'VARCHAR(40) NULL'],
             ['members', 'street', 'VARCHAR(120) NULL'], ['members', 'postal_code', 'VARCHAR(10) NULL'], ['members', 'city', 'VARCHAR(80) NULL'],
@@ -112,6 +112,19 @@ final class Installer
             Database::exec('DELETE FROM group_trainers WHERE id NOT IN (SELECT keep_id FROM (SELECT MAX(id) AS keep_id FROM group_trainers GROUP BY user_id, group_id) k)');
         }
         ensure_group_colors();
+        // v0.14: de zwemschool zit niet meer in de app. Zwemschoolgroepen worden verwijderd zoals met "Groep verwijderen"
+        // (leden blijven bestaan zonder groep; reeksen en activiteiten enkel voor die groepen verdwijnen), de indeling
+        // in zwemblokken wordt gewist en alle overige groepen zijn competitiegroepen.
+        $swim = array_map('intval', array_column(Database::all("SELECT id FROM `groups` WHERE category = 'SWIM_SCHOOL'"), 'id'));
+        if ($swim || Database::val('SELECT 1 FROM member_series LIMIT 1')) {
+            Database::tx(function () use ($swim) {
+                Database::exec('DELETE FROM member_series');
+                foreach ($swim as $gid) {
+                    GroupController::purge($gid);
+                }
+            });
+        }
+        Database::exec("UPDATE `groups` SET category = 'COMPETITION' WHERE category <> 'COMPETITION'");
         // v0.13: rechten van verwijderde onderdelen opruimen (website, inschrijvingen, lidgeld, statistieken, exports).
         $known = array_keys(self::PERMISSIONS);
         $old = Database::all('SELECT id FROM permissions WHERE code NOT IN (' . Scope::in($known) . ')', $known);
@@ -200,8 +213,8 @@ final class Installer
             $ts = now();
             $groups = [];
             foreach ([
-                'Beginners'      => ['Eerste stappen in het water', 'SWIM_SCHOOL'],
-                'Gevorderden'    => ['Techniek en conditie', 'SWIM_SCHOOL'],
+                'Miniemen'       => ['Jongste competitiezwemmers', 'COMPETITION'],
+                'Kadetten'       => ['Techniek en conditie', 'COMPETITION'],
                 'Wedstrijdploeg' => ['Training voor competitie', 'COMPETITION'],
             ] as $name => [$desc, $cat]) {
                 $groups[$name] = Database::insert('INSERT INTO `groups` (name, description, category, is_active) VALUES (?,?,?,1)', [$name, $desc, $cat]);
@@ -226,11 +239,11 @@ final class Installer
                 "INSERT INTO members (member_no, first_name, last_name, status, created_at) VALUES ('HZS-099','Oud','Lid','INACTIVE',?)",
                 [$ts]
             );
-            Database::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$inactive, $groups['Beginners'], '2024-09-01']);
+            Database::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$inactive, $groups['Miniemen'], '2024-09-01']);
 
             $assign = [
-                'Beginners'      => array_slice($memberIds, 0, 4),
-                'Gevorderden'    => array_slice($memberIds, 4, 4),
+                'Miniemen'       => array_slice($memberIds, 0, 4),
+                'Kadetten'       => array_slice($memberIds, 4, 4),
                 'Wedstrijdploeg' => array_slice($memberIds, 8, 4),
             ];
             foreach ($assign as $g => $ids) {
@@ -240,8 +253,8 @@ final class Installer
             }
 
             $trainer = self::createUser('trainer@demo.local', 'Demo1234!', 'Tina Trainer', 'TRAINER');
-            Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Beginners'], '2025-09-01']);
-            Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Gevorderden'], '2025-09-01']);
+            Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Miniemen'], '2025-09-01']);
+            Database::exec('INSERT INTO group_trainers (user_id, group_id, start_date) VALUES (?,?,?)', [$trainer, $groups['Kadetten'], '2025-09-01']);
 
             // De demo-trainer zwemt zelf ook mee in de Wedstrijdploeg: rollen Trainer + Zwemmer, gekoppeld aan een eigen lid.
             $trainerMember = Database::insert(
@@ -295,12 +308,12 @@ final class Installer
             $monday = new DateTime('monday this week');
             for ($w = -1; $w <= 4; $w++) {
                 $d = (clone $monday)->modify(($w * 7) . ' days');
-                $mk('TRAINING', 'Training Beginners', 'Zwembad Alverberg', $d->format('Y-m-d') . ' 18:00:00', 60, 'GROUPS', [$groups['Beginners']]);
-                $mk('TRAINING', 'Training Gevorderden', 'Zwembad Alverberg', (clone $d)->modify('+2 days')->format('Y-m-d') . ' 19:00:00', 90, 'GROUPS', [$groups['Gevorderden']]);
+                $mk('TRAINING', 'Training Miniemen', 'Zwembad Alverberg', $d->format('Y-m-d') . ' 18:00:00', 60, 'GROUPS', [$groups['Miniemen']]);
+                $mk('TRAINING', 'Training Kadetten', 'Zwembad Alverberg', (clone $d)->modify('+2 days')->format('Y-m-d') . ' 19:00:00', 90, 'GROUPS', [$groups['Kadetten']]);
                 $mk('TRAINING', 'Training Wedstrijdploeg', 'Zwembad Alverberg', (clone $d)->modify('+3 days')->format('Y-m-d') . ' 06:30:00', 90, 'GROUPS', [$groups['Wedstrijdploeg']]);
             }
             $mk('COMPETITION', 'Clubkampioenschap', 'Zwembad Alverberg', (clone $monday)->modify('+12 days')->format('Y-m-d') . ' 14:00:00', 180, 'CLUB', []);
-            $mk('COMPETITION', 'Interclubwedstrijd', 'Provinciaal Zwembad', (clone $monday)->modify('+19 days')->format('Y-m-d') . ' 09:00:00', 240, 'GROUPS', [$groups['Gevorderden'], $groups['Wedstrijdploeg']]);
+            $mk('COMPETITION', 'Interclubwedstrijd', 'Provinciaal Zwembad', (clone $monday)->modify('+19 days')->format('Y-m-d') . ' 09:00:00', 240, 'GROUPS', [$groups['Kadetten'], $groups['Wedstrijdploeg']]);
             $mk('CLUB', 'Clubfeest', 'Clubhuis', (clone $monday)->modify('+25 days')->format('Y-m-d') . ' 19:00:00', 180, 'CLUB', []);
         });
     }

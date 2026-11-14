@@ -43,10 +43,7 @@
   <fieldset>
     <legend>Groepen *</legend>
     <div class="group-picks">
-      <?php $lastCat = null; foreach ($groups as $g): ?>
-        <?php if ($lastCat !== $g['category']): $lastCat = $g['category']; ?>
-          <p class="muted small cat-head"><?= e(group_category_label($g['category'])) ?></p>
-        <?php endif; ?>
+      <?php foreach ($groups as $g): ?>
         <label class="check"><input type="checkbox" name="group_ids[]" value="<?= (int) $g['id'] ?>" <?= in_array((int) $g['id'], $selected, true) ? 'checked' : '' ?>> <?= e($g['name']) ?></label>
       <?php endforeach; ?>
     </div>

@@ -11,7 +11,6 @@
     </span>
   <?php endif; ?>
 </div>
-<p><span class="chip cat-<?= e(strtolower($group['category'] ?? 'SWIM_SCHOOL')) ?>"><?= e(group_category_label($group['category'] ?? null)) ?></span></p>
 <?php if ($group['description']): ?><p class="muted"><?= e($group['description']) ?></p><?php endif; ?>
 
 <section class="card">
@@ -61,36 +60,6 @@
 </section>
 <?php endif; ?>
 
-<?php if (Auth::can('activities.write') && $memberships && ($group['category'] ?? '') === 'SWIM_SCHOOL'): ?>
-<section class="card" id="trainingsmoment">
-  <h2>Trainingsmoment per lid</h2>
-  <?php if (count($daySlots) < 2): ?>
-    <p class="muted small">Zwemmen niet alle leden van deze groep op dezelfde dag? Maak eerst minstens twee reeksen voor deze groep, één per trainingsmoment (dag + uur); dan kies je hier per lid welke reeks hij volgt.</p>
-  <?php else: ?>
-  <p class="muted small">Zwemmen niet alle leden van deze groep op hetzelfde moment? Elke reeks is één trainingsmoment (dag en uur). Vink per lid aan welke reeks(en) hij volgt. Niets aangevinkt betekent: nog niet ingedeeld (het lid staat dan op geen aanwezigheidslijst). Aanwezigheidslijsten en de persoonlijke kalender van het lid volgen deze keuze.</p>
-  <form method="post" action="<?= e(url('member_days')) ?>">
-    <?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $group['id'] ?>">
-    <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Lid</th><?php foreach ($daySlots as $ds): ?><th><?= e($ds['when']) ?></th><?php endforeach; ?></tr></thead>
-      <tbody>
-      <?php foreach ($memberships as $m): ?>
-        <tr>
-          <td><?= e($m['last_name'] . ' ' . $m['first_name']) ?></td>
-          <?php foreach ($daySlots as $ds): ?>
-            <td data-label="<?= e($ds['when']) ?>"><input type="checkbox" name="days[<?= (int) $m['id'] ?>][]" value="<?= e($ds['key']) ?>" <?= !empty($assigned[(int) $m['id']][$ds['key']]) ? 'checked' : '' ?> aria-label="<?= e($m['first_name'] . ' ' . $m['last_name'] . ': ' . $ds['when']) ?>"></td>
-          <?php endforeach; ?>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    </div>
-    <div class="actions"><button class="btn" type="submit">Trainingsmomenten opslaan</button></div>
-  </form>
-  <?php endif; ?>
-</section>
-<?php endif; ?>
-
 <section class="card">
   <h2>Leden</h2>
   <?php if (!$memberships): ?>
@@ -131,11 +100,9 @@
     <label>Geselecteerde leden verplaatsen naar
       <select name="to_group_id" required>
         <option value="">— kies een groep —</option>
-        <?php $lastCat = null; foreach ($targets as $t): ?>
-          <?php if ($lastCat !== $t['category']): if ($lastCat !== null) { echo '</optgroup>'; } $lastCat = $t['category']; echo '<optgroup label="' . e(group_category_label($t['category'])) . '">'; endif; ?>
+        <?php foreach ($targets as $t): ?>
           <option value="<?= (int) $t['id'] ?>"><?= e($t['name']) ?></option>
         <?php endforeach; ?>
-        <?php if ($lastCat !== null): ?></optgroup><?php endif; ?>
       </select>
     </label>
     <button class="btn" type="submit">Verplaatsen</button>

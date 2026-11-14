@@ -13,7 +13,7 @@ final class GroupController
         $groups = Database::all(
             "SELECT g.*,
                 (SELECT COUNT(*) FROM group_memberships gm WHERE gm.group_id = g.id) AS member_count
-             FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.category, g.name",
+             FROM `groups` g WHERE $where ORDER BY g.is_active DESC, g.name",
             $params
         );
         render('groups/index', ['groups' => $groups], 'Groepen');
@@ -27,16 +27,13 @@ final class GroupController
             return [];
         }
         $where = $gids === null ? '1=1' : 'id IN (' . Scope::in($gids) . ')';
-        return Database::all("SELECT id, name, category FROM `groups` WHERE is_active = 1 AND $where ORDER BY category, name", $gids ?? []);
+        return Database::all("SELECT id, name, category FROM `groups` WHERE is_active = 1 AND $where ORDER BY name", $gids ?? []);
     }
 
     /** @return array{0:string,1:int} gevalideerde filter (soort, groep-id) uit de querystring */
     public static function readFilter(): array
     {
-        $cat = (string) ($_GET['cat'] ?? '');
-        if (!array_key_exists($cat, group_categories())) {
-            $cat = '';
-        }
+        $cat = ''; // geen onderscheid zwemschool/competitie meer
         $gid = (int) ($_GET['g'] ?? 0);
         if ($gid && !array_filter(self::filterOptions(), fn($g) => (int) $g['id'] === $gid)) {
             $gid = 0;
@@ -80,7 +77,7 @@ final class GroupController
             );
         }
         $targets = Auth::can('groups.write')
-            ? Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 AND id != ? ORDER BY category, name', [$group['id']])
+            ? Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 AND id != ? ORDER BY name', [$group['id']])
             : [];
 
         $now = date('Y-m-d H:i:s');
@@ -100,65 +97,13 @@ final class GroupController
 
         $blockedIds = $candidates ? Guardianship::missingIds() : [];
 
-        // Trainingsmoment per lid (zwemschool): elke actieve reeks van de groep (een reeks = een trainingsmoment).
-        $daySlots = [];
-        $assigned = [];
-        if (Auth::can('activities.read')) {
-            foreach (Database::all(
-                'SELECT s.id, s.title FROM activity_series s JOIN activity_series_groups sg ON sg.series_id = s.id
-                 WHERE sg.group_id = ? AND s.is_active = 1 AND s.end_date >= ?',
-                [$group['id'], today()]
-            ) as $r) {
-                $slots = Database::all('SELECT * FROM activity_series_slots WHERE series_id = ? ORDER BY weekday', [$r['id']]);
-                $daySlots[] = ['key' => (string) $r['id'], 'series_id' => (int) $r['id'], 'label' => $r['title'],
-                    'when' => ucfirst(SeriesService::summary($slots)),
-                    'sort' => $slots ? sprintf('%d%s', $slots[0]['weekday'], $slots[0]['start_time']) : '9'];
-            }
-            usort($daySlots, fn($x, $y) => [$x['sort'], $x['label']] <=> [$y['sort'], $y['label']]);
-            if ($daySlots) {
-                $ids = array_column($daySlots, 'series_id');
-                foreach (Database::all('SELECT DISTINCT member_id, series_id FROM member_series WHERE series_id IN (' . Scope::in($ids) . ')', $ids) as $r) {
-                    $assigned[(int) $r['member_id']][(string) $r['series_id']] = true;
-                }
-            }
-        }
-
-
-        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series', 'daySlots', 'assigned'), $group['name']);
-    }
-
-    /** Trainingsmoment(en) (dag + uur) van de leden van een groep opslaan. Niets aangevinkt = alle trainingen van de groep. */
-    public static function saveDays(): void
-    {
-        $group = Database::one('SELECT id FROM `groups` WHERE id = ?', [(int) input('group_id', '0')]);
-        if (!$group) {
-            abort(404, 'Groep niet gevonden.');
-        }
-        $gSeries = array_map('intval', array_column(Database::all('SELECT series_id FROM activity_series_groups WHERE group_id = ?', [$group['id']]), 'series_id'));
-        $members = array_map('intval', array_column(Database::all('SELECT member_id FROM group_memberships WHERE group_id = ?', [$group['id']]), 'member_id'));
-        $post = is_array($_POST['days'] ?? null) ? $_POST['days'] : [];
-        Database::tx(function () use ($gSeries, $members, $post) {
-            foreach ($members as $mid) {
-                if ($gSeries) {
-                    Database::exec('DELETE FROM member_series WHERE member_id = ? AND series_id IN (' . Scope::in($gSeries) . ')', array_merge([$mid], $gSeries));
-                }
-                $picked = is_array($post[$mid] ?? null) ? array_unique(array_map('intval', $post[$mid])) : [];
-                foreach ($picked as $sid) {
-                    if (in_array($sid, $gSeries, true)) {
-                        Database::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, 0)', [$mid, $sid]);
-                    }
-                }
-            }
-        });
-        audit('UPDATE', 'groups', (int) $group['id'], 'trainingsmoment per lid');
-        flash('success', 'Trainingsmomenten opgeslagen.');
-        redirect(url('group', ['id' => $group['id']]) . '#trainingsmoment');
+        render('groups/show', compact('group', 'memberships', 'trainers', 'candidates', 'blockedIds', 'targets', 'activities', 'series'), $group['name']);
     }
 
     public static function form(): void
     {
         $id = (int) ($_GET['id'] ?? 0);
-        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'category' => input('category', 'SWIM_SCHOOL'), 'is_active' => 1];
+        $group = $id ? self::loadVisible($id) : ['id' => 0, 'name' => '', 'description' => '', 'category' => 'COMPETITION', 'is_active' => 1];
         $selected = $id ? array_map('intval', array_column(Database::all('SELECT user_id FROM group_trainers WHERE group_id = ?', [$id]), 'user_id')) : [];
         render('groups/form', ['group' => $group, 'errors' => [], 'trainerOptions' => self::trainerOptions($selected), 'selectedTrainers' => $selected], $id ? 'Groep wijzigen' : 'Nieuwe groep');
     }
@@ -198,13 +143,10 @@ final class GroupController
         $data = [
             'name' => input('name'),
             'description' => input('description'),
-            'category' => input('category'),
+            'category' => 'COMPETITION',
             'is_active' => input('is_active') === '1' ? 1 : 0,
         ];
 
-        if ($data['category'] === '') {
-            $data['category'] = 'SWIM_SCHOOL';
-        }
         $errors = [];
         if ($data['name'] === '') {
             $errors[] = 'Naam is verplicht.';
@@ -212,9 +154,6 @@ final class GroupController
             $errors[] = 'Naam is te lang (max. 80 tekens).';
         } elseif (Database::val('SELECT COUNT(*) FROM `groups` WHERE name = ? AND id <> ?', [$data['name'], $id]) > 0) {
             $errors[] = 'Er bestaat al een groep met deze naam.';
-        }
-        if (!array_key_exists($data['category'], group_categories())) {
-            $errors[] = 'Kies zwemschool of competitie.';
         }
         if (mb_strlen($data['description']) > 255) {
             $errors[] = 'Omschrijving is te lang (max. 255 tekens).';
@@ -269,7 +208,6 @@ final class GroupController
             abort(404, 'Lid niet gevonden.');
         }
         if ($groupId === 0) {
-            SeriesService::clearMemberBlocks($memberId);
             Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
             audit('DELETE', 'group_membership', null, "member=$memberId");
             flash('success', 'Lid zit nu in geen enkele groep.');
@@ -305,7 +243,6 @@ final class GroupController
             return 'Dit lid zit al in de groep "' . $current['name'] . '". Een lid kan maar in één groep zitten: verplaats het lid naar de nieuwe groep.';
         }
         Database::tx(function () use ($memberId, $groupId) {
-            SeriesService::clearMemberBlocks($memberId);
             Database::exec('DELETE FROM group_memberships WHERE member_id = ?', [$memberId]);
             $id = Database::insert('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$memberId, $groupId, today()]);
             audit('CREATE', 'group_membership', $id);
@@ -321,37 +258,45 @@ final class GroupController
         if (!$group) {
             abort(404, 'Groep niet gevonden.');
         }
-        Database::tx(function () use ($id) {
-            // Reeksen die enkel voor deze groep bestaan verdwijnen mee, met hun trainingen.
-            $solo = array_column(Database::all(
-                'SELECT series_id FROM activity_series_groups GROUP BY series_id HAVING COUNT(*) = 1 AND MAX(CASE WHEN group_id = ? THEN 1 ELSE 0 END) = 1',
-                [$id]
-            ), 'series_id');
-            foreach ($solo as $sid) {
-                foreach (array_column(Database::all('SELECT id FROM activities WHERE series_id = ?', [$sid]), 'id') as $aid) {
-                    self::deleteActivity((int) $aid);
-                }
-                Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$sid]);
-                Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$sid]);
-                Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$sid]);
-                Coverage::forgetSeries((int) $sid);
-                Database::exec('DELETE FROM activity_series WHERE id = ?', [$sid]);
-            }
-            Database::exec('DELETE FROM group_memberships WHERE group_id = ?', [$id]);
-            Database::exec('DELETE FROM group_trainers WHERE group_id = ?', [$id]);
-            Database::exec('DELETE FROM activity_series_groups WHERE group_id = ?', [$id]);
-            Database::exec('DELETE FROM activity_groups WHERE group_id = ?', [$id]);
-            // Groepsactiviteiten die nu aan geen enkele groep meer hangen, verdwijnen ook.
-            foreach (array_column(Database::all(
-                "SELECT a.id FROM activities a WHERE a.audience = 'GROUPS' AND NOT EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = a.id)"
-            ), 'id') as $aid) {
-                self::deleteActivity((int) $aid);
-            }
-            Database::exec('DELETE FROM `groups` WHERE id = ?', [$id]);
-        });
+        Database::tx(fn() => self::purge($id));
         audit('DELETE', 'group', $id, $group['name']);
         flash('success', 'Groep "' . $group['name'] . '" verwijderd.');
         redirect(url('groups'));
+    }
+
+    /**
+     * Groep definitief verwijderen (zonder transactie; de aanroeper zorgt daarvoor). Leden blijven bestaan zonder groep;
+     * reeksen enkel voor deze groep verdwijnen met hun trainingen, net als groepsactiviteiten die aan geen groep meer hangen.
+     */
+    public static function purge(int $id): void
+    {
+        $solo = array_column(Database::all(
+            'SELECT series_id FROM activity_series_groups GROUP BY series_id HAVING COUNT(*) = 1 AND MAX(CASE WHEN group_id = ? THEN 1 ELSE 0 END) = 1',
+            [$id]
+        ), 'series_id');
+        foreach ($solo as $sid) {
+            foreach (array_column(Database::all('SELECT id FROM activities WHERE series_id = ?', [$sid]), 'id') as $aid) {
+                self::deleteActivity((int) $aid);
+            }
+            Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$sid]);
+            Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$sid]);
+            Database::exec('DELETE FROM activity_series_skips WHERE series_id = ?', [$sid]);
+            Database::exec('DELETE FROM member_series WHERE series_id = ?', [$sid]);
+            Coverage::forgetSeries((int) $sid);
+            Database::exec('UPDATE activities SET series_id = NULL WHERE series_id = ?', [$sid]);
+            Database::exec('DELETE FROM activity_series WHERE id = ?', [$sid]);
+        }
+        Database::exec('DELETE FROM group_memberships WHERE group_id = ?', [$id]);
+        Database::exec('DELETE FROM group_trainers WHERE group_id = ?', [$id]);
+        Database::exec('DELETE FROM activity_series_groups WHERE group_id = ?', [$id]);
+        Database::exec('DELETE FROM activity_groups WHERE group_id = ?', [$id]);
+        // Groepsactiviteiten die nu aan geen enkele groep meer hangen, verdwijnen ook.
+        foreach (array_column(Database::all(
+            "SELECT a.id FROM activities a WHERE a.audience = 'GROUPS' AND NOT EXISTS (SELECT 1 FROM activity_groups ag WHERE ag.activity_id = a.id)"
+        ), 'id') as $aid) {
+            self::deleteActivity((int) $aid);
+        }
+        Database::exec('DELETE FROM `groups` WHERE id = ?', [$id]);
     }
 
     private static function deleteActivity(int $id): void
@@ -393,7 +338,6 @@ final class GroupController
             if (!$ms) {
                 continue;
             }
-            SeriesService::clearMemberBlocks((int) $ms['member_id']);
             Database::exec('UPDATE group_memberships SET group_id = ? WHERE id = ?', [$to, $ms['id']]);
             audit('MOVE', 'group_membership', (int) $ms['id'], json_encode(['from' => $from, 'to' => $to]));
             $moved++;
@@ -412,7 +356,6 @@ final class GroupController
         if (!$row) {
             abort(404, 'Dit lid zit niet in een groep.');
         }
-        SeriesService::clearMemberBlocks((int) $row['member_id']);
         Database::exec('DELETE FROM group_memberships WHERE id = ?', [$row['id']]);
         audit('DELETE', 'group_membership', (int) $row['id']);
         flash('success', 'Lid uit de groep gehaald.');

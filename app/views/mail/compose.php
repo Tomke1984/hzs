@@ -1,5 +1,5 @@
 <h1>Bericht sturen</h1>
-<p class="muted">Stuur een mail naar de leden en ouders van een groep, een trainingsblok of een activiteit. Elke ontvanger krijgt het bericht apart.</p>
+<p class="muted">Stuur een mail naar de leden en ouders van een groep, een trainingsreeks of een activiteit. Elke ontvanger krijgt het bericht apart.</p>
 
 <?php if ($errors): ?>
   <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>

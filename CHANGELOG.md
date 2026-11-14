@@ -5,6 +5,13 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Wordt v0.14.0 – zwemschool uit de app – commit volgt bij de push_
+
+- **Zwemschool volledig uit de app:** geen keuze meer tussen zwemschool en competitie (alle groepen zijn competitiegroepen), geen filter daarop in leden, kalender, reeksen en aanwezigheden; zwemblokken weg (indeling per lid, lijst *Nog niet ingedeeld*, *Weekoverzicht zwemschool*, *Trainingsmoment per lid*). Alle leden van een groep staan op de lijsten van hun groep.
+- **Update (schema 14) verwijdert bestaande zwemschoolgroepen** zoals *Groep verwijderen*: leden blijven bestaan zonder groep; reeksen en activiteiten enkel voor die groepen verdwijnen met hun aanwezigheden en afmeldingen; de blokindeling (`member_series`) wordt gewist. Dit is onomkeerbaar: maak eerst een back-up van de database.
+- Groep verwijderen ruimt nu ook afmeldingen van leden bij de verwijderde activiteiten op (voorkomt een fout door de databasekoppeling).
+- Demodata: groepen Miniemen, Kadetten en Wedstrijdploeg (allemaal competitie). Tests: 376 controles (o.a. de verwijdering van een bestaande zwemschoolgroep zonder ledenverlies).
+
 _Trainersplanning: trainers in bulk toewijzen – commit `c34e358`_
 
 - **Meerdere tegelijk** in de trainersplanning: vinkje per training/wedstrijd, snel aanvinken (*Alle tekorten*, *Alles*, *Niets*, alle trainingen van een blok) en in één keer een trainer **inplannen** of **afmelden** met reden (bv. vakantie). Overgeslagen gevallen worden geteld in de melding; ontstaat er een tekort binnen 3 dagen, dan vertrekt meteen de mail.

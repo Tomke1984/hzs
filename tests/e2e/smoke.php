@@ -61,3 +61,41 @@ $b->get('/app');
 T::ok($b->status === 200, 'app werkt na de update');
 T::ok(!T::val("SELECT 1 FROM permissions WHERE code = 'fees.manage'"), 'oud recht opgeruimd');
 T::ok((int) T::val('SELECT COUNT(*) FROM dues') === 1, 'oude gegevens (lidgeld) blijven onaangeroerd in de database');
+
+echo "Zwemschool uit de app (v0.14)\n";
+$admin = Browser::login('admin@demo.local');
+$admin->get('/app/groepen/nieuw');
+T::ok(!$admin->has('name="category"') && !$admin->has('Zwemschool'), 'groepsformulier zonder keuze zwemschool/competitie');
+$admin->get('/app/kalender');
+T::ok(!$admin->has('name="cat"') && !$admin->has('Weekoverzicht zwemschool'), 'kalender zonder filter zwemschool/competitie en zonder weekoverzicht');
+$admin->get('/app/reeksen');
+T::ok(!$admin->has('Nog niet ingedeeld') && !$admin->has('Zwemschool'), 'reeksen zonder zwemblokken');
+foreach (['/app/series-week', '/app/series-member-add', '/app/member-days'] as $p) {
+    $admin->get($p);
+    T::ok($admin->status === 404, "$p bestaat niet meer (geeft {$admin->status})");
+}
+T::ok(!T::val("SELECT 1 FROM `groups` WHERE category <> 'COMPETITION'"), 'demodata: enkel competitiegroepen');
+// Een bestaande database met een zwemschoolgroep (leden, reeks, blokindeling, training met aanwezigheid en afmelding)
+$sg = T::pdo();
+T::exec("INSERT INTO `groups` (name, description, category, is_active) VALUES ('Zwemschool Oud', NULL, 'SWIM_SCHOOL', 1)");
+$swimG = (int) $sg->lastInsertId();
+$mid = (int) T::val("SELECT id FROM members WHERE first_name = 'Emma'");
+T::exec('DELETE FROM group_memberships WHERE member_id = ?', [$mid]);
+T::exec('INSERT INTO group_memberships (member_id, group_id, start_date) VALUES (?,?,?)', [$mid, $swimG, '2025-09-01']);
+T::exec("INSERT INTO activity_series (type_id, title, start_date, end_date, is_active, created_at) VALUES ((SELECT id FROM activity_types WHERE code = 'TRAINING'), 'Zwemblok di', ?, ?, 1, ?)", [date('Y-m-d'), date('Y-m-d', strtotime('+30 days')), date('Y-m-d H:i:s')]);
+$swimS = (int) $sg->lastInsertId();
+T::exec('INSERT INTO activity_series_groups (series_id, group_id) VALUES (?,?)', [$swimS, $swimG]);
+T::exec('INSERT INTO activity_series_slots (series_id, weekday, start_time, end_time) VALUES (?, 2, ?, ?)', [$swimS, '18:00', '19:00']);
+T::exec('INSERT INTO member_series (member_id, series_id, weekday) VALUES (?, ?, 0)', [$mid, $swimS]);
+T::exec("INSERT INTO activities (type_id, title, starts_at, ends_at, audience, status, created_at, series_id) VALUES ((SELECT id FROM activity_types WHERE code = 'TRAINING'), 'Zwemblok di', ?, ?, 'GROUPS', 'PLANNED', ?, ?)", [date('Y-m-d', strtotime('+3 days')) . ' 18:00:00', date('Y-m-d', strtotime('+3 days')) . ' 19:00:00', date('Y-m-d H:i:s'), $swimS]);
+$swimA = (int) $sg->lastInsertId();
+T::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?,?)', [$swimA, $swimG]);
+T::exec("INSERT INTO attendance (activity_id, member_id, status, updated_at) VALUES (?, ?, 'PRESENT', ?)", [$swimA, $mid, date('Y-m-d H:i:s')]);
+T::exec('INSERT INTO absence_reports (activity_id, member_id, created_at) VALUES (?, ?, ?)', [$swimA, $mid, date('Y-m-d H:i:s')]);
+$b = Browser::login('bestuur@demo.local');
+$b->get('/app/groepen');
+T::ok($b->status === 200 && !$b->has('Zwemschool Oud'), 'na de update: zwemschoolgroep verwijderd');
+T::ok(!T::val('SELECT 1 FROM `groups` WHERE id = ?', [$swimG]) && !T::val('SELECT 1 FROM activity_series WHERE id = ?', [$swimS]) && !T::val('SELECT 1 FROM activities WHERE id = ?', [$swimA]), 'reeks en trainingen van de zwemschoolgroep verwijderd');
+T::ok((bool) T::val('SELECT 1 FROM members WHERE id = ?', [$mid]) && !T::val('SELECT 1 FROM group_memberships WHERE member_id = ?', [$mid]), 'lid blijft bestaan, zonder groep');
+T::ok(!T::val('SELECT 1 FROM member_series'), 'blokindeling gewist');
+T::ok((bool) T::val("SELECT 1 FROM `groups` WHERE name = 'Wedstrijdploeg'"), 'competitiegroepen blijven');

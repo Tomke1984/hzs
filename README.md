@@ -25,7 +25,7 @@ Demo-accounts (enkel lokaal; wachtwoord voor allemaal `Demo1234!`):
 |---|---|---|
 | Beheerder | je eigen account | alles, clubbreed |
 | Bestuur | `bestuur@demo.local` | alle leden, groepen, kalender en trainersplanning (geen gebruikersbeheer) |
-| Trainer | `trainer@demo.local` | traint Beginners en Gevorderden en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid); persoonlijke kalender met die groepen |
+| Trainer | `trainer@demo.local` | traint Miniemen en Kadetten en zwemt zelf mee in de Wedstrijdploeg (Trainer + lid); persoonlijke kalender met die groepen |
 | Coördinator competitie | `coordinator@demo.local` | Coördinator + Trainer van de Wedstrijdploeg: trainersplanning, vaste trainers per blok, mails bij tekorten |
 | Competitietrainer | `competitie@demo.local` | Trainer van de Wedstrijdploeg: trainersplanning (afmelden, overnemen, collega inplannen) |
 | Zwemmer | `zwemmer@demo.local` | enkel zichzelf |
@@ -45,29 +45,28 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 
 ## Wat zit erin
 
-Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login. De startpagina (`/`) stuurt naar *Aanmelden*. De publieke website, het websitebeheer, statistieken, lidgeld, inschrijvingen, de zwemtestwachtlijst, het contactformulier, de nieuwsbrief, de fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit/wachtlijst en CSV-exports zijn verwijderd (de code staat nog in de Git-geschiedenis, tag/commit van v0.12). Leesbare adressen: `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` en de app onder `/app` (`/app/kalender`, `/app/leden/12`, …). Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
+Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 enkel voor de **competitie** (geen zwemschool, zwemblokken of indeling per lid meer; bestaande zwemschoolgroepen worden bij de update verwijderd, de leden blijven bestaan zonder groep). De startpagina (`/`) stuurt naar *Aanmelden*. De publieke website, het websitebeheer, statistieken, lidgeld, inschrijvingen, de zwemtestwachtlijst, het contactformulier, de nieuwsbrief, de fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit/wachtlijst en CSV-exports zijn verwijderd (de code staat nog in de Git-geschiedenis, tag/commit van v0.12). Leesbare adressen: `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` en de app onder `/app` (`/app/kalender`, `/app/leden/12`, …). Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
 
 ### Leden, groepen en gebruikers
 - Aanmelden met e-mail en wachtwoord; rollen **Beheerder, Bestuur, Trainer, Coördinator competitie, Zwemmer, Ouder** (combineerbaar, een trainer die ook lid is krijgt Trainer + Zwemmer); permissies in de database.
 - Gegevensscope: trainer = toegewezen groepen, zwemmer = zichzelf, ouder = gekoppelde kinderen, beheerder/bestuur = clubbreed.
 - **Leden**: zoeken, toevoegen, wijzigen (nooit verwijderen, wel inactief), adres en contactgegevens (enkel met recht `members.contact`). Het lidnummer is intern en wordt nergens getoond.
 - **Minderjarigen** hebben minstens één ouder of voogd (waarschuwingen; zonder ouder geen groep).
-- **Groepen** zijn **Zwemschool** of **Competitie**. Een lid zit in **maximaal één groep, zonder historiek** (geen van/tot). Leden in bulk verplaatsen (je blijft op de brongroep), groep verwijderen kan altijd (leden blijven bestaan zonder groep). Op de groepspagina: leden, trainers, gekoppelde reeksen, komende activiteiten. Er is geen lidnummer, capaciteit of lidgeld meer in beeld.
+- **Groepen** zijn allemaal competitiegroepen (de zwemschool zit sinds v0.14 niet meer in de app). Een lid zit in **maximaal één groep, zonder historiek** (geen van/tot). Leden in bulk verplaatsen (je blijft op de brongroep), groep verwijderen kan altijd (leden blijven bestaan zonder groep). Op de groepspagina: leden, trainers, gekoppelde reeksen, komende activiteiten. Er is geen lidnummer, capaciteit of lidgeld meer in beeld.
 - **Trainers** zijn aan groepen gekoppeld zonder datums; meerdere trainers per groep, in te stellen bij Groep wijzigen of bij de gebruiker.
 - **Gebruikers** (enkel beheerders): accounts, rollen, wachtwoord resetten, deactiveren, ouders aan kinderen koppelen (met relatie), trainers aan groepen. Twee tabbladen (beheer/trainers en ouders/zwemmers).
 - **Uitnodigingen per e-mail**: ouders en leden kiezen zelf een wachtwoord via een persoonlijke, eenmalige link (7 dagen); *Wachtwoord vergeten?* via mail (60 minuten).
 
 ### Kalender, trainingsreeksen en aanwezigheid
-- **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op zwemschool/competitie en groep.
+- **Persoonlijke kalender** (in de app): je ziet de trainingen en activiteiten van je eigen groepen (als trainer, lid of via je kinderen) plus alle clubactiviteiten en wedstrijden. **Wedstrijden voor andere groepen staan in grijs** en zijn niet aanklikbaar (beheerders kunnen alles openen). Filter op groep.
 - **Activiteiten** voor groep(en) of de hele club (training, wedstrijd, clubactiviteit); schrappen = annuleren en verwijderen (met aanwezigheden blijft ze geannuleerd bewaard); **alle activiteiten van een dag of periode in één keer schrappen** (× in de kalender, of *Schrappen / verplaatsen*), eventueel per groep.
-- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Alle getoonde reeksen in één keer **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen. Zwemschool en competitie staan gescheiden op het overzicht.
-- **Competitie:** elke groep heeft een vast trainingsschema; alle leden van de groep staan op de lijsten van hun groep.
-- **Zwemschool = zwemblokken:** een zwemschoolreeks (één dag + uur) is een *blok* waarvoor je meerdere groepen kiest. Leden worden per blok ingedeeld (*Trainingsreeksen → blok → Leden in dit blok*, of de lijst *Nog niet ingedeeld* op het overzicht met een keuzelijst per lid, of het rooster *Trainingsmoment per lid* op de groepspagina). Een lid mag in meerdere blokken, leden van verschillende groepen mogen samen in één blok. **Een zwemschoollid zonder blok staat op geen enkele aanwezigheidslijst** en ziet (ouder/zwemmer) geen trainingen van zijn groep tot het is ingedeeld. Wisselt een lid van groep (of wordt het verplaatst of uit de groep gehaald), dan vervalt zijn indeling. Het **weekoverzicht zwemschool** (knop op de kalender en op Trainingsreeksen) toont dag × uur met de groepen en het aantal leden per blok. Een blok = één dag en uur: maak per moment een aparte reeks.
+- **Trainingsreeksen** (*Kalender → Trainingsreeksen*, Admin/Bestuur): groepen, periode en per weekdag begin/einde (en locatie); de app maakt de trainingen aan. Een tweede training op dezelfde dag (droogtraining) is een aparte reeks. Schrappen per training of per periode, reeks wijzigen/stoppen/verwijderen (ingevulde aanwezigheden blijven bewaard). Alle getoonde reeksen in één keer **verlengen** (bv. naar het volgende seizoen) zonder nieuwe reeks of trainingen te verwijderen. Het overzicht toont de reeksen per groep.
+- Elke groep heeft een vast trainingsschema; alle leden van de groep staan op de lijsten van hun groep.
 - **Presentielijst** met Onbekend / Aanwezig / Afwezig; een trainer registreert enkel voor groepen die hij traint.
 - *← Terug* bovenaan gaat naar de bovenliggende pagina, niet naar de vorige in de browser.
 
 ### Trainersplanning competitie (v0.12)
-- **Doel:** nooit meer een competitietraining zonder trainer. Zwemschool valt (voorlopig) buiten deze planning.
+- **Doel:** nooit meer een training zonder trainer.
 - **Trainersplanning** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitiegroepen (en clubbrede wedstrijden) met hun trainers en een status *In orde* of *Trainer gezocht* (x/y). Tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*; periode 1–8 weken.
 - **Vaste trainer per blok:** de coördinator kiest per trainingsreeks en weekdag de vaste trainer(s) (*Vaste trainers en instellingen*). Die staan automatisch op elke training van dat blok; een wijziging geldt meteen voor alle komende trainingen.
 - **Afmelden en overnemen:** een trainer meldt zich af (met reden) voor één training of wedstrijd; de anderen zien meteen het tekort en klikken *Ik neem over*, of plannen een collega in. Elke competitietrainer kan dit doen (ook voor een ander), zodat iedereen de coördinatie kan overnemen wanneer nodig. *Weghalen* is voor extra/per vergissing ingeplande trainers; een vaste trainer meld je af.
@@ -79,7 +78,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login. De startpagina (
 - **Rol *Coördinator competitie*** (permissie `coverage.manage`, ook voor bestuur en beheerder). Geeft de coördinator zelf training, vink dan ook *Trainer* aan. Wie in de trainersplanning staat: actieve trainers van een competitiegroep en coördinatoren.
 
 ### Verder in de app
-- **Aanwezigheid en communicatie:** aanwezigheidsrapport per groep/periode met lijst *Nog in te vullen*; **bericht sturen** naar groep, trainingsblok, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
+- **Aanwezigheid en communicatie:** aanwezigheidsrapport per groep/periode met lijst *Nog in te vullen*; **bericht sturen** naar groep, trainingsreeks, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
 - **Noodcontact en medische opmerking** (enkel met `members.medical`); reden bij stopzetting; waarschuwing bij **dubbele leden**.
 - **Auditlog** (`audit.read`, enkel beheerders), **globaal zoeken** in het menu, **dashboards per rol**.
 - **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); `security.require_2fa_admin` verplicht ze voor beheerders; een beheerder kan 2FA van een gebruiker uitzetten.

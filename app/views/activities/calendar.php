@@ -7,21 +7,20 @@ $todayStr = today();
   <h1>Kalender</h1>
   <?php if (Auth::can('activities.write')): ?>
     <span class="actions-inline">
-      <a class="btn btn-ghost" href="<?= e(url('series_week')) ?>">Weekoverzicht zwemschool</a>
       <a class="btn btn-ghost" href="<?= e(url('series')) ?>">Trainingsreeksen</a>
       <a class="btn" href="<?= e(url('activity_form')) ?>">+ Nieuwe activiteit</a>
     </span>
   <?php endif; ?>
 </div>
 
-<?php $keep = array_filter(['cat' => $cat, 'g' => $gid ?: '']); ?>
+<?php $keep = array_filter(['g' => $gid ?: '']); ?>
 <form class="filters" method="get" action="">
   <input type="hidden" name="m" value="<?= e($first->format('Y-m')) ?>">
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>
   <button class="btn btn-small" type="submit">Filteren</button>
-  <?php if ($cat !== '' || $gid): ?><a href="<?= e(url('calendar', ['m' => $first->format('Y-m')])) ?>">Wis filter</a><?php endif; ?>
+  <?php if ($gid): ?><a href="<?= e(url('calendar', ['m' => $first->format('Y-m')])) ?>">Wis filter</a><?php endif; ?>
 </form>
-<?php if ($cat !== '' || $gid): ?>
+<?php if ($gid): ?>
   <p class="muted small">Gefilterd op groep. Activiteiten voor de hele club blijven altijd zichtbaar.</p>
 <?php endif; ?>
 

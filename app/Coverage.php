@@ -7,7 +7,7 @@
  * activity_trainers (ASSIGNED = vervanger/extra, ABSENT = afgemeld). Wijzigt de vaste trainer van een blok,
  * dan geldt dat meteen voor alle komende trainingen; afwijkingen per training blijven staan.
  *
- * Enkel trainingen en wedstrijden van competitiegroepen (en clubbrede wedstrijden) tellen mee; de zwemschool niet.
+ * Alle groepen zijn competitiegroepen (sinds v0.14); trainingen en wedstrijden van actieve groepen en clubbrede wedstrijden tellen mee.
  */
 final class Coverage
 {
@@ -207,9 +207,10 @@ final class Coverage
         }
     }
 
-    /** Opruimen bij het verwijderen van een activiteit of reeks. */
+    /** Opruimen bij het verwijderen van een activiteit (trainers, meldingen en afmeldingen van leden) of reeks. */
     public static function forgetActivity(int $activityId): void
     {
+        Database::exec('DELETE FROM absence_reports WHERE activity_id = ?', [$activityId]);
         Database::exec('DELETE FROM activity_trainers WHERE activity_id = ?', [$activityId]);
         Database::exec('DELETE FROM coverage_alerts WHERE activity_id = ?', [$activityId]);
     }
