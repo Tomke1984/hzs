@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Trainersplanning als weekkalender – commit `HASH`_
+_Trainersplanning als weekkalender – commit `f3e7bc5`_
 
 - **Wisselen tussen Lijst en Weekkalender** (knoppen rechtsboven in de trainersplanning; de app onthoudt je keuze). De weekkalender toont maandag tot zondag naast elkaar, met per training of wedstrijd het uur, *In orde* / *Trainer gezocht* en de trainers (afgemeld of op wedstrijd doorstreept). Bladeren met *Vorige* en *Volgende*.
 - Klik op een training in de weekkalender om je af te melden, over te nemen of iemand in te plannen. Op telefoon staan de dagen onder elkaar.
