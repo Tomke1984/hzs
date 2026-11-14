@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Aanwezigheden voorlopig verborgen – commit volgt bij de push_
+_Aanwezigheden voorlopig verborgen – commit `17d3120`_
 
 - **Aanwezigheden verborgen** achter een schakelaar (`'features' => ['attendance' => false]` in `config.php`, standaard uit): geen menu-item *Aanwezigheden*, geen aanwezigheidsrapport (404), geen presentielijst bij een activiteit, geen blok *Aanwezigheid nog in te vullen*. Code en bestaande gegevens blijven; met `true` komt alles terug.
 - Bij een activiteit staat nu *Deelnemers en afmeldingen*: ouders en leden kunnen zich nog altijd afmelden, trainers en bestuur zien wie afgemeld is.
