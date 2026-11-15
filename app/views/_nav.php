@@ -13,7 +13,7 @@ $icons = [
     'roster' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 17c.4-2 1.8-3.2 3.5-3.2s3.1 1.2 3.5 3.2"/>',
 ];
 $coverView = Coverage::canView();
-$nShort = $coverView ? count(Coverage::problems(7)) : 0;
+$nShort = $coverView ? count(Coverage::shortages()) : 0;
 $cur = (string) ($_GET['r'] ?? 'dashboard');
 $menu = [
     [null, [

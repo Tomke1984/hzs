@@ -157,7 +157,7 @@ final class ActivityController
     {
         $activity = self::loadVisible((int) input('activity_id', '0'), true);
         $mid = (int) input('member_id', '0');
-        $back = url('activity', ['id' => $activity['id']]);
+        $back = input('back') === 'dashboard' ? url('dashboard') : url('activity', ['id' => $activity['id']]);
         $inRoster = in_array($mid, array_map('intval', array_column(Scope::targetMembers($activity), 'id')), true);
         if (!in_array($mid, Scope::ownMemberIds(), true) || !$inRoster) {
             abort(403, 'Je kan enkel afmelden voor jezelf of je eigen kinderen.');

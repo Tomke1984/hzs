@@ -5,7 +5,7 @@
     <a class="btn" href="<?= e(url('series_form')) ?>">+ Nieuwe reeks</a>
   </span>
 </div>
-<form class="filters" method="get" action="">
+<form class="filters" data-auto method="get" action="">
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>
   <button class="btn btn-small" type="submit">Filteren</button>
   <?php if ($gid): ?><a href="<?= e(url('series')) ?>">Wis filter</a><?php endif; ?>

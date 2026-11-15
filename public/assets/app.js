@@ -1,6 +1,6 @@
 (function () {
   // Tabellen (behalve presentielijst) krijgen op mobiel een kaartweergave: kolomtitel als label per cel
-  document.querySelectorAll('table.table:not(.attendance)').forEach(function (t) {
+  document.querySelectorAll('table.table:not(.attendance):not(.member-table)').forEach(function (t) {
     var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
     if (!heads.length) return;
     t.classList.add('stack');
@@ -10,15 +10,15 @@
   });
 
   // Beheer-app: menu als uitschuifbaar paneel op smalle schermen
-  var appBtn = document.querySelector('.app-menu-btn'), appOverlay = document.querySelector('.app-overlay');
+  var appBtns = document.querySelectorAll('.app-menu-btn'), appBtn = appBtns[0], appOverlay = document.querySelector('.app-overlay');
   if (appBtn) {
     var setNav = function (open) {
       document.body.classList.toggle('nav-open', open);
-      appBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      appBtns.forEach(function (b) { b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
       if (appOverlay) appOverlay.hidden = !open;
       if (open) { var first = document.querySelector('#app-nav .side-link'); if (first) first.focus(); } else if (document.activeElement && document.activeElement.closest && document.activeElement.closest('#sidebar')) appBtn.focus();
     };
-    appBtn.addEventListener('click', function () { setNav(!document.body.classList.contains('nav-open')); });
+    appBtns.forEach(function (b) { b.addEventListener('click', function () { setNav(!document.body.classList.contains('nav-open')); }); });
     if (appOverlay) appOverlay.addEventListener('click', function () { setNav(false); });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && document.body.classList.contains('nav-open')) setNav(false); });
     document.querySelectorAll('#app-nav a').forEach(function (a) { a.addEventListener('click', function () { setNav(false); }); });
@@ -42,6 +42,12 @@
     });
     coverUpdate();
   }
+
+  // Filters: meteen toepassen bij elke wijziging (de knop "Filteren" verdwijnt dan)
+  document.querySelectorAll('form.filters[data-auto]').forEach(function (f) {
+    f.classList.add('is-auto');
+    f.addEventListener('change', function (ev) { if (ev.target.matches('select, input[type=checkbox], input[type=date]')) f.submit(); });
+  });
 
   // Bevestiging voor formulieren met data-confirm
   document.addEventListener('submit', function (ev) {

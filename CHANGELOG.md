@@ -5,6 +5,17 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_v0.18 – UX-advies front-end doorgevoerd – commit `HASH`_
+
+- **Overzicht per rol.** Ouders en zwemmers: bovenaan *Volgende training* per kind met meteen *Afmelden* / *Toch aanwezig*, daaronder de komende activiteiten als lijst (standaard). Trainers en bestuur: weekkalender en *Waar is actie nodig* (tekorten, afmeldingen van zwemmers, niet-geactiveerde uitnodigingen, minderjarigen zonder ouder) in plaats van de tegels met aantallen.
+- **Weekkalender kijkt vooruit:** op zaterdag en zondag toont hij de volgende week. Compacte navigatie ‹ 16–22 nov › met *Naar nu*; dagkoppen als "ma 16"; datums zonder jaartal als het dit jaar is.
+- **Eén tekortsignaal:** menubadge, overzicht en trainersplanning tonen hetzelfde aantal over dezelfde periode (14 dagen). De misleidende groene melding is weg: zonder tekorten staat er *✓ Geen tekorten* met het volgende tekort verder weg. In de kalenders behoudt een activiteit met tekort haar groepskleur en krijgt ze een rode rand en `!`-badge. Ouders zien geen tekorten.
+- **Minder uitleg en knoppen:** trainersplanning met uitleg achter *ⓘ Hoe werkt dit?* en acties achter ⋯; kalender met *+ Nieuw* en ⋯ (afgelasten/verplaatsen, reeksen). Het × per dag in de kalender is weg.
+- **Activiteitspagina:** *Training afgelasten* als gewone knop, *Verwijderen* onderaan in een ingeklapte gevarenzone. De trainerskaart herhaalt datum, uur, groep en locatie niet meer; *Terug* staat er nog één keer.
+- **Kleur:** wedstrijden herkenbaar aan 🏆 in plaats van een gele rand; legende = groepskleuren + één tekenmarkering. Grijze tekst donkerder (beter contrast).
+- **Mobiel:** vaste tabbalk onderaan (Overzicht, Kalender, Planning of Leden, Menu, met teller); compacte ledenlijst (naam, groep, ouder; status enkel als die afwijkt); filters passen meteen toe en staan naast elkaar; geen schaduwrand meer links.
+- Tests: nieuwe suite `v18_ux` (28 controles), bestaande suites aangepast (441 in totaal).
+
 _Clubkampioenschap terug in de trainersplanning – commit `0600c9a`_
 
 - Wedstrijden voor de hele club (zoals het clubkampioenschap) staan weer in de trainersplanning, met de vinkjes om meerdere trainers in te plannen. Enkel **clubactiviteiten** (samenkomst, pastadag, teambuilding, …) vragen geen trainers; die stonden er al niet in. Dit draait het tweede punt van de vorige versie terug.

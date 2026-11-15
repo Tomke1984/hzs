@@ -275,6 +275,28 @@ final class Coverage
     }
 
     /** Activiteiten waar nog een trainer ontbreekt, vanaf nu tot binnen $days dagen. */
+    /** Eén periode voor het tekortsignaal: menubadge, overzicht en trainersplanning tonen hetzelfde getal. */
+    public const SIGNAL_DAYS = 14;
+
+    /** Tekorten in de signaalperiode (gecachet per request). */
+    public static function shortages(): array
+    {
+        static $cache = null;
+        return $cache ??= self::problems(self::SIGNAL_DAYS);
+    }
+
+    /** Eerstvolgende tekort na de signaalperiode (binnen een half jaar), of null. */
+    public static function nextShortage(): ?array
+    {
+        $from = date('Y-m-d H:i:s', strtotime('+' . self::SIGNAL_DAYS . ' days'));
+        foreach (self::list($from, date('Y-m-d H:i:s', strtotime('+183 days'))) as $a) {
+            if ($a['missing'] > 0) {
+                return $a;
+            }
+        }
+        return null;
+    }
+
     public static function problems(int $days): array
     {
         return array_values(array_filter(

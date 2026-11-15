@@ -16,7 +16,6 @@
 <?php if ($user): ?>
 <header class="app-topbar">
   <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
-  <button class="app-menu-btn" type="button" aria-expanded="false" aria-controls="app-nav">Menu</button>
 </header>
 <div class="app-shell">
   <aside class="sidebar" id="sidebar">
@@ -54,9 +53,35 @@
   <?= $content ?>
 </main>
 <footer class="wrap foot">Hasseltse Zwemvereniging Spartacus · Clubapp<?php if (($privacy = privacy_href()) !== ''): ?> · <a href="<?= e($privacy) ?>">Privacybeleid</a><?php endif; ?></footer>
-<?php if ($user): ?>
+<?php if ($user): $tabCur = (string) ($_GET['r'] ?? 'dashboard'); ?>
   </div>
 </div>
+<?php
+  // Mobiel: vaste tabbalk onderaan (duimbereik) met de meest gebruikte schermen + het volledige menu
+  $tabs = [['Overzicht', 'dashboard', ['dashboard'], '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/>']];
+  if (Auth::can('activities.read')) {
+      $tabs[] = ['Kalender', 'calendar', ['calendar', 'activity', 'activity_form'], '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'];
+  }
+  if (Coverage::canView()) {
+      $tabs[] = ['Planning', 'coverage', ['coverage', 'coverage_bulk_form', 'coverage_settings'], '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 17c.4-2 1.8-3.2 3.5-3.2s3.1 1.2 3.5 3.2"/>'];
+  } elseif (Auth::can('members.read')) {
+      $tabs[] = [members_label(), 'members', ['members', 'member'], '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>'];
+  }
+  $tabBadge = Coverage::canView() ? count(Coverage::shortages()) : 0;
+?>
+<nav class="tabbar" aria-label="Snelmenu">
+  <?php foreach ($tabs as [$tl, $tr, $troutes, $ticon]): $on = in_array($tabCur, $troutes, true); ?>
+    <a class="tab<?= $on ? ' is-active' : '' ?>" href="<?= e(url($tr)) ?>"<?= $on ? ' aria-current="page"' : '' ?>>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $ticon ?></svg>
+      <span><?= e($tl) ?></span>
+      <?php if ($tr === 'coverage' && $tabBadge): ?><span class="tab-badge" aria-label="<?= $tabBadge ?> tekorten"><?= $tabBadge ?></span><?php endif; ?>
+    </a>
+  <?php endforeach; ?>
+  <button class="tab app-menu-btn" type="button" aria-expanded="false" aria-controls="app-nav">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>Menu</span>
+  </button>
+</nav>
 <?php endif; ?>
 </body>
 </html>

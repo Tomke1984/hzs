@@ -103,7 +103,7 @@ $sid = T::val('SELECT series_id FROM activities WHERE id = ?', [$act]);
 $day = substr((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$act]), 0, 10);
 T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_at) VALUES (?, ?, 'ABSENT', ?)", [$act, $uid, date('Y-m-d H:i:s')]);
 $board->get('/app/kalender/' . $act);
-T::ok($board->has('value="delete"') && $board->has('Verwijderen') && $board->has('Schrappen'), 'activiteitspagina: knoppen Schrappen en Verwijderen');
+T::ok($board->has('value="delete"') && $board->has('Verwijderen') && $board->has('Training afgelasten') && $board->has('class="danger-zone"'), 'activiteitspagina: Afgelasten als gewone actie, Verwijderen in de gevarenzone');
 $trainer->get('/app/kalender/' . $act);
 T::ok(!$trainer->has('value="delete"'), 'trainer zonder schrijfrecht ziet geen verwijderknop');
 $trainer->post('/app/occurrence', ['activity_id' => $act, 'do' => 'delete']);

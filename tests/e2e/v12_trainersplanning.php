@@ -69,9 +69,10 @@ T::exec('DELETE FROM group_trainers WHERE user_id = ? AND group_id = ?', [$tinaI
 echo "Weekkalender\n";
 $coord->get('/app/trainersplanning?view=week');
 $tomDate = date('Y-m-d', strtotime('+1 day'));
-$wOff = (int) floor((strtotime('monday this week', strtotime($tomDate)) - strtotime('monday this week', strtotime(date('Y-m-d')))) / 604800);
+// De weekkalender kijkt vooruit: op za/zo is week 0 al de volgende week (zie week_monday()).
+$wOff = (int) round((strtotime('monday this week', strtotime($tomDate)) - strtotime('monday this week', strtotime(date('Y-m-d', strtotime('+2 days'))))) / 604800);
 $coord->get('/app/trainersplanning?view=week&w=' . $wOff);
-T::ok($coord->has('class="week-grid"') && $coord->has('Weekkalender</a>') && preg_match('/aria-current="page">Weekkalender/', $coord->body) === 1, 'weekkalender getoond');
+T::ok($coord->has('class="week-grid"') && preg_match('/aria-current="page">Week<\/a>/', $coord->body) === 1, 'weekkalender getoond');
 T::ok(preg_match('/href="[^"]*kalender\/' . $tomorrow . '#trainers".*?Avond WP.*?In orde · 1\/1.*?Kobe Competitie/s', $coord->body) === 1, 'training met status en trainer; klik opent de activiteit');
 $kobe->get('/app/trainersplanning?view=week&w=' . $wOff);
 T::ok(preg_match('/class="week-item[^"]*is-mine"[^>]*kalender\/' . $tomorrow . '#trainers">\s*<span class="chip mine-chip">Jij</s', $kobe->body) === 1, 'weekkalender: eigen trainingen gemarkeerd');
@@ -80,7 +81,7 @@ T::ok(preg_match('/is-mine"[^>]*kalender\/' . $tomorrow . '#trainers">\s*<span c
 T::ok(!preg_match('/is-mine[^>]*>\s*<span class="chip mine-chip">[^<]*<\/span>\s*<span class="week-time">[^<]*<\/span>\s*<span class="week-title">Training Miniemen/', $kobe->body), 'overzicht: trainingen van anderen niet gemarkeerd');
 T::exec('UPDATE `groups` SET min_trainers = 3 WHERE id = ?', [$gid]);
 $kobe->get('/app?view=week&w=' . $wOff);
-T::ok(preg_match('/is-short"[^>]*kalender\/' . $tomorrow . '#trainers">.*?<span class="chip bad">Trainer gezocht<\/span>/s', $kobe->body) === 1, 'overzicht: tekort rood gemarkeerd');
+T::ok(preg_match('/is-short"[^>]*kalender\/' . $tomorrow . '#trainers">.*?<span class="short-badge">! Trainer gezocht<\/span>/s', $kobe->body) === 1, 'overzicht: tekort rood gemarkeerd');
 T::exec('UPDATE `groups` SET min_trainers = NULL WHERE id = ?', [$gid]);
 $kobe->get('/app?view=list');
 $kobe->get('/app/trainersplanning?view=list');
@@ -88,7 +89,7 @@ T::ok(preg_match('/class="cover-card[^"]*is-mine" id="a' . $tomorrow . '">/', $k
 $coord->get('/app/trainersplanning');
 T::ok($coord->has('class="week-grid"'), 'gekozen weergave wordt onthouden');
 $coord->get('/app/trainersplanning?view=week&w=' . ($wOff + 1));
-T::ok($coord->has('Vorige') && $coord->has('Deze week'), 'navigatie naar andere weken');
+T::ok($coord->has('aria-label="Vorige week"') && $coord->has('Naar nu'), 'navigatie naar andere weken');
 $coord->get('/app/trainersplanning?view=week&show=mine&w=' . $wOff);
 T::ok(!$coord->has('Avond WP'), 'filter Mijn planning werkt ook in de weekkalender');
 $coord->get('/app/trainersplanning?view=list');
@@ -99,9 +100,9 @@ $wpP->get('/app?view=week&w=' . $wOff);
 T::ok($wpP->status === 200 && $wpP->has('class="week-grid week-plain"') && preg_match('/kalender\/' . $tomorrow . '".*?Avond WP/s', $wpP->body) === 1, 'overzicht: weekkalender met de trainingen van het eigen kind');
 T::ok(!$wpP->has('Training Miniemen'), 'overzicht: geen activiteiten van andere groepen');
 $wpP->get('/app?view=list');
-T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: lijst');
+T::ok($wpP->has('Komende activiteiten') && !$wpP->has('week-grid'), 'overzicht: lijst');
 $wpP->get('/app');
-T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: gekozen weergave onthouden');
+T::ok($wpP->has('Komende activiteiten') && !$wpP->has('week-grid'), 'overzicht: gekozen weergave onthouden');
 
 echo "Afmelden met vervanger\n";
 T::clearMails();

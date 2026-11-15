@@ -250,13 +250,44 @@ const MONTHS_NL = ['', 'januari', 'februari', 'maart', 'april', 'mei', 'juni', '
 const MONTHS_NL_SHORT = ['', 'jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
 const DAYS_NL_SHORT = ['', 'ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
 
+/** "ma 9 nov" (dit jaar) of "ma 9 nov 2027" (ander jaar). */
 function fmt_date(?string $d): string
 {
     if (!$d) {
         return '';
     }
     $t = new DateTime(substr($d, 0, 10));
-    return DAYS_NL_SHORT[(int) $t->format('N')] . ' ' . $t->format('j') . ' ' . MONTHS_NL_SHORT[(int) $t->format('n')] . ' ' . $t->format('Y');
+    $year = $t->format('Y') === date('Y') ? '' : ' ' . $t->format('Y');
+    return DAYS_NL_SHORT[(int) $t->format('N')] . ' ' . $t->format('j') . ' ' . MONTHS_NL_SHORT[(int) $t->format('n')] . $year;
+}
+
+/** Korte dagkop in een weekkalender: "ma 9". */
+function fmt_day(string $d): string
+{
+    $t = new DateTime(substr($d, 0, 10));
+    return DAYS_NL_SHORT[(int) $t->format('N')] . ' ' . $t->format('j');
+}
+
+/** Titel van een week: "9–15 nov" of "30 nov – 6 dec" (jaar enkel als het niet dit jaar is). */
+function fmt_week_range(string $monday): string
+{
+    $a = new DateTime($monday);
+    $b = (clone $a)->modify('+6 days');
+    $year = $b->format('Y') === date('Y') ? '' : ' ' . $b->format('Y');
+    if ($a->format('n') === $b->format('n')) {
+        return $a->format('j') . '–' . $b->format('j') . ' ' . MONTHS_NL_SHORT[(int) $b->format('n')] . $year;
+    }
+    return $a->format('j') . ' ' . MONTHS_NL_SHORT[(int) $a->format('n')] . ' – ' . $b->format('j') . ' ' . MONTHS_NL_SHORT[(int) $b->format('n')] . $year;
+}
+
+/**
+ * Maandag van de week die een weekkalender toont. Standaard kijkt die vooruit:
+ * op zaterdag en zondag is de week bijna voorbij, dan tonen we de volgende week.
+ */
+function week_monday(int $offset = 0): string
+{
+    $base = date('Y-m-d', strtotime('monday this week', strtotime(today() . ' +2 days')));
+    return date('Y-m-d', strtotime("$base $offset weeks"));
 }
 
 function fmt_time(string $dt): string

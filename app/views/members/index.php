@@ -12,7 +12,7 @@
   </div>
 <?php endif; ?>
 
-<form class="filters" method="get" action="">
+<form class="filters" data-auto method="get" action="">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam">
   <select name="status" aria-label="Status">
     <option value="ACTIVE" <?= $status === 'ACTIVE' ? 'selected' : '' ?>>Actieve leden</option>
@@ -28,30 +28,30 @@
   <p class="card muted">Geen leden gevonden.</p>
 <?php else: ?>
 <div class="table-wrap">
-<table class="table">
+<table class="table member-table">
   <thead>
     <tr>
       <th>Naam</th><th>Groepen</th>
-      <?php if ($showContact): ?><th>Ouders</th><th>E-mail</th><th>Telefoon</th><?php endif; ?>
-      <th>Status</th>
+      <?php if ($showContact): ?><th>Ouders</th><th class="col-contact">E-mail</th><th class="col-contact">Telefoon</th><?php endif; ?>
+      <th class="col-status">Status</th>
     </tr>
   </thead>
   <tbody>
   <?php foreach ($members as $m): ?>
     <tr>
-      <td><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a>
+      <td class="col-name"><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a>
         <?php if (in_array((int) $m['id'], $missingIds, true)): ?><span class="chip warn">Ouder ontbreekt</span><?php endif; ?></td>
-      <td><?= implode(', ', array_map('group_chip', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
+      <td class="col-groups"><?= implode(', ', array_map('group_chip', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
       <?php if ($showContact): ?>
-        <td>
+        <td class="col-parents">
           <?php foreach ($parentsByMember[$m['id']] ?? [] as $i => $p): ?>
             <?= $i ? ', ' : '' ?><a href="<?= e(url('user_form', ['id' => $p['user_id']])) ?>"><?= e($p['display_name']) ?></a><?php if ($p['relationship']): ?> <span class="muted small">(<?= e($p['relationship']) ?>)</span><?php endif; ?>
           <?php endforeach; ?>
           <?php if (empty($parentsByMember[$m['id']])): ?><span class="muted">—</span><?php endif; ?>
         </td>
-        <td><?= e($m['email']) ?></td><td><?= e($m['phone']) ?></td>
+        <td class="col-contact"><?= e($m['email']) ?></td><td class="col-contact"><?= e($m['phone']) ?></td>
       <?php endif; ?>
-      <td><span class="chip <?= $m['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $m['status'] === 'ACTIVE' ? 'Actief' : e($m['status_reason'] ?: 'Inactief') ?></span><?php if ($m['status'] !== 'ACTIVE' && $m['status_date']): ?> <span class="muted small"><?= e(fmt_date($m['status_date'])) ?></span><?php endif; ?></td>
+      <td class="col-status"><?php if ($m['status'] !== 'ACTIVE'): /* enkel afwijkingen tonen */ ?><span class="chip off"><?= e($m['status_reason'] ?: 'Inactief') ?></span><?php if ($m['status_date']): ?> <span class="muted small"><?= e(fmt_date($m['status_date'])) ?></span><?php endif; ?><?php endif; ?></td>
     </tr>
   <?php endforeach; ?>
   </tbody>

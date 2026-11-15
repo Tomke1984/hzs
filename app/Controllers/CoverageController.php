@@ -16,9 +16,8 @@ final class CoverageController
         $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['coverage_view'] ?? 'week');
         $_SESSION['coverage_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
-        $monday = date('Y-m-d', strtotime('monday this week', strtotime(today())));
+        $monday = week_monday($offset);
         if ($view === 'week') {
-            $monday = date('Y-m-d', strtotime("$monday $offset weeks"));
             $from = $monday . ' 00:00:00';
             $to = date('Y-m-d 00:00:00', strtotime("$monday +7 days"));
         } else {
@@ -37,8 +36,8 @@ final class CoverageController
         }
         $byWeek = [];
         foreach ($rows as $a) {
-            $monday = date('Y-m-d', strtotime('monday this week', strtotime(substr($a['starts_at'], 0, 10))));
-            $byWeek[$monday][] = $a;
+            $wk = date('Y-m-d', strtotime('monday this week', strtotime(substr($a['starts_at'], 0, 10))));
+            $byWeek[$wk][] = $a;
         }
         $byDay = [];
         foreach ($rows as $a) {
@@ -50,7 +49,8 @@ final class CoverageController
             'mode' => $view,
             'offset' => $offset,
             'monday' => $monday,
-            'problems' => $problems,
+            'shortages' => Coverage::shortages(),
+            'nextShort' => Coverage::shortages() ? null : Coverage::nextShortage(),
             'pool' => Coverage::pool(),
             'uid' => $uid,
             'weeks' => $weeks,

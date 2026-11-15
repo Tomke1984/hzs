@@ -3,7 +3,7 @@
 </div>
 <p class="muted">Per lid hoe vaak aanwezig of afwezig op de geregistreerde trainingen. Enkel registraties tellen mee; “onbekend” wordt genegeerd.</p>
 
-<form class="filters" method="get" action="">
+<form class="filters" data-auto method="get" action="">
   <label class="small">Van <input type="date" name="from" value="<?= e($from) ?>"></label>
   <label class="small">Tot <input type="date" name="to" value="<?= e($to) ?>"></label>
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>

@@ -26,23 +26,20 @@ $hidden = function () use ($a, $back, $keep): string {
 };
 ?>
 <?php $isMine = $mine && !$mine['absent']; ?>
-<article class="cover-card<?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?><?= $isMine ? ' is-mine' : '' ?>" id="a<?= (int) $a['id'] ?>">
+<article class="cover-card<?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?><?= $isMine ? ' is-mine' : '' ?><?= $back === 'activity' ? ' is-compact' : '' ?>" id="a<?= (int) $a['id'] ?>">
   <div class="cover-head">
     <div>
       <?php if ($isMine): ?><span class="chip mine-chip"><?= $a['type_code'] === 'TRAINING' ? 'Jij geeft training' : 'Jij gaat mee' ?></span><?php endif; ?>
+      <?php if ($back !== 'activity'): /* op de activiteitspagina staan datum, uur, groep en locatie al erboven */ ?>
       <span class="cover-when"><?= e(fmt_date($a['starts_at'])) ?> · <?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
-      <?php if ($back === ''): ?>
-        <a class="cover-title" href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e($a['title']) ?></a>
-      <?php else: ?>
-        <span class="cover-title"><?= e($a['title']) ?></span>
-      <?php endif; ?>
-      <span class="chip type-<?= e(strtolower($a['type_code'])) ?>"><?= e($a['type_name']) ?></span>
+      <a class="cover-title" href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= $a['type_code'] === 'COMPETITION' ? '<span class="meet-icon" aria-label="Wedstrijd" title="Wedstrijd">🏆</span> ' : '' ?><?= e($a['title']) ?></a>
       <?php foreach ($a['groups'] as $g): ?><?= group_chip($g['name']) ?> <?php endforeach; ?>
       <?php if (!$a['groups'] && $a['audience'] === 'CLUB'): ?><span class="chip">Hele club</span><?php endif; ?>
-      <?php if ($a['location']): ?><span class="muted small"><?= e($a['location']) ?></span><?php endif; ?>
+      <?php if ($a['location']): ?><span class="small cover-loc"><?= e($a['location']) ?></span><?php endif; ?>
+      <?php endif; ?>
     </div>
     <?php if ($a['missing'] > 0): ?>
-      <span class="chip bad"><?= $a['present'] === 0 ? 'Geen trainer' : 'Trainer gezocht' ?> · <?= (int) $a['present'] ?>/<?= (int) $a['required'] ?></span>
+      <span class="short-badge">! <?= $a['present'] === 0 ? 'Geen trainer' : 'Trainer gezocht' ?> · <?= (int) $a['present'] ?>/<?= (int) $a['required'] ?></span>
     <?php else: ?>
       <span class="chip ok">In orde · <?= (int) $a['present'] ?>/<?= (int) $a['required'] ?></span>
     <?php endif; ?>

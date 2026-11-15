@@ -4,12 +4,13 @@ final class DashboardController
     public static function index(): void
     {
         $upcoming = [];
-        // Eerstvolgende activiteiten: als lijst of als weekkalender (keuze onthouden in de sessie).
-        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'week');
+        // Ouders en zwemmers (geen trainer, geen beheer): eerst "wanneer is de volgende training?", lijst als standaard.
+        $family = Scope::ownMemberIds() && !Auth::hasRole('TRAINER') && !Auth::can('activities.write');
+        // Activiteiten: als lijst of als weekkalender (keuze onthouden in de sessie).
+        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? ($family ? 'list' : 'week'));
         $_SESSION['dashboard_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
-        $monday = date('Y-m-d', strtotime('monday this week', strtotime(today())));
-        $monday = date('Y-m-d', strtotime("$monday $offset weeks"));
+        $monday = week_monday($offset);
         $byDay = [];
         if (Auth::can('activities.read')) {
             [$sql, $params] = Scope::activityFilter('a');
@@ -56,9 +57,9 @@ final class DashboardController
                 $upcoming = Database::all(
                     "SELECT a.*, t.code AS type_code, t.name AS type_name
                      FROM activities a JOIN activity_types t ON t.id = a.type_id
-                     WHERE a.ends_at >= ? AND a.status = 'PLANNED' AND $sql
-                     ORDER BY a.starts_at LIMIT 8",
-                    array_merge([now()], $params)
+                     WHERE a.ends_at >= ? AND a.starts_at < ? AND a.status = 'PLANNED' AND $sql
+                     ORDER BY a.starts_at LIMIT 12",
+                    array_merge([now(), date('Y-m-d 00:00:00', strtotime(today() . ' +15 days'))], $params)
                 );
                 if ($upcoming && Coverage::canView()) {
                     $me = (int) Auth::user()['id'];
@@ -77,19 +78,16 @@ final class DashboardController
         }
         $mode = $view;
 
-        $stats = null;
-        if (Scope::clubWide()) {
-            $stats = [
-                'members'    => (int) Database::val("SELECT COUNT(*) FROM members WHERE status = 'ACTIVE'"),
-                'groups'     => (int) Database::val('SELECT COUNT(*) FROM `groups` WHERE is_active = 1'),
-                'activities' => (int) Database::val("SELECT COUNT(*) FROM activities WHERE starts_at >= ? AND status = 'PLANNED'", [now()]),
-            ];
-        }
+        // Uitnodigingen die nog niet geactiveerd zijn (actie voor wie gebruikers beheert)
+        $pendingInvites = Auth::can('users.manage')
+            ? (int) Database::val("SELECT COUNT(*) FROM users WHERE is_active = 1 AND password_hash LIKE '!%'")
+            : 0;
 
         $guardianMissing = Auth::can('members.contact') ? Guardianship::missingCount() : 0;
+        $nextTrainings = $family ? self::nextTrainings() : [];
 
         render('dashboard', array_merge(
-            compact('upcoming', 'stats', 'guardianMissing', 'mode', 'offset', 'monday', 'byDay'),
+            compact('upcoming', 'pendingInvites', 'guardianMissing', 'mode', 'offset', 'monday', 'byDay', 'family', 'nextTrainings'),
             self::coach(),
             self::office(),
             self::coverage()
@@ -100,14 +98,42 @@ final class DashboardController
     private static function coverage(): array
     {
         if (!Coverage::canView()) {
-            return ['coverShort' => [], 'coverMine' => [], 'coverView' => false];
+            return ['coverShort' => [], 'coverNext' => null, 'coverMine' => [], 'coverView' => false];
         }
         $uid = (int) Auth::user()['id'];
-        $rows = Coverage::list(now(), date('Y-m-d H:i:s', strtotime('+14 days')));
-        $short = array_values(array_filter($rows, fn($a) => $a['missing'] > 0));
-        $mine = array_values(array_filter($rows, fn($a) => $a['starts_at'] < date('Y-m-d H:i:s', strtotime('+7 days'))
-            && (bool) array_filter($a['trainers'], fn($t) => $t['id'] === $uid && !$t['absent'])));
-        return ['coverShort' => $short, 'coverMine' => $mine, 'coverView' => true];
+        $rows = Coverage::list(now(), date('Y-m-d H:i:s', strtotime('+7 days')));
+        $mine = array_values(array_filter($rows, fn($a) => (bool) array_filter($a['trainers'], fn($t) => $t['id'] === $uid && !$t['absent'])));
+        // Zelfde tekorten (en periode) als de menubadge en de trainersplanning
+        return ['coverShort' => Coverage::shortages(), 'coverNext' => Coverage::shortages() ? null : Coverage::nextShortage(), 'coverMine' => $mine, 'coverView' => true];
+    }
+
+    /**
+     * Ouders en zwemmers: per eigen lid (kind of zichzelf) de eerstvolgende training, met afmeldstatus.
+     * @return list<array{member:array,activity:?array,absent:?array}>
+     */
+    private static function nextTrainings(): array
+    {
+        $out = [];
+        $ids = Scope::ownMemberIds();
+        if (!$ids) {
+            return [];
+        }
+        $members = Database::all("SELECT id, first_name, last_name FROM members WHERE status = 'ACTIVE' AND id IN (" . Scope::in($ids) . ') ORDER BY first_name', $ids);
+        foreach ($members as $m) {
+            $a = Database::one(
+                "SELECT a.*, t.name AS type_name FROM activities a JOIN activity_types t ON t.id = a.type_id
+                 WHERE a.status = 'PLANNED' AND a.ends_at > ? AND t.code = 'TRAINING' AND (
+                   a.audience = 'CLUB' OR EXISTS (
+                     SELECT 1 FROM activity_groups ag JOIN group_memberships gm ON gm.group_id = ag.group_id
+                     WHERE ag.activity_id = a.id AND gm.member_id = ? AND gm.start_date <= substr(a.starts_at, 1, 10)
+                       AND (gm.end_date IS NULL OR gm.end_date >= substr(a.starts_at, 1, 10))))
+                 ORDER BY a.starts_at LIMIT 1",
+                [now(), $m['id']]
+            );
+            $absent = $a ? Database::one('SELECT reason FROM absence_reports WHERE activity_id = ? AND member_id = ?', [$a['id'], $m['id']]) : null;
+            $out[] = ['member' => $m, 'activity' => $a, 'absent' => $absent];
+        }
+        return $out;
     }
 
     /** Trainer of bestuur: aanwezigheden die nog ingevuld moeten worden en recente afmeldingen. */

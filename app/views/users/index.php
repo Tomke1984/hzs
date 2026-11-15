@@ -12,7 +12,7 @@
   <a href="<?= e(url('users', ['tab' => 'members'])) ?>" <?= $tab === 'members' ? 'aria-current="page"' : '' ?>>Ouders en zwemmers <span class="chip"><?= (int) $counts['members'] ?></span></a>
 </nav>
 
-<form class="filters" method="get" action="">
+<form class="filters" data-auto method="get" action="">
   <input type="hidden" name="tab" value="<?= e($tab) ?>">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam of e-mail">
   <button class="btn btn-small" type="submit">Zoeken</button>

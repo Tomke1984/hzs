@@ -8,7 +8,7 @@
 <section class="card">
   <p>
     <span class="chip type-<?= e(strtolower($activity['type_code'])) ?>"><?= e($activity['type_name']) ?></span>
-    <?php if ($activity['status'] === 'CANCELLED'): ?><span class="chip off">Geschrapt</span><?php if (!empty($activity['status_note'])): ?> <span class="muted"><?= e($activity['status_note']) ?></span><?php endif; ?><?php endif; ?>
+    <?php if ($activity['status'] === 'CANCELLED'): ?><span class="chip off">Afgelast</span><?php if (!empty($activity['status_note'])): ?> <span class="muted"><?= e($activity['status_note']) ?></span><?php endif; ?><?php endif; ?>
     <?php if (!empty($activity['series_id']) && Auth::can('activities.write')): ?> <a class="small" href="<?= e(url('series_show', ['id' => $activity['series_id']])) ?>">Deel van een reeks<?= !empty($activity['is_custom']) ? ' (individueel aangepast)' : '' ?></a><?php endif; ?>
   </p>
   <dl class="facts">
@@ -27,7 +27,7 @@
   <?php if ($activity['description']): ?><p><?= nl2br(e($activity['description'])) ?></p><?php endif; ?>
   <?php if (Auth::can('activities.write')): ?>
   <div class="activity-actions">
-  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $activity['status'] === 'CANCELLED' ? '' : 'data-confirm="Deze activiteit annuleren en verwijderen? Dit kan niet ongedaan worden gemaakt."' ?>>
+  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $activity['status'] === 'CANCELLED' ? '' : 'data-confirm="Deze activiteit afgelasten? Leden zien ze daarna niet meer in hun kalender."' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
     <?php if ($activity['status'] === 'CANCELLED'): ?>
@@ -35,14 +35,8 @@
       <button class="btn btn-small btn-ghost" type="submit">Herstellen</button>
     <?php else: ?>
       <input type="hidden" name="do" value="cancel">
-            <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
+      <button class="btn btn-small btn-ghost" type="submit"><?= $activity['type_code'] === 'TRAINING' ? 'Training afgelasten' : 'Afgelasten' ?></button>
     <?php endif; ?>
-  </form>
-  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" data-confirm="<?= e($activity['title']) ?> definitief verwijderen? Ook de afmeldingen, aanwezigheden en de trainersplanning ervan worden gewist. Dit kan niet ongedaan worden gemaakt.">
-    <?= csrf_field() ?>
-    <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
-    <input type="hidden" name="do" value="delete">
-    <button class="btn btn-small btn-danger" type="submit">Verwijderen</button>
   </form>
   </div>
   <?php endif; ?>
@@ -156,4 +150,15 @@
   <p><a class="btn btn-ghost btn-small" href="<?= e(url('mail', ['to' => 'a:' . $activity['id']])) ?>">✉ Bericht aan de deelnemers</a></p>
 <?php endif; ?>
 
-<p><a href="<?= e(url('calendar', ['m' => substr($activity['starts_at'], 0, 7)])) ?>">← Terug naar de kalender</a></p>
+<?php if (Auth::can('activities.write')): ?>
+<details class="danger-zone">
+  <summary>Activiteit definitief verwijderen…</summary>
+  <p class="small">Verwijdert de activiteit met alle afmeldingen, aanwezigheden en de trainersplanning ervan. Gebruik dit enkel voor iets dat per vergissing is aangemaakt; om een training niet te laten doorgaan, kies je <em>Afgelasten</em>.</p>
+  <form method="post" action="<?= e(url('occurrence')) ?>" data-confirm="<?= e($activity['title']) ?> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.">
+    <?= csrf_field() ?>
+    <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
+    <input type="hidden" name="do" value="delete">
+    <button class="link-danger" type="submit">Verwijderen</button>
+  </form>
+</details>
+<?php endif; ?>
