@@ -30,6 +30,13 @@ final class ActivityController
             }
             $sql .= '))';
         }
+        // Filter op soort activiteit (training, wedstrijd, ...)
+        $types = Database::all('SELECT code, name FROM activity_types ORDER BY id');
+        $type = in_array($_GET['t'] ?? '', array_column($types, 'code'), true) ? (string) $_GET['t'] : '';
+        if ($type !== '') {
+            $sql .= ' AND t.code = ?';
+            $params[] = $type;
+        }
         $rows = Database::all(
             "SELECT a.id, a.title, a.audience, a.starts_at, a.ends_at, a.status, a.status_note, a.location, t.code AS type_code, t.name AS type_name
              FROM activities a JOIN activity_types t ON t.id = a.type_id
@@ -96,6 +103,8 @@ final class ActivityController
             'byDay' => $byDay,
             'cat' => $cat,
             'gid' => $gid,
+            'type' => $type,
+            'types' => $types,
             'groupOptions' => GroupController::filterOptions(),
             'monthLabel' => MONTHS_NL[(int) $first->format('n')] . ' ' . $first->format('Y'),
         ], 'Kalender');

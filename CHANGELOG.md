@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Kalender: filter op soort activiteit – commit `HASH`_
+
+- In de kalender kan je naast de groep nu ook filteren op **soort**: Training, Wedstrijd of Clubactiviteit. De filter blijft behouden bij *Vorige*/*Volgende*; *Wis filter* zet alles terug.
+- Tests: 5 extra controles in `smoke` (405 in totaal).
+
 _Activiteiten verwijderen – commit `14d1e46`_
 
 - **Nieuwe rode knop *Verwijderen*** op de activiteitspagina (naast *Schrappen*), voor wie activiteiten mag beheren. Na bevestiging is de activiteit definitief weg, ook als er al aanwezigheden geregistreerd waren; afmeldingen en trainersplanning ervan worden mee gewist. Een training uit een reeks komt niet terug bij het bijwerken van de reeks. *Schrappen* werkt zoals voorheen.

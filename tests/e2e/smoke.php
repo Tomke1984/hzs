@@ -128,3 +128,16 @@ T::ok($admin->status === 200, 'aanwezigheidsrapport weer bereikbaar');
 $admin->get('/app/kalender/' . $act);
 T::ok($admin->has('Aanwezigheden opslaan'), 'presentielijst weer zichtbaar');
 T::config(['features' => ['attendance' => false]]);
+
+echo "Kalender: filter op soort activiteit\n";
+$fb = Browser::login('bestuur@demo.local');
+$m = substr((string) T::val("SELECT starts_at FROM activities WHERE title = 'Clubfeest'"), 0, 7);
+$fb->get('/app/kalender?m=' . $m);
+T::ok($fb->has('name="t"') && $fb->has('Alle soorten') && $fb->has('Clubfeest'), 'kalender: keuzelijst soort, standaard alles');
+$fb->get('/app/kalender?m=' . $m . '&t=TRAINING');
+T::ok(!$fb->has('Clubfeest') && $fb->has('type-training') && !$fb->has('cal-event type-club'), 'filter Training: enkel trainingen');
+T::ok($fb->has('Wis filter') && str_contains($fb->body, 't=TRAINING'), 'filter blijft bij vorige/volgende maand');
+$fb->get('/app/kalender?m=' . $m . '&t=CLUB');
+T::ok($fb->has('Clubfeest') && !$fb->has('cal-event type-training'), 'filter Clubactiviteit');
+$fb->get('/app/kalender?m=' . $m . '&t=ONBEKEND');
+T::ok($fb->status === 200 && $fb->has('Clubfeest'), 'onbekende soort: geen filter');

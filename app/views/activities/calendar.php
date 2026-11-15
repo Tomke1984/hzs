@@ -13,12 +13,16 @@ $todayStr = today();
   <?php endif; ?>
 </div>
 
-<?php $keep = array_filter(['g' => $gid ?: '']); ?>
+<?php $keep = array_filter(['g' => $gid ?: '', 't' => $type]); ?>
 <form class="filters" method="get" action="">
   <input type="hidden" name="m" value="<?= e($first->format('Y-m')) ?>">
   <?= group_filter_fields($cat, $gid, $groupOptions) ?>
+  <select name="t" aria-label="Soort activiteit">
+    <option value="">Alle soorten</option>
+    <?php foreach ($types as $ty): ?><option value="<?= e($ty['code']) ?>"<?= $type === $ty['code'] ? ' selected' : '' ?>><?= e($ty['name']) ?></option><?php endforeach; ?>
+  </select>
   <button class="btn btn-small" type="submit">Filteren</button>
-  <?php if ($gid): ?><a href="<?= e(url('calendar', ['m' => $first->format('Y-m')])) ?>">Wis filter</a><?php endif; ?>
+  <?php if ($gid || $type !== ''): ?><a href="<?= e(url('calendar', ['m' => $first->format('Y-m')])) ?>">Wis filter</a><?php endif; ?>
 </form>
 <?php if ($gid): ?>
   <p class="muted small">Gefilterd op groep. Activiteiten voor de hele club blijven altijd zichtbaar.</p>
