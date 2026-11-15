@@ -26,14 +26,16 @@ final class SeriesService
     /**
      * Activiteit schrappen = annuleren en verwijderen. Met geregistreerde aanwezigheden blijft ze (geannuleerd) bewaard.
      * Een training uit een reeks komt niet terug bij het bijwerken van de reeks. Geeft 'deleted' of 'kept'.
+     * Met $force wordt ze altijd definitief verwijderd (knop *Verwijderen*).
      */
-    public static function erase(int $activityId, string $reason = ''): string
+    public static function erase(int $activityId, string $reason = '', bool $force = false): string
     {
         $a = Database::one('SELECT id, series_id, starts_at FROM activities WHERE id = ?', [$activityId]);
         if (!$a) {
             return 'deleted';
         }
-        $marked = (int) Database::val("SELECT COUNT(*) FROM attendance WHERE activity_id = ? AND status <> 'UNKNOWN'", [$activityId]);
+        // $force: definitief verwijderen, ook met geregistreerde aanwezigheden en afmeldingen.
+        $marked = $force ? 0 : (int) Database::val("SELECT COUNT(*) FROM attendance WHERE activity_id = ? AND status <> 'UNKNOWN'", [$activityId]);
         if ($marked > 0) {
             Database::exec("UPDATE activities SET status='CANCELLED', status_note=? WHERE id=?", [$reason === '' ? null : $reason, $activityId]);
             return 'kept';

@@ -92,3 +92,31 @@ $jp = (int) T::val('SELECT user_id FROM guardian_links WHERE member_id = ? LIMIT
 $admin->post('/app/user-delete', ['id' => $jp]);
 $admin->follow();
 T::ok($admin->has('geen ouder of voogd meer') && $admin->has('Julie'), 'waarschuwing als een minderjarige zijn laatste ouder verliest');
+
+echo "Activiteit verwijderen (niet enkel schrappen)\n";
+$wp = (int) T::val("SELECT id FROM `groups` WHERE name = 'Wedstrijdploeg'");
+$act = (int) T::val("SELECT a.id FROM activities a JOIN activity_groups ag ON ag.activity_id = a.id WHERE ag.group_id = ? AND a.starts_at > ? ORDER BY a.starts_at LIMIT 1", [$wp, date('Y-m-d H:i:s')]);
+$mem = (int) T::val('SELECT member_id FROM group_memberships WHERE group_id = ? LIMIT 1', [$wp]);
+$uid = (int) T::val("SELECT id FROM users WHERE email = 'competitie@demo.local'");
+T::exec("INSERT INTO attendance (activity_id, member_id, status, updated_at) VALUES (?, ?, 'PRESENT', ?)", [$act, $mem, date('Y-m-d H:i:s')]);
+$sid = T::val('SELECT series_id FROM activities WHERE id = ?', [$act]);
+$day = substr((string) T::val('SELECT starts_at FROM activities WHERE id = ?', [$act]), 0, 10);
+T::exec("INSERT INTO activity_trainers (activity_id, user_id, status, updated_at) VALUES (?, ?, 'ABSENT', ?)", [$act, $uid, date('Y-m-d H:i:s')]);
+$board->get('/app/kalender/' . $act);
+T::ok($board->has('value="delete"') && $board->has('Verwijderen') && $board->has('Schrappen'), 'activiteitspagina: knoppen Schrappen en Verwijderen');
+$trainer->get('/app/kalender/' . $act);
+T::ok(!$trainer->has('value="delete"'), 'trainer zonder schrijfrecht ziet geen verwijderknop');
+$trainer->post('/app/occurrence', ['activity_id' => $act, 'do' => 'delete']);
+T::ok($trainer->status === 403 && (bool) T::val('SELECT 1 FROM activities WHERE id = ?', [$act]), 'trainer kan niet verwijderen (403)');
+$board->post('/app/occurrence', ['activity_id' => $act, 'do' => 'delete']);
+$board->follow();
+T::ok($board->has('Activiteit verwijderd.'), 'melding na verwijderen');
+T::ok(!T::val('SELECT 1 FROM activities WHERE id = ?', [$act]) && !T::val('SELECT 1 FROM attendance WHERE activity_id = ?', [$act])
+    && !T::val('SELECT 1 FROM activity_trainers WHERE activity_id = ?', [$act]) && !T::val('SELECT 1 FROM activity_groups WHERE activity_id = ?', [$act]), 'activiteit met aanwezigheden en trainersplanning definitief weg');
+if ($sid) {
+    T::ok((bool) T::val('SELECT 1 FROM activity_series_skips WHERE series_id = ? AND day = ?', [$sid, $day]), 'training uit een reeks komt niet terug bij het bijwerken van de reeks');
+}
+$meet = (int) T::val("SELECT id FROM activities WHERE title = 'Interclubwedstrijd'");
+$board->post('/app/occurrence', ['activity_id' => $meet, 'do' => 'delete']);
+T::ok(!T::val('SELECT 1 FROM activities WHERE id = ?', [$meet]), 'losse wedstrijd verwijderd');
+T::ok((bool) T::val("SELECT 1 FROM audit_log WHERE action = 'DELETE' AND entity = 'activity' AND entity_id = ?", [$meet]), 'verwijderen staat in het auditlog');

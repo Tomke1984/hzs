@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Activiteiten verwijderen – commit `HASH`_
+
+- **Nieuwe rode knop *Verwijderen*** op de activiteitspagina (naast *Schrappen*), voor wie activiteiten mag beheren. Na bevestiging is de activiteit definitief weg, ook als er al aanwezigheden geregistreerd waren; afmeldingen en trainersplanning ervan worden mee gewist. Een training uit een reeks komt niet terug bij het bijwerken van de reeks. *Schrappen* werkt zoals voorheen.
+- Knoppen op de activiteitspagina netjes onder de gegevens; groepsblokjes buiten de kalenderlegende weer vol gekleurd.
+- Tests: 8 extra controles in `v15_verwijderen` (400 in totaal).
+
 _Kalender: legende in dezelfde kleuren – commit `988daad`_
 
 - De legende onder de maandkalender gebruikt nu dezelfde lichte tint met gekleurde rand als de activiteiten (en hetzelfde geel voor wedstrijden).

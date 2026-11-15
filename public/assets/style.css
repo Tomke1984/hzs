@@ -611,6 +611,8 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .swatch.g-4 { --gc: #be185d; } .swatch.g-5 { --gc: #0e7490; } .swatch.g-6 { --gc: #7c2d12; } .swatch.g-7 { --gc: #4338ca; }
 .swatch.g-8 { --gc: #9d174d; } .swatch.g-9 { --gc: #166534; } .swatch.g-10 { --gc: #1e3a8a; } .swatch.g-11 { --gc: #b45309; }
 .swatch.g-club { --gc: var(--club); }
-.swatch[class*=" g-"] { background: color-mix(in srgb, var(--gc) 16%, #fff); border: 1px solid color-mix(in srgb, var(--gc) 35%, #fff); border-left: 4px solid var(--gc); }
-.cal-legend .swatch, .swatch[class*=" g-"], .swatch.is-comp-sw, .swatch.short-sw { width: 22px; }
+.cal-legend .swatch[class*=" g-"] { background: color-mix(in srgb, var(--gc) 16%, #fff); border: 1px solid color-mix(in srgb, var(--gc) 35%, #fff); border-left: 4px solid var(--gc); }
+.cal-legend .swatch { width: 22px; }
 .swatch.is-comp-sw { border-left-color: #f59e0b; }
+.activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.activity-actions .inline-form { margin: 0; padding: 0; border: 0; }

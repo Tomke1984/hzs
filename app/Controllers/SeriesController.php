@@ -209,10 +209,17 @@ final class SeriesController
             abort(404, 'Activiteit niet gevonden.');
         }
         $do = input('do');
-        if (!in_array($do, ['cancel', 'restore'], true)) {
+        if (!in_array($do, ['cancel', 'restore', 'delete'], true)) {
             abort(400, 'Ongeldige actie.');
         }
         $reason = mb_substr(input('reason'), 0, 200);
+        if ($do === 'delete') {
+            $title = (string) Database::val('SELECT title FROM activities WHERE id = ?', [$a['id']]);
+            SeriesService::erase((int) $a['id'], '', true);
+            audit('DELETE', 'activity', (int) $a['id'], "$title definitief verwijderd");
+            flash('success', 'Activiteit verwijderd.');
+            redirect($a['series_id'] && input('back') === 'series' ? url('series_show', ['id' => $a['series_id']]) : url('calendar'));
+        }
         if ($do === 'cancel') {
             $res = SeriesService::erase((int) $a['id'], $reason);
             audit('DELETE', 'activity', (int) $a['id'], $res === 'kept' ? 'geannuleerd (aanwezigheden bewaard)' : 'geschrapt en verwijderd');

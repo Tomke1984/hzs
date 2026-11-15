@@ -26,6 +26,7 @@
   </dl>
   <?php if ($activity['description']): ?><p><?= nl2br(e($activity['description'])) ?></p><?php endif; ?>
   <?php if (Auth::can('activities.write')): ?>
+  <div class="activity-actions">
   <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $activity['status'] === 'CANCELLED' ? '' : 'data-confirm="Deze activiteit annuleren en verwijderen? Dit kan niet ongedaan worden gemaakt."' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
@@ -37,6 +38,13 @@
             <button class="btn btn-small btn-ghost" type="submit">Schrappen</button>
     <?php endif; ?>
   </form>
+  <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" data-confirm="<?= e($activity['title']) ?> definitief verwijderen? Ook de afmeldingen, aanwezigheden en de trainersplanning ervan worden gewist. Dit kan niet ongedaan worden gemaakt.">
+    <?= csrf_field() ?>
+    <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
+    <input type="hidden" name="do" value="delete">
+    <button class="btn btn-small btn-danger" type="submit">Verwijderen</button>
+  </form>
+  </div>
   <?php endif; ?>
 </section>
 
