@@ -5,6 +5,10 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Kalender: legende in dezelfde kleuren – commit `HASH`_
+
+- De legende onder de maandkalender gebruikt nu dezelfde lichte tint met gekleurde rand als de activiteiten (en hetzelfde geel voor wedstrijden).
+
 _Kalender: lichtere groepskleuren – commit `21df560`_
 
 - In de maandkalender zijn de activiteiten nu licht getint in de groepskleur met een gekleurde rand links en donkere tekst, in plaats van een vol gekleurd vlak. Tekorten (rood met `!`) springen zo duidelijk in het oog. Wedstrijden houden hun gele rand; activiteiten van andere groepen en geschrapte activiteiten zijn lichtgrijs.

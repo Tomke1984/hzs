@@ -606,3 +606,11 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .cal-event[class*=" g-"].is-comp:not(.short):not(.other):not(.cancelled) { border-left-color: #f59e0b; box-shadow: inset 0 0 0 1px var(--gc); }
 .cal-event.other { background: #eef1f4; color: #6b7783; }
 .cal-event.cancelled { background: #eef1f4; color: #8a97a3; }
+/* Legende in dezelfde stijl als de activiteiten: lichte tint + gekleurde rand */
+.swatch.g-0 { --gc: #064ca2; } .swatch.g-1 { --gc: #0f766e; } .swatch.g-2 { --gc: #4d7c0f; } .swatch.g-3 { --gc: #a16207; }
+.swatch.g-4 { --gc: #be185d; } .swatch.g-5 { --gc: #0e7490; } .swatch.g-6 { --gc: #7c2d12; } .swatch.g-7 { --gc: #4338ca; }
+.swatch.g-8 { --gc: #9d174d; } .swatch.g-9 { --gc: #166534; } .swatch.g-10 { --gc: #1e3a8a; } .swatch.g-11 { --gc: #b45309; }
+.swatch.g-club { --gc: var(--club); }
+.swatch[class*=" g-"] { background: color-mix(in srgb, var(--gc) 16%, #fff); border: 1px solid color-mix(in srgb, var(--gc) 35%, #fff); border-left: 4px solid var(--gc); }
+.cal-legend .swatch, .swatch[class*=" g-"], .swatch.is-comp-sw, .swatch.short-sw { width: 22px; }
+.swatch.is-comp-sw { border-left-color: #f59e0b; }
