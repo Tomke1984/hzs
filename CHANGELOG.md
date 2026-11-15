@@ -5,6 +5,10 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Overzicht: kalender bovenaan – commit `HASH`_
+
+- Op het overzicht staat het blok met de activiteiten (weekkalender of lijst) nu bovenaan; *Trainer gezocht* en *Jij geeft training* komen eronder.
+
 _Weekkalender is de standaardweergave – commit `e4c3106`_
 
 - Het overzicht en de trainersplanning openen standaard als **weekkalender**; de lijst blijft één klik verder. Wie de lijst kiest, houdt die zolang hij aangemeld is. De knop *Weekkalender* staat nu eerst.
