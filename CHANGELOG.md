@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Meerdere trainers per wedstrijd, geen trainers voor clubactiviteiten – commit `HASH`_
+_Meerdere trainers per wedstrijd, geen trainers voor clubactiviteiten – commit `57da167`_
 
 - **Wedstrijd:** *Trainers toevoegen* toont nu een lijst met vinkjes; vink iedereen aan die meegaat en klik *Inplannen*. Wie al ingepland is of op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. De knop voor jezelf heet bij een wedstrijd *Ik ga mee*.
 - **Activiteiten voor de hele club** (zoals het clubkampioenschap) staan niet meer in de trainersplanning en tellen niet meer als tekort (geen rode markering, geen mails). Clubactiviteiten stonden er al niet in.
