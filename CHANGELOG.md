@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Kalender: legende in dezelfde kleuren – commit `HASH`_
+_Kalender: legende in dezelfde kleuren – commit `988daad`_
 
 - De legende onder de maandkalender gebruikt nu dezelfde lichte tint met gekleurde rand als de activiteiten (en hetzelfde geel voor wedstrijden).
 
