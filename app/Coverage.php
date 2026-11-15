@@ -56,10 +56,12 @@ final class Coverage
     /** SQL-voorwaarde voor activiteiten die in de trainersplanning horen (aliassen a = activities, t = activity_types). */
     private static function scopeSql(): string
     {
-        // Enkel trainingen en wedstrijden van competitiegroepen; activiteiten voor de hele club hebben geen trainers nodig.
+        // Trainingen en wedstrijden van competitiegroepen + wedstrijden voor de hele club (bv. clubkampioenschap).
+        // Clubactiviteiten (samenkomst, pastadag, teambuilding, ...) hebben geen trainers nodig.
         return "a.status = 'PLANNED' AND t.code IN ('TRAINING','COMPETITION') AND (
                   EXISTS (SELECT 1 FROM activity_groups cg JOIN `groups` cgg ON cgg.id = cg.group_id
-                          WHERE cg.activity_id = a.id AND cgg.category = 'COMPETITION' AND cgg.is_active = 1))";
+                          WHERE cg.activity_id = a.id AND cgg.category = 'COMPETITION' AND cgg.is_active = 1)
+                  OR (t.code = 'COMPETITION' AND a.audience = 'CLUB'))";
     }
 
     public static function inScope(int $activityId): bool

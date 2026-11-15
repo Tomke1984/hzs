@@ -204,9 +204,8 @@ foreach ([$kobeId, $tinaId, $coordId] as $u) {
 }
 $ck = (int) T::val("SELECT id FROM activities WHERE title = 'Clubkampioenschap'");
 $coord->get('/app/trainersplanning?view=list&weeks=8');
-T::ok(!$coord->has('id="a' . $ck . '"') && !$coord->has('Clubkampioenschap'), 'activiteit voor de hele club staat niet in de trainersplanning');
-$coord->post('/app/coverage-action', ['activity_id' => $ck, 'do' => 'claim']);
-T::ok($coord->status === 404, 'geen trainers voor een activiteit van de hele club (404)');
+T::ok($coord->has('id="a' . $ck . '"') && preg_match('/id="a' . $ck . '".*?name="user_ids\[\]"/s', $coord->body) === 1, 'clubkampioenschap (wedstrijd voor de hele club) staat in de planning, met vinkjes');
+T::ok(!$coord->has('Clubfeest'), 'clubactiviteit staat niet in de trainersplanning');
 
 echo "Meerdere tegelijk\n";
 $coord->get('/app/trainersplanning/meerdere');

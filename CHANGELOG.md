@@ -5,6 +5,10 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Clubkampioenschap terug in de trainersplanning – commit `HASH`_
+
+- Wedstrijden voor de hele club (zoals het clubkampioenschap) staan weer in de trainersplanning, met de vinkjes om meerdere trainers in te plannen. Enkel **clubactiviteiten** (samenkomst, pastadag, teambuilding, …) vragen geen trainers; die stonden er al niet in. Dit draait het tweede punt van de vorige versie terug.
+
 _Meerdere trainers per wedstrijd, geen trainers voor clubactiviteiten – commit `57da167`_
 
 - **Wedstrijd:** *Trainers toevoegen* toont nu een lijst met vinkjes; vink iedereen aan die meegaat en klik *Inplannen*. Wie al ingepland is of op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. De knop voor jezelf heet bij een wedstrijd *Ik ga mee*.
