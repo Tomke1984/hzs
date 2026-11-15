@@ -101,10 +101,19 @@ $hidden = function () use ($a, $back, $keep): string {
   <div class="cover-foot">
     <?php if ($canClaim): ?>
       <form method="post" action="<?= e(url('coverage_action')) ?>"><?= $hidden() ?><input type="hidden" name="do" value="claim">
-        <button class="btn btn-small<?= $a['missing'] > 0 ? '' : ' btn-ghost' ?>" type="submit"><?= $a['missing'] > 0 ? 'Ik neem over' : 'Ik help mee' ?></button></form>
+        <button class="btn btn-small<?= $a['missing'] > 0 ? '' : ' btn-ghost' ?>" type="submit"><?= $a['type_code'] === 'COMPETITION' ? 'Ik ga mee' : ($a['missing'] > 0 ? 'Ik neem over' : 'Ik help mee') ?></button></form>
     <?php endif; ?>
     <?php if ($free): ?>
-      <?php if ($a['missing'] === 0): ?><details class="cover-absent"><summary class="btn btn-small btn-ghost">Andere trainer toevoegen</summary><?php endif; ?>
+      <?php $isMeet = $a['type_code'] === 'COMPETITION'; ?>
+      <?php if ($a['missing'] === 0 || $isMeet): ?><details class="cover-absent"<?= $isMeet && $a['missing'] > 0 ? ' open' : '' ?>><summary class="btn btn-small btn-ghost"><?= $isMeet ? 'Trainers toevoegen' : 'Andere trainer toevoegen' ?></summary><?php endif; ?>
+      <?php if ($isMeet): ?>
+        <form method="post" action="<?= e(url('coverage_action')) ?>" class="cover-assign cover-multi"><?= $hidden() ?><input type="hidden" name="do" value="assign"><input type="hidden" name="multi" value="1">
+          <fieldset><legend class="small muted">Vink aan wie meegaat:</legend>
+            <?php foreach ($free as $pid => $pname): ?><label class="check"><input type="checkbox" name="user_ids[]" value="<?= (int) $pid ?>"> <?= e($pname) ?></label><?php endforeach; ?>
+          </fieldset>
+          <button class="btn btn-small" type="submit">Inplannen</button>
+        </form>
+      <?php else: ?>
       <form method="post" action="<?= e(url('coverage_action')) ?>" class="cover-assign"><?= $hidden() ?><input type="hidden" name="do" value="assign">
         <select name="user_id" required aria-label="Trainer inplannen voor <?= e($a['title'] . ' ' . fmt_dt($a['starts_at'])) ?>">
           <option value="">Trainer inplannen…</option>
@@ -112,7 +121,8 @@ $hidden = function () use ($a, $back, $keep): string {
         </select>
         <button class="btn btn-small btn-ghost" type="submit">Inplannen</button>
       </form>
-      <?php if ($a['missing'] === 0): ?></details><?php endif; ?>
+      <?php endif; ?>
+      <?php if ($a['missing'] === 0 || $isMeet): ?></details><?php endif; ?>
     <?php endif; ?>
   </div>
   <?php endif; ?>

@@ -87,7 +87,49 @@ final class CoverageController
         $isDefault = Coverage::isDefault($a, $target);
         $self = $target === $me;
 
+        // Meerdere trainers tegelijk inplannen (vooral voor wedstrijden): user_ids[]
+        $many = $do === 'assign' && (isset($_POST['user_ids']) || input('multi') === '1') ? array_values(array_unique(array_map('intval', (array) ($_POST['user_ids'] ?? [])))) : null;
+        if ($many !== null) {
+            $done = [];
+            $notes = [];
+            $clashes = 0;
+            foreach ($many as $uid) {
+                if (!isset($pool[$uid])) {
+                    continue;
+                }
+                if (isset($current[$uid]) && !$current[$uid]['absent']) {
+                    $notes[] = $pool[$uid] . ' staat al ingepland.';
+                    continue;
+                }
+                if ($c = Coverage::conflict($a, $uid)) {
+                    $notes[] = 'Niet ingepland: ' . $c;
+                    continue;
+                }
+                Coverage::isDefault($a, $uid) ? Coverage::set($aid, $uid, null) : Coverage::set($aid, $uid, 'ASSIGNED');
+                audit('COVERAGE_ASSIGN', 'activity', $aid, $pool[$uid]);
+                $done[] = $pool[$uid];
+                if ($a['type_code'] === 'COMPETITION') {
+                    $clashes += self::meetClashes($a, $uid);
+                }
+            }
+            if (!$done && !$notes) {
+                flash('error', 'Vink minstens één trainer aan.');
+                redirect($back);
+            }
+            if (!$done) {
+                flash('error', implode(' ', $notes));
+                redirect($back);
+            }
+            $msg = implode(', ', $done) . (count($done) === 1 ? ' is' : ' zijn') . ' ingepland.' . ($notes ? ' ' . implode(' ', $notes) : '');
+            if ($clashes) {
+                $msg .= " Voor $clashes training(en) op hetzelfde moment staan ze nu als \"op wedstrijd\" afgemeld.";
+            }
+            $do = 'many';
+        }
+
         switch ($do) {
+            case 'many':
+                break;
             case 'absent':
                 if (!isset($current[$target]) || $current[$target]['absent']) {
                     flash('error', 'Deze trainer staat niet (meer) ingepland.');
@@ -170,7 +212,9 @@ final class CoverageController
             default:
                 abort(400, 'Onbekende actie.');
         }
-        audit('COVERAGE_' . strtoupper($do), 'activity', $aid, $name);
+        if ($do !== 'many') {
+            audit('COVERAGE_' . strtoupper($do), 'activity', $aid, $name);
+        }
 
         $after = Coverage::one($aid);
         $mailed = Coverage::remind(); // ook tekorten elders (bv. trainingen tijdens een wedstrijd)

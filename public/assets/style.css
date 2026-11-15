@@ -616,3 +616,7 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .swatch.is-comp-sw { border-left-color: #f59e0b; }
 .activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .activity-actions .inline-form { margin: 0; padding: 0; border: 0; }
+.cover-multi { flex-direction: column; align-items: flex-start; }
+.cover-multi fieldset { border: 0; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.cover-multi legend { padding: 0; margin-bottom: 4px; }
+.cover-multi .check { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }

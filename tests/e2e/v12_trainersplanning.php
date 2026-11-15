@@ -175,14 +175,38 @@ T::ok($coord->has('Bedankt! Je staat ingepland.'), 'andere trainer neemt de trai
 $coord->post('/app/coverage-action', ['activity_id' => $meet, 'do' => 'claim']);
 $coord->follow();
 T::ok($coord->has('Bedankt! Je staat ingepland.') && $coord->has('op wedstrijd'), 'wedstrijd gaat voor: Lander gaat ook mee, zijn training wordt "op wedstrijd"');
-T::exec("INSERT INTO activities (type_id, title, starts_at, ends_at, audience, status, created_at) VALUES (?, 'Tweede meeting', ?, ?, 'CLUB', 'PLANNED', ?)", [$typeMeet, "$d5 18:00:00", "$d5 20:00:00", date('Y-m-d H:i:s')]);
+T::exec("INSERT INTO activities (type_id, title, starts_at, ends_at, audience, status, created_at) VALUES (?, 'Tweede meeting', ?, ?, 'GROUPS', 'PLANNED', ?)", [$typeMeet, "$d5 18:00:00", "$d5 20:00:00", date('Y-m-d H:i:s')]);
 $meet2 = (int) T::pdo()->lastInsertId();
+T::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?, ?)', [$meet2, $gid]);
 $coord->post('/app/coverage-action', ['activity_id' => $meet2, 'do' => 'assign', 'user_id' => $kobeId]);
 $coord->follow();
 T::ok($coord->has('Niet ingepland:'), 'twee wedstrijden tegelijk: geweigerd');
 $coord->post('/app/coverage-action', ['activity_id' => $meet, 'do' => 'remove', 'user_id' => $kobeId]);
 $coord->get('/app/trainersplanning');
 T::ok(preg_match('/id="a' . $train5 . '".*?Kobe Competitie.*?>Vast</s', $coord->body) === 1, 'van de wedstrijd gehaald: Kobe staat weer op zijn training');
+
+echo "Meerdere trainers op een wedstrijd, geen trainers voor clubactiviteiten\n";
+$coord->get('/app/trainersplanning?view=list&weeks=8');
+T::ok(preg_match('/id="a' . $meetDemo . '".*?Trainers toevoegen.*?name="user_ids\[\]"/s', $coord->body) === 1, 'wedstrijd: meerdere trainers aanvinken');
+T::ok(preg_match('/id="a' . $tomorrow . '"(?:(?!<\/article>).)*name="user_ids\[\]"/s', $coord->body) === 0, 'training: gewone keuzelijst');
+$coord->post('/app/coverage-action', ['activity_id' => $meetDemo, 'do' => 'assign', 'user_ids' => [$kobeId, $tinaId, $coordId]]);
+$coord->follow();
+T::ok($coord->has('zijn ingepland.'), 'drie trainers in één keer op de wedstrijd');
+T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE activity_id = ? AND status = 'ASSIGNED'", [$meetDemo]) === 3, 'drie trainers opgeslagen');
+$coord->post('/app/coverage-action', ['activity_id' => $meetDemo, 'do' => 'assign', 'user_ids' => [$kobeId]]);
+$coord->follow();
+T::ok($coord->has('staat al ingepland'), 'al ingeplande trainer: melding');
+$coord->post('/app/coverage-action', ['activity_id' => $meetDemo, 'do' => 'assign', 'multi' => '1']);
+$coord->follow();
+T::ok($coord->has('minstens één trainer'), 'niets aangevinkt: melding');
+foreach ([$kobeId, $tinaId, $coordId] as $u) {
+    T::exec('DELETE FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$meetDemo, $u]);
+}
+$ck = (int) T::val("SELECT id FROM activities WHERE title = 'Clubkampioenschap'");
+$coord->get('/app/trainersplanning?view=list&weeks=8');
+T::ok(!$coord->has('id="a' . $ck . '"') && !$coord->has('Clubkampioenschap'), 'activiteit voor de hele club staat niet in de trainersplanning');
+$coord->post('/app/coverage-action', ['activity_id' => $ck, 'do' => 'claim']);
+T::ok($coord->status === 404, 'geen trainers voor een activiteit van de hele club (404)');
 
 echo "Meerdere tegelijk\n";
 $coord->get('/app/trainersplanning/meerdere');
