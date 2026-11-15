@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Activiteiten verwijderen – commit `HASH`_
+_Activiteiten verwijderen – commit `14d1e46`_
 
 - **Nieuwe rode knop *Verwijderen*** op de activiteitspagina (naast *Schrappen*), voor wie activiteiten mag beheren. Na bevestiging is de activiteit definitief weg, ook als er al aanwezigheden geregistreerd waren; afmeldingen en trainersplanning ervan worden mee gewist. Een training uit een reeks komt niet terug bij het bijwerken van de reeks. *Schrappen* werkt zoals voorheen.
 - Knoppen op de activiteitspagina netjes onder de gegevens; groepsblokjes buiten de kalenderlegende weer vol gekleurd.
