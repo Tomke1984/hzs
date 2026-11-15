@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Clubkampioenschap terug in de trainersplanning – commit `HASH`_
+_Clubkampioenschap terug in de trainersplanning – commit `0600c9a`_
 
 - Wedstrijden voor de hele club (zoals het clubkampioenschap) staan weer in de trainersplanning, met de vinkjes om meerdere trainers in te plannen. Enkel **clubactiviteiten** (samenkomst, pastadag, teambuilding, …) vragen geen trainers; die stonden er al niet in. Dit draait het tweede punt van de vorige versie terug.
 
