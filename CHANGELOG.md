@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Kalender: lichtere groepskleuren – commit `HASH`_
+_Kalender: lichtere groepskleuren – commit `21df560`_
 
 - In de maandkalender zijn de activiteiten nu licht getint in de groepskleur met een gekleurde rand links en donkere tekst, in plaats van een vol gekleurd vlak. Tekorten (rood met `!`) springen zo duidelijk in het oog. Wedstrijden houden hun gele rand; activiteiten van andere groepen en geschrapte activiteiten zijn lichtgrijs.
 
