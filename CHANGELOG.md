@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Eigen trainingen gemarkeerd – commit `HASH`_
+_Eigen trainingen gemarkeerd – commit `72db314`_
 
 - **De trainingen van de aangemelde trainer vallen op** met een blauwe rand, lichtblauwe achtergrond en het label *Jij geeft training* (bij een wedstrijd *Jij gaat mee*; in de weekkalender kort *Jij*). Dit geldt in de trainersplanning (lijst en weekkalender) en op het overzicht (lijst en weekkalender). Wie afgemeld is of op wedstrijd staat, wordt niet gemarkeerd.
 - Test voor de automatische herinnering hangt niet meer af van de weekdag waarop hij loopt.
