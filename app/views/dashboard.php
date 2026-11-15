@@ -76,8 +76,8 @@
     <h2><?= $mode === 'week' ? 'Activiteiten' : 'Eerstvolgende activiteiten' ?></h2>
     <span class="actions-inline">
       <span class="segmented" role="group" aria-label="Weergave">
-        <a href="<?= e(url('dashboard', ['view' => 'list'])) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
         <a href="<?= e(url('dashboard', ['view' => 'week'])) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Weekkalender</a>
+        <a href="<?= e(url('dashboard', ['view' => 'list'])) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
       </span>
       <a href="<?= e(url('calendar')) ?>">Hele kalender →</a>
     </span>

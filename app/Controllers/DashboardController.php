@@ -5,7 +5,7 @@ final class DashboardController
     {
         $upcoming = [];
         // Eerstvolgende activiteiten: als lijst of als weekkalender (keuze onthouden in de sessie).
-        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'list');
+        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'week');
         $_SESSION['dashboard_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
         $monday = date('Y-m-d', strtotime('monday this week', strtotime(today())));

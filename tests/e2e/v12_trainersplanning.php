@@ -25,6 +25,12 @@ $board = Browser::login('bestuur@demo.local');
 
 $coord->get('/app/trainersplanning');
 T::ok($coord->status === 200 && $coord->has('Vaste trainers en instellingen'), 'coördinator ziet de trainersplanning met instellingen');
+T::ok($coord->has('class="week-grid"'), 'standaardweergave trainersplanning: weekkalender');
+$coord->get('/app');
+T::ok($coord->has('class="week-grid week-plain"'), 'standaardweergave overzicht: weekkalender');
+// De rest van de test werkt met de lijst (de gekozen weergave wordt onthouden)
+$coord->get('/app/trainersplanning?view=list');
+$kobe->get('/app/trainersplanning?view=list');
 $kobe->get('/app/trainersplanning');
 T::ok($kobe->status === 200 && !$kobe->has('Vaste trainers en instellingen'), 'groepstrainer ziet de planning, zonder instellingen');
 $kobe->get('/app/trainersplanning/instellingen');
@@ -88,10 +94,10 @@ $wpP = Browser::login('ouder.wouters@demo.local');
 $wpP->get('/app?view=week&w=' . $wOff);
 T::ok($wpP->status === 200 && $wpP->has('class="week-grid week-plain"') && preg_match('/kalender\/' . $tomorrow . '".*?Avond WP/s', $wpP->body) === 1, 'overzicht: weekkalender met de trainingen van het eigen kind');
 T::ok(!$wpP->has('Training Miniemen'), 'overzicht: geen activiteiten van andere groepen');
-$wpP->get('/app');
-T::ok($wpP->has('class="week-grid week-plain"'), 'overzicht: weergave onthouden');
 $wpP->get('/app?view=list');
-T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: terug naar de lijst');
+T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: lijst');
+$wpP->get('/app');
+T::ok($wpP->has('Eerstvolgende activiteiten') && !$wpP->has('week-grid'), 'overzicht: gekozen weergave onthouden');
 
 echo "Afmelden met vervanger\n";
 T::clearMails();

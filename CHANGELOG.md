@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Weekkalender is de standaardweergave – commit `HASH`_
+
+- Het overzicht en de trainersplanning openen standaard als **weekkalender**; de lijst blijft één klik verder. Wie de lijst kiest, houdt die zolang hij aangemeld is. De knop *Weekkalender* staat nu eerst.
+- Tests: 2 extra controles (391 in totaal).
+
 _Eigen trainingen gemarkeerd – commit `72db314`_
 
 - **De trainingen van de aangemelde trainer vallen op** met een blauwe rand, lichtblauwe achtergrond en het label *Jij geeft training* (bij een wedstrijd *Jij gaat mee*; in de weekkalender kort *Jij*). Dit geldt in de trainersplanning (lijst en weekkalender) en op het overzicht (lijst en weekkalender). Wie afgemeld is of op wedstrijd staat, wordt niet gemarkeerd.

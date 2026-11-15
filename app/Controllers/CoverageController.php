@@ -13,7 +13,7 @@ final class CoverageController
         $weeks = max(1, min(8, (int) ($_GET['weeks'] ?? 4)));
         $show = in_array($_GET['show'] ?? '', ['problems', 'mine'], true) ? $_GET['show'] : '';
         // Weergave: lijst (per week, met acties) of weekkalender. De laatste keuze wordt onthouden.
-        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['coverage_view'] ?? 'list');
+        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['coverage_view'] ?? 'week');
         $_SESSION['coverage_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
         $monday = date('Y-m-d', strtotime('monday this week', strtotime(today())));
