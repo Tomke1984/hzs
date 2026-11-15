@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Tekorten beter zichtbaar – commit `HASH`_
+_Tekorten beter zichtbaar – commit `50a725d`_
 
 - **Kalender (maand):** een training of wedstrijd zonder genoeg trainers is nu een rood vlak met `!` in plaats van enkel een rode rand.
 - **Weekkalenders en lijst:** volledig rood kader, rode achtergrond en een rood label *Geen trainer* / *Trainer gezocht*.
