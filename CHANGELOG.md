@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Weekkalender is de standaardweergave – commit `HASH`_
+_Weekkalender is de standaardweergave – commit `e4c3106`_
 
 - Het overzicht en de trainersplanning openen standaard als **weekkalender**; de lijst blijft één klik verder. Wie de lijst kiest, houdt die zolang hij aangemeld is. De knop *Weekkalender* staat nu eerst.
 - Tests: 2 extra controles (391 in totaal).
