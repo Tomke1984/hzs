@@ -32,8 +32,19 @@ final class DashboardController
                         $names[(int) $g['activity_id']][] = $g['name'];
                     }
                 }
+                // Trainers: markeer de activiteiten waar je zelf ingepland staat (en niet afgemeld bent).
+                $mineIds = [];
+                if ($week && Coverage::canView()) {
+                    $me = (int) Auth::user()['id'];
+                    foreach (Coverage::list($monday . ' 00:00:00', date('Y-m-d 00:00:00', strtotime("$monday +7 days"))) as $c) {
+                        if (array_filter($c['trainers'], fn($t) => $t['id'] === $me && !$t['absent'])) {
+                            $mineIds[(int) $c['id']] = true;
+                        }
+                    }
+                }
                 foreach ($week as $a) {
                     $a['groups'] = $names[(int) $a['id']] ?? [];
+                    $a['mine'] = isset($mineIds[(int) $a['id']]);
                     $byDay[substr($a['starts_at'], 0, 10)][] = $a;
                 }
             } else {
@@ -44,6 +55,19 @@ final class DashboardController
                      ORDER BY a.starts_at LIMIT 8",
                     array_merge([now()], $params)
                 );
+                if ($upcoming && Coverage::canView()) {
+                    $me = (int) Auth::user()['id'];
+                    $mineIds = [];
+                    foreach (Coverage::list('2000-01-01 00:00:00', '2100-01-01 00:00:00', array_column($upcoming, 'id')) as $c) {
+                        if (array_filter($c['trainers'], fn($t) => $t['id'] === $me && !$t['absent'])) {
+                            $mineIds[(int) $c['id']] = true;
+                        }
+                    }
+                    foreach ($upcoming as &$a) {
+                        $a['mine'] = isset($mineIds[(int) $a['id']]);
+                    }
+                    unset($a);
+                }
             }
         }
         $mode = $view;

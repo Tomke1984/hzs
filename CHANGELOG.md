@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Eigen trainingen gemarkeerd – commit `HASH`_
+
+- **De trainingen van de aangemelde trainer vallen op** met een blauwe rand, lichtblauwe achtergrond en het label *Jij geeft training* (bij een wedstrijd *Jij gaat mee*; in de weekkalender kort *Jij*). Dit geldt in de trainersplanning (lijst en weekkalender) en op het overzicht (lijst en weekkalender). Wie afgemeld is of op wedstrijd staat, wordt niet gemarkeerd.
+- Test voor de automatische herinnering hangt niet meer af van de weekdag waarop hij loopt.
+- Tests: 4 extra controles (389 in totaal).
+
 _Overzicht als weekkalender – commit `e54ede9`_
 
 - **Op het overzicht (startpagina) kan je de activiteiten nu als Lijst of als Weekkalender bekijken**, net als in de trainersplanning. De weekkalender toont maandag tot zondag met uur, soort, groep en locatie; bladeren met *Vorige* en *Volgende*; de keuze wordt onthouden. Werkt voor iedereen, ook ouders (enkel hun eigen groepen).

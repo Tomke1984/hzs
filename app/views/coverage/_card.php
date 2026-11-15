@@ -25,9 +25,11 @@ $hidden = function () use ($a, $back, $keep): string {
     return $h;
 };
 ?>
-<article class="cover-card<?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?>" id="a<?= (int) $a['id'] ?>">
+<?php $isMine = $mine && !$mine['absent']; ?>
+<article class="cover-card<?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?><?= $isMine ? ' is-mine' : '' ?>" id="a<?= (int) $a['id'] ?>">
   <div class="cover-head">
     <div>
+      <?php if ($isMine): ?><span class="chip mine-chip"><?= $a['type_code'] === 'TRAINING' ? 'Jij geeft training' : 'Jij gaat mee' ?></span><?php endif; ?>
       <span class="cover-when"><?= e(fmt_date($a['starts_at'])) ?> · <?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
       <?php if ($back === ''): ?>
         <a class="cover-title" href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e($a['title']) ?></a>

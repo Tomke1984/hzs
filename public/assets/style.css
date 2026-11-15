@@ -577,3 +577,10 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
   .week-nav .actions-inline { display: flex; flex-wrap: nowrap; gap: 6px; }
   .week-nav > .btn, .week-nav .actions-inline { margin-top: 0; }
 }
+/* Trainingen van de aangemelde trainer */
+.chip.mine-chip { background: var(--blue); color: #fff; font-weight: 700; }
+.cover-card.is-mine { box-shadow: 0 0 0 2px var(--blue); }
+.cover-card.is-mine:not(.is-short) { background: var(--aqua); }
+.week-item.is-mine { box-shadow: 0 0 0 2px var(--blue); }
+.week-item.is-mine:not(.is-short) { background: var(--aqua); }
+.week-item .mine-chip { font-size: .7rem; }

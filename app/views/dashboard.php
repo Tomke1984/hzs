@@ -97,7 +97,8 @@
           <h3 class="week-head"><?= e(fmt_date($day)) ?></h3>
           <?php if (!$items): ?><p class="muted small week-empty">—</p><?php endif; ?>
           <?php foreach ($items as $a): ?>
-            <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['ends_at'] <= now() ? ' is-past' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?>">
+            <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['ends_at'] <= now() ? ' is-past' : '' ?><?= $a['mine'] ? ' is-mine' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?><?= $a['mine'] ? '#trainers' : '' ?>">
+              <?php if ($a['mine']): ?><span class="chip mine-chip"><?= $a['type_code'] === 'TRAINING' ? 'Jij geeft training' : 'Jij gaat mee' ?></span><?php endif; ?>
               <span class="week-time"><?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
               <span class="week-title"><?= e($a['title']) ?></span>
               <span class="chip type-<?= e(strtolower($a['type_code'])) ?>"><?= e($a['type_name']) ?></span>
@@ -116,6 +117,7 @@
       <?php foreach ($upcoming as $a): ?>
         <li>
           <a href="<?= e(url('activity', ['id' => $a['id']])) ?>">
+            <?php if (!empty($a['mine'])): ?><span class="chip mine-chip"><?= $a['type_code'] === 'TRAINING' ? 'Jij geeft training' : 'Jij gaat mee' ?></span><?php endif; ?>
             <span class="chip type-<?= e(strtolower($a['type_code'])) ?>"><?= e($a['type_name']) ?></span>
             <strong><?= e($a['title']) ?></strong>
           </a>

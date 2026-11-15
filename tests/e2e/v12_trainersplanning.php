@@ -67,6 +67,14 @@ $wOff = (int) floor((strtotime('monday this week', strtotime($tomDate)) - strtot
 $coord->get('/app/trainersplanning?view=week&w=' . $wOff);
 T::ok($coord->has('class="week-grid"') && $coord->has('Weekkalender</a>') && preg_match('/aria-current="page">Weekkalender/', $coord->body) === 1, 'weekkalender getoond');
 T::ok(preg_match('/href="[^"]*kalender\/' . $tomorrow . '#trainers".*?Avond WP.*?In orde · 1\/1.*?Kobe Competitie/s', $coord->body) === 1, 'training met status en trainer; klik opent de activiteit');
+$kobe->get('/app/trainersplanning?view=week&w=' . $wOff);
+T::ok(preg_match('/class="week-item[^"]*is-mine"[^>]*kalender\/' . $tomorrow . '#trainers">\s*<span class="chip mine-chip">Jij</s', $kobe->body) === 1, 'weekkalender: eigen trainingen gemarkeerd');
+$kobe->get('/app?view=week&w=' . $wOff);
+T::ok(preg_match('/is-mine"[^>]*kalender\/' . $tomorrow . '#trainers">\s*<span class="chip mine-chip">Jij geeft training/s', $kobe->body) === 1, 'overzicht: eigen trainingen gemarkeerd');
+T::ok(!preg_match('/is-mine[^>]*>\s*<span class="chip mine-chip">[^<]*<\/span>\s*<span class="week-time">[^<]*<\/span>\s*<span class="week-title">Training Miniemen/', $kobe->body), 'overzicht: trainingen van anderen niet gemarkeerd');
+$kobe->get('/app?view=list');
+$kobe->get('/app/trainersplanning?view=list');
+T::ok(preg_match('/class="cover-card[^"]*is-mine" id="a' . $tomorrow . '">/', $kobe->body) === 1 && $kobe->has('Jij geeft training'), 'lijst: eigen trainingen gemarkeerd');
 $coord->get('/app/trainersplanning');
 T::ok($coord->has('class="week-grid"'), 'gekozen weergave wordt onthouden');
 $coord->get('/app/trainersplanning?view=week&w=' . ($wOff + 1));
@@ -213,6 +221,8 @@ $wpParent->get('/app/kalender/' . $tomorrow);
 T::ok($wpParent->status === 200 && !$wpParent->has('id="trainers"'), 'ouder ziet geen trainerskaart');
 
 echo "Automatische herinnering\n";
+// Zeker een tekort binnen 3 dagen, ongeacht de weekdag waarop de test loopt
+T::exec('UPDATE `groups` SET min_trainers = 3 WHERE id = ?', [$gid]);
 T::clearMails();
 T::exec('DELETE FROM coverage_alerts');
 T::autoRan(false);
@@ -228,6 +238,8 @@ $coord->follow();
 T::ok($coord->has('Mail verstuurd voor') && T::outbox() !== '', 'knop "Nu mail sturen"');
 $kobe->post('/app/coverage-remind', []);
 T::ok($kobe->status === 403, 'groepstrainer kan de mail niet manueel sturen');
+
+T::exec('UPDATE `groups` SET min_trainers = NULL WHERE id = ?', [$gid]);
 
 echo "Deellink weekplanning\n";
 $coord->post('/app/coverage-share', ['group_id' => $gid]);

@@ -63,8 +63,9 @@
       <section class="week-day<?= $day === today() ? ' is-today' : '' ?><?= $items ? ' has-events' : '' ?>">
         <h3 class="week-head"><?= e(fmt_date($day)) ?></h3>
         <?php if (!$items): ?><p class="muted small week-empty">—</p><?php endif; ?>
-        <?php foreach ($items as $a): $past = $a['ends_at'] <= now(); ?>
-          <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?>#trainers">
+        <?php foreach ($items as $a): $past = $a['ends_at'] <= now(); $isMine = (bool) array_filter($a['trainers'], fn($t) => $t['id'] === $uid && !$t['absent']); ?>
+          <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['missing'] > 0 && !$past ? ' is-short' : '' ?><?= $past ? ' is-past' : '' ?><?= $isMine ? ' is-mine' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?>#trainers">
+            <?php if ($isMine): ?><span class="chip mine-chip">Jij</span><?php endif; ?>
             <span class="week-time"><?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
             <span class="week-title"><?= e($a['title']) ?></span>
             <?php if ($a['missing'] > 0): ?>
