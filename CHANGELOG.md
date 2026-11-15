@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Overzicht: kalender bovenaan – commit `HASH`_
+_Overzicht: kalender bovenaan – commit `f93ec13`_
 
 - Op het overzicht staat het blok met de activiteiten (weekkalender of lijst) nu bovenaan; *Trainer gezocht* en *Jij geeft training* komen eronder.
 
