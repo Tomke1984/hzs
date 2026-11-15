@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Kalender: filter op soort activiteit – commit `HASH`_
+_Kalender: filter op soort activiteit – commit `25ceabf`_
 
 - In de kalender kan je naast de groep nu ook filteren op **soort**: Training, Wedstrijd of Clubactiviteit. De filter blijft behouden bij *Vorige*/*Volgende*; *Wis filter* zet alles terug.
 - Tests: 5 extra controles in `smoke` (405 in totaal).
