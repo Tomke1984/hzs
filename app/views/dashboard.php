@@ -31,11 +31,12 @@
           <h3 class="week-head"><?= e(fmt_date($day)) ?></h3>
           <?php if (!$items): ?><p class="muted small week-empty">—</p><?php endif; ?>
           <?php foreach ($items as $a): ?>
-            <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['ends_at'] <= now() ? ' is-past' : '' ?><?= $a['mine'] ? ' is-mine' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?><?= $a['mine'] ? '#trainers' : '' ?>">
+            <a class="week-item type-<?= e(strtolower($a['type_code'])) ?><?= $a['ends_at'] <= now() ? ' is-past' : '' ?><?= $a['mine'] ? ' is-mine' : '' ?><?= $a['short'] !== null && $a['ends_at'] > now() ? ' is-short' : '' ?>" href="<?= e(url('activity', ['id' => $a['id']])) ?><?= $a['mine'] || $a['short'] !== null ? '#trainers' : '' ?>">
               <?php if ($a['mine']): ?><span class="chip mine-chip"><?= $a['type_code'] === 'TRAINING' ? 'Jij geeft training' : 'Jij gaat mee' ?></span><?php endif; ?>
               <span class="week-time"><?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></span>
               <span class="week-title"><?= e($a['title']) ?></span>
               <span class="chip type-<?= e(strtolower($a['type_code'])) ?>"><?= e($a['type_name']) ?></span>
+              <?php if ($a['short'] !== null && $a['ends_at'] > now()): ?><span class="chip bad"><?= $a['short'] === 0 ? 'Geen trainer' : 'Trainer gezocht' ?></span><?php endif; ?>
               <?php if ($a['groups']): ?><span class="week-trainers"><?php foreach ($a['groups'] as $g): ?><span><?= group_chip($g) ?></span><?php endforeach; ?></span><?php endif; ?>
               <?php if ($a['location']): ?><span class="muted small"><?= e($a['location']) ?></span><?php endif; ?>
             </a>

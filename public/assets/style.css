@@ -584,3 +584,11 @@ td progress.share-track{display:block;margin-top:4px;width:90px}
 .week-item.is-mine { box-shadow: 0 0 0 2px var(--blue); }
 .week-item.is-mine:not(.is-short) { background: var(--aqua); }
 .week-item .mine-chip { font-size: .7rem; }
+/* Tekorten duidelijker: rood vlak in plaats van enkel een rand */
+.cal-event.short { background: var(--bad) !important; color: #fff !important; outline: 2px solid #7f1d1d; outline-offset: -2px; font-weight: 700; }
+.cal-event.short .grp, .cal-event.short .time { color: #fff !important; }
+.swatch.short-sw { background: var(--bad); outline: 2px solid #7f1d1d; outline-offset: -2px; }
+.week-item.is-short:not(.is-past) { border: 2px solid var(--bad); border-left-width: 6px; background: #fde4e4; }
+.week-item.is-short:not(.is-past) .chip.bad { background: var(--bad); color: #fff; font-weight: 700; }
+.cover-card.is-short:not(.is-past) { border: 2px solid var(--bad); border-left-width: 6px; background: #fdecec; }
+.cover-card.is-short .cover-head .chip.bad { background: var(--bad); color: #fff; font-weight: 700; }

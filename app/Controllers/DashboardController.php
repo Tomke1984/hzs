@@ -34,15 +34,20 @@ final class DashboardController
                 }
                 // Trainers: markeer de activiteiten waar je zelf ingepland staat (en niet afgemeld bent).
                 $mineIds = [];
+                $shortIds = [];
                 if ($week && Coverage::canView()) {
                     $me = (int) Auth::user()['id'];
                     foreach (Coverage::list($monday . ' 00:00:00', date('Y-m-d 00:00:00', strtotime("$monday +7 days"))) as $c) {
                         if (array_filter($c['trainers'], fn($t) => $t['id'] === $me && !$t['absent'])) {
                             $mineIds[(int) $c['id']] = true;
                         }
+                        if ($c['missing'] > 0) {
+                            $shortIds[(int) $c['id']] = $c['present'];
+                        }
                     }
                 }
                 foreach ($week as $a) {
+                    $a['short'] = $shortIds[(int) $a['id']] ?? null;
                     $a['groups'] = $names[(int) $a['id']] ?? [];
                     $a['mine'] = isset($mineIds[(int) $a['id']]);
                     $byDay[substr($a['starts_at'], 0, 10)][] = $a;

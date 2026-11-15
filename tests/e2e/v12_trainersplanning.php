@@ -78,6 +78,10 @@ T::ok(preg_match('/class="week-item[^"]*is-mine"[^>]*kalender\/' . $tomorrow . '
 $kobe->get('/app?view=week&w=' . $wOff);
 T::ok(preg_match('/is-mine"[^>]*kalender\/' . $tomorrow . '#trainers">\s*<span class="chip mine-chip">Jij geeft training/s', $kobe->body) === 1, 'overzicht: eigen trainingen gemarkeerd');
 T::ok(!preg_match('/is-mine[^>]*>\s*<span class="chip mine-chip">[^<]*<\/span>\s*<span class="week-time">[^<]*<\/span>\s*<span class="week-title">Training Miniemen/', $kobe->body), 'overzicht: trainingen van anderen niet gemarkeerd');
+T::exec('UPDATE `groups` SET min_trainers = 3 WHERE id = ?', [$gid]);
+$kobe->get('/app?view=week&w=' . $wOff);
+T::ok(preg_match('/is-short"[^>]*kalender\/' . $tomorrow . '#trainers">.*?<span class="chip bad">Trainer gezocht<\/span>/s', $kobe->body) === 1, 'overzicht: tekort rood gemarkeerd');
+T::exec('UPDATE `groups` SET min_trainers = NULL WHERE id = ?', [$gid]);
 $kobe->get('/app?view=list');
 $kobe->get('/app/trainersplanning?view=list');
 T::ok(preg_match('/class="cover-card[^"]*is-mine" id="a' . $tomorrow . '">/', $kobe->body) === 1 && $kobe->has('Jij geeft training'), 'lijst: eigen trainingen gemarkeerd');

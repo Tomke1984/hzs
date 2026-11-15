@@ -67,7 +67,7 @@ $todayStr = today();
 <ul class="cal-legend" aria-label="Legende">
   <?php foreach ($legend as [$lname, $lcol]): ?><li><span class="swatch g-<?= e($lcol) ?>"></span><?= e($lname) ?></li><?php endforeach; ?>
   <li><span class="swatch is-comp-sw"></span>Wedstrijd (gele rand)</li>
-  <?php if (!empty($hasShort)): ?><li><span class="swatch short-sw"></span>Trainer gezocht (rode rand, <a href="<?= e(url('coverage', ['show' => 'problems'])) ?>">trainersplanning</a>)</li><?php endif; ?>
+  <?php if (!empty($hasShort)): ?><li><span class="swatch short-sw"></span>Trainer gezocht (rood met !, <a href="<?= e(url('coverage', ['show' => 'problems'])) ?>">trainersplanning</a>)</li><?php endif; ?>
 </ul>
 <?php endif; ?>
 

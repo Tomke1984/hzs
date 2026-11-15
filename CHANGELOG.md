@@ -5,6 +5,13 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Tekorten beter zichtbaar – commit `HASH`_
+
+- **Kalender (maand):** een training of wedstrijd zonder genoeg trainers is nu een rood vlak met `!` in plaats van enkel een rode rand.
+- **Weekkalenders en lijst:** volledig rood kader, rode achtergrond en een rood label *Geen trainer* / *Trainer gezocht*.
+- **Overzicht:** de weekkalender toont tekorten nu ook (voor trainers en coördinator); klik opent de trainerskaart.
+- Tests: 1 extra controle (392 in totaal).
+
 _Overzicht: kalender bovenaan – commit `f93ec13`_
 
 - Op het overzicht staat het blok met de activiteiten (weekkalender of lijst) nu bovenaan; *Trainer gezocht* en *Jij geeft training* komen eronder.
