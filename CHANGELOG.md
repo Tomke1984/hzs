@@ -5,7 +5,9 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+_Docker – commit `COMMIT`_
+
+- **Dockerfile** (php 8.3 + Apache, webmap `public/`, `.htaccess` aan, HTTPS achter een proxy) en **`.dockerignore`** (geen `config.php`, database, mails of `.git` in de image). Uitleg in de README onder *Docker*.
 
 ## Op main
 
