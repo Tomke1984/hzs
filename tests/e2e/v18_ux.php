@@ -78,3 +78,9 @@ T::ok($parent->has('class="tabbar"') && !$parent->has('>Planning</span>'), 'oude
 $board->get('/app/leden');
 T::ok($board->has('member-table') && !$board->has('>Actief</span>'), 'ledenlijst: compacte tabel, enkel afwijkende status');
 T::ok($board->has('data-auto'), 'filters passen meteen toe');
+
+echo "Bladeren blijft op dezelfde hoogte\n";
+$parent->get('/app?view=week');
+T::ok(substr_count($parent->body, 'data-keep-scroll') >= 4, 'overzicht: ‹ › en Week/Lijst houden de scrollpositie vast');
+$board->get('/app/kalender');
+T::ok(substr_count($board->body, 'class="week-arrow" data-keep-scroll') === 2, 'kalender: ‹ › houden de scrollpositie vast');

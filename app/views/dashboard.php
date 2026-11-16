@@ -43,8 +43,8 @@
     <h2><?= $mode === 'week' ? 'Activiteiten' : 'Komende activiteiten' ?></h2>
     <span class="actions-inline">
       <span class="segmented" role="group" aria-label="Weergave">
-        <a href="<?= e(url('dashboard', ['view' => 'week'])) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Week</a>
-        <a href="<?= e(url('dashboard', ['view' => 'list'])) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
+        <a data-keep-scroll href="<?= e(url('dashboard', ['view' => 'week'])) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Week</a>
+        <a data-keep-scroll href="<?= e(url('dashboard', ['view' => 'list'])) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
       </span>
       <a class="hide-mobile" href="<?= e(url('calendar')) ?>">Hele kalender →</a>
     </span>

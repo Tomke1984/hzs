@@ -35,10 +35,10 @@ $todayStr = today();
 <?php endif; ?>
 
 <div class="week-nav month-nav">
-  <a class="week-arrow" href="<?= e(url('calendar', ['m' => $prev] + $keep)) ?>" aria-label="Vorige maand" title="Vorige maand">‹</a>
+  <a class="week-arrow" data-keep-scroll href="<?= e(url('calendar', ['m' => $prev] + $keep)) ?>" aria-label="Vorige maand" title="Vorige maand">‹</a>
   <strong class="week-range"><?= e(ucfirst($monthLabel)) ?></strong>
-  <a class="week-arrow" href="<?= e(url('calendar', ['m' => $next] + $keep)) ?>" aria-label="Volgende maand" title="Volgende maand">›</a>
-  <?php if ($first->format('Y-m') !== date('Y-m')): ?><a class="week-now" href="<?= e(url('calendar', $keep)) ?>">Naar nu</a><?php endif; ?>
+  <a class="week-arrow" data-keep-scroll href="<?= e(url('calendar', ['m' => $next] + $keep)) ?>" aria-label="Volgende maand" title="Volgende maand">›</a>
+  <?php if ($first->format('Y-m') !== date('Y-m')): ?><a class="week-now" data-keep-scroll href="<?= e(url('calendar', $keep)) ?>">Naar nu</a><?php endif; ?>
 </div>
 
 <div class="legend"><span class="chip off">Grijs: wedstrijd voor een andere groep</span></div>

@@ -51,8 +51,8 @@
     <?php endforeach; ?>
   </nav>
   <div class="segmented" role="group" aria-label="Weergave">
-    <a href="<?= e(url('coverage', $q(['view' => 'week', 'weeks' => '']))) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Week</a>
-    <a href="<?= e(url('coverage', $q(['view' => 'list', 'w' => '']))) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
+    <a data-keep-scroll href="<?= e(url('coverage', $q(['view' => 'week', 'weeks' => '']))) ?>"<?= $mode === 'week' ? ' aria-current="page"' : '' ?>>Week</a>
+    <a data-keep-scroll href="<?= e(url('coverage', $q(['view' => 'list', 'w' => '']))) ?>"<?= $mode === 'list' ? ' aria-current="page"' : '' ?>>Lijst</a>
   </div>
 </div>
 

@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Bladeren zonder naar boven te springen – commit `HASH`_
+
+- In de weekkalender (overzicht en trainersplanning) en de maandkalender blijf je bij ‹ ›, *Naar nu* en *Week*/*Lijst* op dezelfde hoogte op de pagina, in plaats van telkens naar boven te springen (vooral op telefoon storend).
+- Tests: 2 extra controles in `v18_ux`.
+
 _v0.19 – Veiliger en sneller (review senior developer) – commit `36da600`_
 
 - **Database buiten de webmap:** de installer vraagt waar het SQLite-bestand moet staan (op een server: buiten `www/`). Staat het toch in de webmap, dan ziet een beheerder een rode waarschuwing op het overzicht. Extra `.htaccess`-regels weigeren `.sqlite`, `config.php`, logs en de mappen `app/`, `db/`, `docs/`, `tools/`, ook als `mod_rewrite` ontbreekt. Uitleg in de README (*Database buiten de webmap*).

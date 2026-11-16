@@ -43,6 +43,30 @@
     coverUpdate();
   }
 
+  // Bladeren in de kalender (‹ ›, Naar nu, Week/Lijst): op dezelfde hoogte blijven in plaats van naar boven te springen
+  (function () {
+    var KEY = 'hzs-keep-scroll';
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      sessionStorage.removeItem(KEY);
+      if (saved && saved.path === location.pathname && !location.hash) {
+        if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+        var go = function () { window.scrollTo(0, saved.y); };
+        go();
+        requestAnimationFrame(go);
+        window.addEventListener('load', go, { once: true });
+      }
+    } catch (e) { /* geen sessionStorage: gewoon bovenaan beginnen */ }
+    document.addEventListener('click', function (ev) {
+      var a = ev.target.closest('a[data-keep-scroll]');
+      if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) { return; }
+      try {
+        var url = new URL(a.href, location.href);
+        sessionStorage.setItem(KEY, JSON.stringify({ path: url.pathname, y: window.scrollY }));
+      } catch (e) { /* niets */ }
+    });
+  })();
+
   // Filters: meteen toepassen bij elke wijziging (de knop "Filteren" verdwijnt dan)
   document.querySelectorAll('form.filters[data-auto]').forEach(function (f) {
     f.classList.add('is-auto');
