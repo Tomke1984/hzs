@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `HASH`_
+_Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `cb74c97`_
 
 - Ook ouders en zwemmers zien de activiteiten op het overzicht nu standaard als weekkalender (onder de kaart *Volgende training*). De lijst blijft één klik verder.
 - Test `v18_ux` hangt niet meer af van de weekdag waarop hij loopt.
