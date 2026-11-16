@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Bladeren zonder naar boven te springen – commit `HASH`_
+_Bladeren zonder naar boven te springen – commit `d830b73`_
 
 - In de weekkalender (overzicht en trainersplanning) en de maandkalender blijf je bij ‹ ›, *Naar nu* en *Week*/*Lijst* op dezelfde hoogte op de pagina, in plaats van telkens naar boven te springen (vooral op telefoon storend).
 - Tests: 2 extra controles in `v18_ux`.
