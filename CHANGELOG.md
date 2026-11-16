@@ -5,11 +5,15 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Docker – commit `b853f83`_
-
-- **Dockerfile** (php 8.3 + Apache, webmap `public/`, `.htaccess` aan, HTTPS achter een proxy) en **`.dockerignore`** (geen `config.php`, database, mails of `.git` in de image). Uitleg in de README onder *Docker*.
+_Niets: `dev` en `main` zijn gelijk._
 
 ## Op main
+
+### v0.20.0 – 2026-11-17 – `3fdbe0b` – Docker
+
+#### Docker – commit `b853f83`
+
+- **Dockerfile** (php 8.3 + Apache, webmap `public/`, `.htaccess` aan, HTTPS achter een proxy) en **`.dockerignore`** (geen `config.php`, database, mails of `.git` in de image). Uitleg in de README onder *Docker*.
 
 ### v0.19.0 – 2026-11-16 – `bc63da9` – minimale competitie-app met trainersplanning, nieuwe kalenderweergaven, UX en beveiliging
 
