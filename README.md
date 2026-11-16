@@ -47,7 +47,7 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 
 Gebruik je SQLite op de server, zet het databasebestand dan **buiten de webmap** (de map die de webserver uitlevert, vaak `www/` of `public_html/`), bv. `/home/<account>/hzs-data/clubapp.sqlite`. Vul dat pad in bij de installatie (veld *SQLite: pad naar het databasebestand*) of pas `db.path` in `config.php` aan. Een bestaande database verplaatsen: zet de app even offline, verplaats `clubapp.sqlite` (en eventuele `clubapp.sqlite-wal`/`-shm`) en pas `db.path` aan.
 
-Staat het bestand toch binnen de webmap, dan hangt de bescherming enkel af van `.htaccess` (werkt niet op nginx of met `AllowOverride None`). De app toont beheerders dan een rode waarschuwing op het overzicht. Als extra verdediging weigeren `.htaccess`-bestanden in de hoofdmap en in `app/`, `db/`, `docs/`, `storage/` en `tools/` alles, ook zonder `mod_rewrite`.
+Staat het bestand toch binnen de webmap, dan hangt de bescherming enkel af van `.htaccess` (werkt niet op nginx of met `AllowOverride None`). De app toont beheerders dan een rode waarschuwing op het overzicht. Als extra verdediging weigeren `.htaccess`-bestanden in de hoofdmap (gevoelige bestanden) en in `db/`, `docs/`, `storage/` en `tools/` alles, ook zonder `mod_rewrite`. **Niet** in `app/`: `/app` is ook het adres van de app, en Apache zou dan elke pagina onder `/app` weigeren (*Forbidden*).
 
 ## Wat zit erin
 

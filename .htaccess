@@ -1,5 +1,9 @@
 # Alle verzoeken gaan naar public/. app/, db/, storage/ en config.php zijn daardoor nooit bereikbaar.
 Options -Indexes
+# /app is zowel een map (code) als het adres van de app: geen automatische doorverwijzing naar /app/,
+# de regel hieronder stuurt het verzoek naar public/. Zet hier GEEN .htaccess met "Require all denied" in app/:
+# Apache leest die vóór de herschrijfregel en weigert dan elke pagina onder /app (Forbidden).
+DirectorySlash Off
 # Tweede verdedigingslinie (ook als mod_rewrite ontbreekt): gevoelige bestanden nooit uitleveren.
 <FilesMatch "(^config\.php$|^config\.sample\.php$|\.(sqlite|sqlite-wal|sqlite-shm|db|sql|log|md|sh|ps1)$|^\.)">
   Require all denied

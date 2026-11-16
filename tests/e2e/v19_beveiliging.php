@@ -39,9 +39,13 @@ $p->get('/app/kalender');
 T::ok($p->status === 200 && $p->has('cal-'), 'kalender voor ouders werkt');
 
 echo "Database buiten de webmap\n";
-foreach (['app', 'db', 'tools', 'docs'] as $d) {
+foreach (['db', 'tools', 'docs'] as $d) {
     T::ok(str_contains((string) @file_get_contents(T::$dir . "/$d/.htaccess"), 'Require all denied'), "$d/ geweigerd, ook zonder mod_rewrite");
 }
+// Regressie v0.22: een .htaccess met "Require all denied" in app/ blokkeert op Apache (webroot = hoofdmap) elke
+// pagina onder /app met "Forbidden", omdat Apache die leest vóór de herschrijfregel naar public/.
+T::ok(!is_file(T::$dir . '/app/.htaccess'), 'geen .htaccess in app/ (zou /app op Apache blokkeren)');
+T::ok(str_contains((string) file_get_contents(T::$dir . '/.htaccess'), 'DirectorySlash Off'), '/app zonder doorverwijzing naar /app/');
 $ht = (string) file_get_contents(T::$dir . '/.htaccess');
 T::ok(str_contains($ht, '<FilesMatch') && str_contains($ht, 'sqlite') && str_contains($ht, 'config'), 'hoofd-.htaccess weigert .sqlite en config.php');
 $admin->get('/app');
