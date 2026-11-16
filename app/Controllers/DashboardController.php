@@ -4,10 +4,10 @@ final class DashboardController
     public static function index(): void
     {
         $upcoming = [];
-        // Ouders en zwemmers (geen trainer, geen beheer): eerst "wanneer is de volgende training?", lijst als standaard.
+        // Ouders en zwemmers (geen trainer, geen beheer): eerst "wanneer is de volgende training?"
         $family = Scope::ownMemberIds() && !Auth::hasRole('TRAINER') && !Auth::can('activities.write');
         // Activiteiten: als lijst of als weekkalender (keuze onthouden in de sessie).
-        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? ($family ? 'list' : 'week'));
+        $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'week');
         $_SESSION['dashboard_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
         $monday = week_monday($offset);

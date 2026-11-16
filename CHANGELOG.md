@@ -5,6 +5,11 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `HASH`_
+
+- Ook ouders en zwemmers zien de activiteiten op het overzicht nu standaard als weekkalender (onder de kaart *Volgende training*). De lijst blijft één klik verder.
+- Test `v18_ux` hangt niet meer af van de weekdag waarop hij loopt.
+
 _v0.18 – UX-advies front-end doorgevoerd – commit `8fd9f7f`_
 
 - **Overzicht per rol.** Ouders en zwemmers: bovenaan *Volgende training* per kind met meteen *Afmelden* / *Toch aanwezig*, daaronder de komende activiteiten als lijst (standaard). Trainers en bestuur: weekkalender en *Waar is actie nodig* (tekorten, afmeldingen van zwemmers, niet-geactiveerde uitnodigingen, minderjarigen zonder ouder) in plaats van de tegels met aantallen.
