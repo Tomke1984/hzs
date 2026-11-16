@@ -1,9 +1,0 @@
-# Nooit in de image: lokale configuratie, database, mails en git-geschiedenis
-.git
-config.php
-storage/data/*
-storage/mail/*
-storage/sessions/*
-storage/coverage-last-run
-*.log
-.DS_Store

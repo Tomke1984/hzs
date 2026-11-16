@@ -5,7 +5,9 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+_Docker verwijderd – commit `COMMIT`_
+
+- **Dockerfile** en **`.dockerignore`** weer verwijderd, net als de sectie *Docker* in de README.
 
 ## Op main
 

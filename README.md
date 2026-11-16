@@ -49,17 +49,6 @@ Gebruik je SQLite op de server, zet het databasebestand dan **buiten de webmap**
 
 Staat het bestand toch binnen de webmap, dan hangt de bescherming enkel af van `.htaccess` (werkt niet op nginx of met `AllowOverride None`). De app toont beheerders dan een rode waarschuwing op het overzicht. Als extra verdediging weigeren `.htaccess`-bestanden in de hoofdmap en in `app/`, `db/`, `docs/`, `storage/` en `tools/` alles, ook zonder `mod_rewrite`.
 
-## Docker
-
-De `Dockerfile` bouwt een image op `php:8.3-apache` met `public/` als webmap, `mod_rewrite` en `.htaccess` aan, en HTTPS-herkenning achter een proxy (`X-Forwarded-Proto`, zodat het secure cookie en HSTS werken).
-
-```bash
-docker build -t hzs-clubapp .
-docker run -d -p 8080:80 -v hzs-storage:/var/www/html/storage hzs-clubapp
-```
-
-Open daarna `http://localhost:8080/install.php` en kies SQLite (laat het pad leeg: `storage/data/` ligt in de container buiten de webmap). Het volume `hzs-storage` bewaart database en mails bij een nieuwe image; `config.php` wordt bij de installatie in de container geschreven, dus mount die ook (`-v $(pwd)/config.php:/var/www/html/config.php`) of installeer opnieuw na een rebuild. `.dockerignore` houdt je lokale `config.php`, database en `.git` uit de image. De image bevat enkel `pdo_sqlite`; voor MySQL voeg je `docker-php-ext-install pdo_mysql` toe.
-
 ## Wat zit erin
 
 Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 enkel voor de **competitie** (geen zwemschool, zwemblokken of indeling per lid meer; bestaande zwemschoolgroepen worden bij de update verwijderd, de leden blijven bestaan zonder groep). De startpagina (`/`) stuurt naar *Aanmelden*. De publieke website, het websitebeheer, statistieken, lidgeld, inschrijvingen, de zwemtestwachtlijst, het contactformulier, de nieuwsbrief, de fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit/wachtlijst en CSV-exports zijn verwijderd (de code staat nog in de Git-geschiedenis, tag/commit van v0.12). Leesbare adressen: `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` en de app onder `/app` (`/app/kalender`, `/app/leden/12`, …). Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
