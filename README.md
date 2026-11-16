@@ -41,7 +41,13 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 2. Upload de volledige map; de webroot moet naar `public/` wijzen (of gebruik de meegeleverde `.htaccess` in de hoofdmap).
 3. Open `install.php`, kies **MySQL** en vul de gegevens in.
 4. Verwijder daarna `public/install.php`.
-5. Zet in `config.php` `cookie_secure` op `true` zodra de site via HTTPS draait, en `debug` op `false`.
+5. Zet in `config.php` `debug` op `false`. Over HTTPS krijgt het sessiecookie automatisch de vlag *Secure*; `cookie_secure` op `true` forceert dat altijd.
+
+### Database buiten de webmap (SQLite op een server)
+
+Gebruik je SQLite op de server, zet het databasebestand dan **buiten de webmap** (de map die de webserver uitlevert, vaak `www/` of `public_html/`), bv. `/home/<account>/hzs-data/clubapp.sqlite`. Vul dat pad in bij de installatie (veld *SQLite: pad naar het databasebestand*) of pas `db.path` in `config.php` aan. Een bestaande database verplaatsen: zet de app even offline, verplaats `clubapp.sqlite` (en eventuele `clubapp.sqlite-wal`/`-shm`) en pas `db.path` aan.
+
+Staat het bestand toch binnen de webmap, dan hangt de bescherming enkel af van `.htaccess` (werkt niet op nginx of met `AllowOverride None`). De app toont beheerders dan een rode waarschuwing op het overzicht. Als extra verdediging weigeren `.htaccess`-bestanden in de hoofdmap en in `app/`, `db/`, `docs/`, `storage/` en `tools/` alles, ook zonder `mod_rewrite`.
 
 ## Wat zit erin
 
@@ -85,7 +91,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 - **Communicatie:** (aanwezigheidsrapport per groep/periode als `features.attendance` aan staat); **bericht sturen** naar groep, trainingsreeks, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
 - **Noodcontact en medische opmerking** (enkel met `members.medical`); reden bij stopzetting; waarschuwing bij **dubbele leden**.
 - **Auditlog** (`audit.read`, enkel beheerders), **globaal zoeken** in het menu, **dashboards per rol**.
-- **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); `security.require_2fa_admin` verplicht ze voor beheerders; een beheerder kan 2FA van een gebruiker uitzetten.
+- **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); verplicht voor **beheerders en bestuur** op de server (`security.require_2fa_admin`; niet ingesteld = verplicht behalve op localhost); een beheerder kan 2FA van een gebruiker uitzetten.
 - **Privacy:** zet `privacy_url` in `config.php` naar het privacybeleid op de clubwebsite; de link staat dan onderaan elke pagina.
 
 ### Mobiel en techniek
@@ -102,7 +108,7 @@ app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
 app/Controllers/        Auth, Account, Dashboard, Member, Group, Activity, Series, User, Invite, Report (aanwezigheden,
                         auditlog, zoeken), Mail (bericht sturen), Coverage (trainersplanning)
-app/Installer.php       installatie, migraties (één keer per sessie), referentiedata (rollen/permissies)
+app/Installer.php       installatie, migraties (enkel als de schemaversie in app_meta achterloopt), indexen, referentiedata
 app/Coverage.php        trainersplanning competitie: bezetting per activiteit, tekorten, herinneringsmails
 app/views/              PHP-templates met escaping via e()
 db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
@@ -112,7 +118,8 @@ tools/                  coverage-reminders.php (herinneringen via cron), seed-de
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
-Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur, HSTS bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Nog te doen voor productie: MFA voor beheerders, HSTS op serverniveau, back-ups, concrete bewaartermijnen voor ledengegevens en verwerkersovereenkomsten met hosting en mail (het privacybeleid staat op de clubwebsite; zet de link in `privacy_url`).
+Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur zonder activiteit en ten laatste 7 dagen na het aanmelden, HSTS en secure cookie bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Een nieuw wachtwoord (zelf, via reset of door de beheerder) of het uitzetten van 2FA meldt alle andere sessies van die gebruiker af (`users.session_version`).
+Snelheid: indexen op de veelgebruikte kolommen, SQLite in WAL-modus, en de upgrades lopen enkel als de schemaversie in `app_meta` lager is dan de code (normaal één kleine query per verzoek). Nog te doen voor productie: HSTS op serverniveau, back-ups, concrete bewaartermijnen voor ledengegevens en verwerkersovereenkomsten met hosting en mail (het privacybeleid staat op de clubwebsite; zet de link in `privacy_url`).
 
 ## Tips voor ontwikkelaars
 - Beheerders zien onderaan het menu klein de branch en commit die draait (bv. `dev 29b3a79`), handig om te controleren of een update binnen is.
@@ -126,7 +133,7 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning` en `v15_verwijderen`.
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux` en `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, 2FA voor bestuur, secure cookie).
 
 ## Werkwijze met GitHub
 

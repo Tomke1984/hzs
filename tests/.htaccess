@@ -1,0 +1,2 @@
+# Nooit rechtstreeks via de webserver (ook niet als mod_rewrite ontbreekt).
+Require all denied

@@ -159,6 +159,40 @@ function app_build(): string
     return basename($ref) . ' ' . substr(trim((string) $sha), 0, 7);
 }
 
+/**
+ * Staat het SQLite-bestand binnen de documentroot van de webserver? Dan hangt de bescherming enkel af van .htaccess
+ * (werkt niet op nginx, of als AllowOverride uit staat) en kan iemand de hele database downloaden.
+ */
+function db_inside_webroot(): bool
+{
+    $db = config('db');
+    if (!is_array($db) || ($db['driver'] ?? 'sqlite') !== 'sqlite' || empty($db['path'])) {
+        return false;
+    }
+    $docroot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    $file = realpath((string) $db['path']);
+    if (!$docroot || !$file) {
+        return false;
+    }
+    $docroot = rtrim(str_replace('\\', '/', $docroot), '/') . '/';
+    return str_starts_with(str_replace('\\', '/', $file), $docroot);
+}
+
+/** Verzoek op deze computer (localhost)? Dan gelden enkele strengere standaarden niet, om lokaal testen eenvoudig te houden. */
+function is_local_request(): bool
+{
+    $host = strtolower((string) preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+    return PHP_SAPI === 'cli' || in_array($host, ['localhost', '127.0.0.1', '[::1]'], true) || str_ends_with($host, '.localhost') || str_ends_with($host, '.test');
+}
+
+/** Loopt dit verzoek over HTTPS (ook achter een proxy van de hosting)? */
+function is_https(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443
+        || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+}
+
 function now(): string
 {
     return date('Y-m-d H:i:s');

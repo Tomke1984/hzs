@@ -29,6 +29,9 @@ final class Database
             self::$pdo = new PDO('sqlite:' . $db['path'], null, null, $options);
             self::$pdo->exec('PRAGMA foreign_keys = ON');
             self::$pdo->exec('PRAGMA busy_timeout = 5000');
+            // WAL: lezers wachten niet op een schrijver (en omgekeerd); NORMAL is veilig in WAL en sneller.
+            self::$pdo->exec('PRAGMA journal_mode = WAL');
+            self::$pdo->exec('PRAGMA synchronous = NORMAL');
         }
     }
 

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
   ical_token VARCHAR(40) NULL,
   totp_secret VARCHAR(64) NULL,
   totp_enabled TINYINT NOT NULL DEFAULT 0,
+  session_version INT NOT NULL DEFAULT 0,
   FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};
 
@@ -283,3 +284,8 @@ CREATE TABLE IF NOT EXISTS coverage_alerts (
   missing INT NOT NULL,
   sent_at VARCHAR(19) NOT NULL
 ){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS app_meta (
+  k VARCHAR(40) NOT NULL PRIMARY KEY,
+  v VARCHAR(200) NOT NULL
+){{ENGINE}}

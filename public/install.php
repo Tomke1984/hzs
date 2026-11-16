@@ -34,8 +34,9 @@ if (installer_blocked()) {
 $errors = [];
 $v = [
     'driver' => 'sqlite', 'host' => '127.0.0.1', 'port' => '3306', 'name' => '', 'user' => '',
-    'admin_name' => '', 'admin_email' => '', 'demo' => '',
+    'admin_name' => '', 'admin_email' => '', 'demo' => '', 'db_path' => '',
 ];
+$defaultDbPath = APP_ROOT . '/storage/data/clubapp.sqlite';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
@@ -51,6 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($v['driver'] === 'mysql' && ($v['host'] === '' || $v['name'] === '' || $v['user'] === '')) {
         $errors[] = 'Vul host, databasenaam en gebruiker in voor MySQL.';
+    }
+    $dbPath = $v['db_path'] === '' ? $defaultDbPath : $v['db_path'];
+    if ($v['driver'] === 'sqlite' && (!str_ends_with($dbPath, '.sqlite') || !preg_match('#^(/|[A-Za-z]:[\\\\/])#', $dbPath))) {
+        $errors[] = 'Geef een volledig pad op dat eindigt op .sqlite (bv. /home/club/hzs-data/clubapp.sqlite), of laat het veld leeg.';
     }
     if ($v['admin_name'] === '') {
         $errors[] = 'Naam van de beheerder is verplicht.';
@@ -68,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$errors) {
         $dbCfg = $v['driver'] === 'mysql'
             ? ['driver' => 'mysql', 'host' => $v['host'], 'port' => (int) $v['port'], 'name' => $v['name'], 'user' => $v['user'], 'pass' => $dbPass]
-            : ['driver' => 'sqlite', 'path' => APP_ROOT . '/storage/data/clubapp.sqlite'];
+            : ['driver' => 'sqlite', 'path' => $dbPath];
 
         try {
             Database::connect($dbCfg);
@@ -86,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $dbExport = $v['driver'] === 'mysql'
                 ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($v['host'], true) . ",\n        'port' => " . (int) $v['port'] . ",\n        'name' => " . var_export($v['name'], true) . ",\n        'user' => " . var_export($v['user'], true) . ",\n        'pass' => " . var_export($dbPass, true) . ",\n    ]"
-                : "[\n        'driver' => 'sqlite',\n        'path' => __DIR__ . '/storage/data/clubapp.sqlite',\n    ]";
+                : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbPath === $defaultDbPath ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbPath, true)) . ",\n    ]";
             $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . ($v['driver'] === 'sqlite' ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n];\n";
 
             $written = @file_put_contents(APP_ROOT . '/config.php', $configPhp) !== false;
@@ -129,6 +134,8 @@ ob_start(); ?>
       </div>
       <label>Wachtwoord <input type="password" name="pass" autocomplete="off"></label>
       <p class="muted small">De MySQL-velden zijn enkel nodig als je MySQL kiest. De database moet al bestaan.</p>
+      <label>SQLite: pad naar het databasebestand <input name="db_path" value="<?= e($v['db_path']) ?>" placeholder="<?= e($defaultDbPath) ?>"></label>
+      <p class="muted small">Op een server: kies een map <strong>buiten</strong> de webmap (bv. naast <code>www/</code>), zodat het bestand nooit te downloaden is. Leeg = <code>storage/data/</code> (prima om lokaal te testen).</p>
     </fieldset>
 
     <fieldset>

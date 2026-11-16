@@ -56,7 +56,7 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 - **Adressen:** `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` (`PRETTY_ROUTES`) en de app onder `/app` (`APP_PATHS` voor de hoofdschermen met id in het pad, bv. `/app/leden/12/wijzigen`; andere routes op `/app/<route-met-streepjes>`); `app_route_from_path()` vertaalt het pad terug. De deellink weekplanning blijft op `?r=weekplanning&t=…` (`PLAIN_ROUTES`). `/` toont het overzicht (en stuurt dus naar aanmelden zonder login); elk ander pad buiten `/app` geeft 404. `public/.htaccess` stuurt alles wat geen bestand is naar `index.php`.
 - `public/index.php`: front controller met routetabel `route → methode → [Controller, actie, permissie|'public'|null]`; centrale CSRF-controle op elke POST (fout = 419).
 - `app/Controllers/*`: Auth, Account, Dashboard, Member, Group, Activity, Series, User, Invite, Report, Mail, Coverage. `app/Scope.php`: centrale gegevensscope; `app/Auth.php`: sessie en permissies; verder `SeriesService`, `Coverage`, `Mailer`, `Mailing`, `Invites`, `Guardianship`, `Totp`.
-- **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}`. `Installer::migrate()` loopt één keer per sessie (schemaversie 14): ontbrekende tabellen aanmaken, ontbrekende kolommen toevoegen, opruimmigraties (groepshistoriek, zwemschoolgroepen verwijderen), groepskleuren en het opruimen van verouderde rechten; daarna `syncReferenceData()` voor nieuwe rollen/rechten.
+- **Schema en migraties:** `db/schema.sql` met tokens `{{PK}}`/`{{ENGINE}}`. `Installer::boot()` leest bij elk verzoek de tabel `app_meta` (schemaversie en een vingerafdruk van rollen/rechten); enkel als de schemaversie lager is dan `Installer::SCHEMA` (15) loopt `Installer::migrate()`: ontbrekende tabellen aanmaken, ontbrekende kolommen toevoegen, opruimmigraties (groepshistoriek, zwemschoolgroepen verwijderen), groepskleuren, het opruimen van verouderde rechten en de indexen (`Installer::INDEXES`, `ensureIndexes()`); `syncReferenceData()` loopt enkel als de vingerafdruk van rollen/rechten veranderde. SQLite draait in WAL-modus (`synchronous = NORMAL`).
 - **Vormgeving:** één layout (`layout.php` + `style.css`), ook voor aanmelden, foutpagina's en de deellink.
 - **Kalenderfilter soort:** `?t=<code>` (een `activity_types.code`; onbekende waarde = geen filter) naast de groepsfilter `g`.
 - **Activiteit verwijderen:** `occurrence` met `do=delete` (permissie `activities.write`) roept `SeriesService::erase($id, '', true)` aan: altijd definitief, ook met aanwezigheden; wist `attendance`, `activity_groups`, `absence_reports`, `activity_trainers`, `coverage_alerts`; voor een reeks-training komt er een `activity_series_skips`-rij zodat ze niet terugkomt. Auditlog `DELETE activity`.
@@ -69,17 +69,18 @@ Rollen zijn combineerbaar (trainer die ook lid is). De scope is de unie van de r
 
 ## 7. Beveiliging
 ### Geïmplementeerd
-- `password_hash`, sessieregeneratie bij login, HttpOnly/SameSite-cookie, `cookie_secure` configureerbaar. Enige cookie: `hzs_session` (technisch).
+- `password_hash`, sessieregeneratie bij login, HttpOnly/SameSite-cookie, Secure automatisch over HTTPS (ook achter een proxy, `X-Forwarded-Proto`) of altijd met `cookie_secure`. Enige cookie: `hzs_session` (technisch).
 - CSRF op alle POST-acties; prepared statements; uitvoer-escaping via `e()`; CSP zonder inline scripts of stijl.
 - Permissiecheck per route en gegevensscope in elke query (`Scope`). Leden en gebruikers kunnen definitief verwijderd worden (`Purge`, met auditlog); wie enkel tijdelijk weg is, zet je op inactief.
 - **Login-throttling:** na 5 mislukte pogingen per e-mailadres of 20 per IP-adres binnen 15 minuten volgt een blokkade van 15 minuten (HTTP 429).
-- **Sessie:** verloopt na 12 uur zonder activiteit. **Headers:** `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes `no-store` en `noindex`.
+- **Sessie:** verloopt na 12 uur zonder activiteit en ten laatste 7 dagen na het aanmelden. `users.session_version` stijgt bij een nieuw wachtwoord (zelf, via resetlink of door de beheerder), bij 2FA uitzetten en bij een 2FA-reset door de beheerder: alle andere sessies van die gebruiker zijn dan meteen ongeldig (`Auth::revokeSessions()`); de eigen sessie blijft geldig met een nieuwe sessie-id. **Headers:** `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS bij HTTPS; app-routes `no-store` en `noindex`.
 - Tokens voor uitnodiging (7 dagen) en reset (60 minuten) zijn eenmalig en gehasht bewaard; de iCal-link en de deellink weekplanning zijn herroepbare, willekeurige tokens (de deellink toont geen namen).
-- **Tweestapsverificatie:** TOTP (RFC 6238); `security.require_2fa_admin` dwingt ze af voor beheerders.
+- **Tweestapsverificatie:** TOTP (RFC 6238); verplicht voor beheerders en bestuur (zij zien gegevens van minderjarigen) met `security.require_2fa_admin`; niet ingesteld = verplicht behalve bij verzoeken op localhost.
+- **Database buiten de webmap:** de installer vraagt het pad van het SQLite-bestand; staat het binnen `DOCUMENT_ROOT`, dan krijgen beheerders een waarschuwing (`db_inside_webroot()`). `.htaccess` weigert `.sqlite`, `config.php`, logs en markdown, en de mappen `app/`, `db/`, `docs/`, `storage/`, `tools/`, ook zonder `mod_rewrite`.
 - **Gevoelige gegevens:** medische opmerking en noodcontact enkel met `members.medical`.
 - Kleiner aanvalsoppervlak dan v0.12: geen publieke formulieren, geen uploads, geen publieke pagina's meer.
 ### Voor productie nog te doen
-Afdwingen van 2FA voor beheerders, headers/HSTS ook op serverniveau, back-ups van de database, minimale databaserechten, logging en alerting. Privacy/AVG: bewaartermijnen voor ledengegevens, verwerkersovereenkomsten met hosting en mail, en `privacy_url` naar het privacybeleid op de clubwebsite.
+Headers/HSTS ook op serverniveau, back-ups van de database, minimale databaserechten, logging en alerting. Privacy/AVG: bewaartermijnen voor ledengegevens, verwerkersovereenkomsten met hosting en mail, en `privacy_url` naar het privacybeleid op de clubwebsite.
 ### MySQL-beperking
 Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe query op leden, groepen, activiteiten of aanwezigheid moet `Scope` gebruiken en getest worden met autorisatietests.
 
@@ -100,25 +101,25 @@ Geen Row Level Security: de scope wordt in de querylaag afgedwongen. Elke nieuwe
 - Berichten: max. 400 ontvangers per bericht; een trainer enkel voor zijn eigen groepen.
 
 ## 9. Testaanpak
-End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `v15_verwijderen` (lid, gebruiker en groep definitief verwijderen, rechten, opruimen van gekoppelde gegevens), `smoke` (hoofdpagina's per rol, aanwezigheden verborgen en weer aan te zetten, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) en `v12_trainersplanning` (toegang per rol, groepstrainers als vaste trainers, weekkalender, afmelden met vervanger, geen training en wedstrijd tegelijk, overnemen/inplannen, meerdere tegelijk, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
+End-to-end suite in de repository: `php tests/e2e/run.php` (zie README). Elke suite installeert een verse kopie met SQLite en demodata, start `php -S` en test via HTTP (cookies, CSRF) en de database; PHP-waarschuwingen in het serverlog laten de test falen. Suites: `v15_verwijderen` (lid, gebruiker en groep definitief verwijderen, rechten, opruimen van gekoppelde gegevens), `smoke` (hoofdpagina's per rol, aanwezigheden verborgen en weer aan te zetten, verwijderde adressen geven 404, geen zwemschool meer en verwijdering van bestaande zwemschoolgroepen zonder ledenverlies, menu en formulieren zonder verwijderde onderdelen, geen verwijderde tabellen of rechten in een nieuwe installatie, update van een bestaande database zonder gegevensverlies) `v19_beveiliging` (schemaversie en indexen, upgrade van een oudere database, rechten enkel opnieuw synchroniseren na een codewijziging, WAL, waarschuwing bij database in de webmap, andere sessies afmelden na wachtwoordwijziging/reset/2FA-reset, 2FA verplicht voor bestuur, Secure-cookie over HTTPS) en `v12_trainersplanning` (toegang per rol, groepstrainers als vaste trainers, weekkalender, afmelden met vervanger, geen training en wedstrijd tegelijk, overnemen/inplannen, meerdere tegelijk, minimum, mails en hun ontvangers, automatische herinnering, deellink, opruimen, migratie).
 
 ## 10. Responsive
 De app is gecontroleerd van 320 tot 1920 px (geen horizontale scroll). Het menu klapt in onder 960 px; tabellen worden kaarten op telefoon; formuliervelden zijn 16 px op telefoon (geen zoom op iOS).
 
 ## 11. Deployment en exploitatie
 - Subdomein (bv. app.khzs.be) met HTTPS; webroot naar `public/`.
-- `config.php` buiten versiebeheer; `debug` uit; `cookie_secure` aan; `app_url` en `privacy_url` instellen.
+- `config.php` buiten versiebeheer; `debug` uit; bij SQLite het databasebestand buiten de webmap (README); `app_url` en `privacy_url` instellen.
 - `public/install.php` na installatie verwijderen.
 - Mail instellen (smtp aanbevolen); de herinneringen van de trainersplanning gebruiken dezelfde mail en `app_url`.
 - Dagelijkse back-up van de database; restore testen. De map `storage/` moet schrijfbaar zijn (database, mail, `coverage-last-run`).
 - Na een update: controleer onderaan het menu (beheerder) welke commit draait.
-- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen na goedkeuring); versies in `CHANGELOG.md` (v0.14.0 = deze release, nog op `dev`). Migraties lopen automatisch bij de eerste aanvraag na een update.
+- Releases: `dev` = testversie, `main` = goedgekeurde versie (alleen na goedkeuring); versies in `CHANGELOG.md` (v0.19 = deze release, nog op `dev`). Migraties lopen automatisch bij de eerste aanvraag na een update.
 - Opgelet bij de update van een installatie die nog de publieke website draaide: na v0.13 is er geen website meer op dat adres. Zet de website (hzs-basic) eerst elders online of stuur het domein door.
 
 ## 12. Risico's
 - **Hoog:** een nieuwe query zonder `Scope` kan gegevens lekken (geen RLS).
-- **Middel:** 2FA is optioneel en zonder QR-code; audit enkel op de belangrijkste mutaties; oude tabellen (lidgeld, inschrijvingen, …) blijven met persoonsgegevens in bestaande databases staan tot ze bewust gewist worden.
+- **Middel:** 2FA zonder QR-code; medische opmerking en TOTP-geheim staan onversleuteld in de database; audit enkel op de belangrijkste mutaties; oude tabellen (lidgeld, inschrijvingen, …) blijven met persoonsgegevens in bestaande databases staan tot ze bewust gewist worden.
 - **Laag:** geen offline modus of pushmeldingen.
 
 ## 13. Aanbevolen volgende stappen
-Bewaartermijnen en verwerkersovereenkomsten vastleggen; beslissen of de oude gegevens (inschrijvingen, zwemtestaanvragen, lidgeld, contactberichten, nieuwsbriefabonnees) gewist of geëxporteerd moeten worden; CSV-import van bestaande leden; afdwingen van 2FA en QR-code; een mail wanneer een tekort opgelost is; geautomatiseerde back-up.
+Bewaartermijnen en verwerkersovereenkomsten vastleggen; beslissen of de oude gegevens (inschrijvingen, zwemtestaanvragen, lidgeld, contactberichten, nieuwsbriefabonnees) gewist of geëxporteerd moeten worden; CSV-import van bestaande leden; QR-code voor 2FA; versleuteling van medische opmerking en TOTP-geheim; migratiebestanden en `ON DELETE CASCADE`; CI met PHPStan en de e2e-suite; een mail wanneer een tekort opgelost is; geautomatiseerde back-up.

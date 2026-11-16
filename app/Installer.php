@@ -46,21 +46,93 @@ final class Installer
         }
     }
 
-    /** Schemaversie van deze release; de sessie onthoudt dat de controle gedaan is, zodat ze niet bij elk verzoek loopt. */
-    public const SCHEMA = 14;
+    /** Schemaversie van deze release. De database onthoudt welke versie ze heeft (tabel app_meta). */
+    public const SCHEMA = 15;
+
+    /** Indexen voor de zoekopdrachten die veel lopen (kalender, scope, aanmelden, tokens). naam => [tabel, kolommen] */
+    public const INDEXES = [
+        'idx_activities_starts'   => ['activities', 'starts_at'],
+        'idx_activities_series'   => ['activities', 'series_id'],
+        'idx_actgroups_group'     => ['activity_groups', 'group_id'],
+        'idx_gm_member'           => ['group_memberships', 'member_id'],
+        'idx_gm_group'            => ['group_memberships', 'group_id'],
+        'idx_gt_user'             => ['group_trainers', 'user_id'],
+        'idx_gt_group'            => ['group_trainers', 'group_id'],
+        'idx_guardian_member'     => ['guardian_links', 'member_id'],
+        'idx_tokens_user'         => ['user_tokens', 'user_id, purpose'],
+        'idx_login_email'         => ['login_attempts', 'email, created_at'],
+        'idx_login_ip'            => ['login_attempts', 'ip, created_at'],
+        'idx_login_created'       => ['login_attempts', 'created_at'],
+        'idx_audit_created'       => ['audit_log', 'created_at'],
+        'idx_acttrainers_user'    => ['activity_trainers', 'user_id'],
+        'idx_absence_member'      => ['absence_reports', 'member_id'],
+        'idx_users_ical'          => ['users', 'ical_token'],
+        'idx_groups_share'        => ['`groups`', 'share_token'],
+    ];
 
     /**
-     * Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL), één keer per sessie.
+     * Wordt bij elk verzoek aangeroepen, maar doet normaal maar één kleine query: de schemaversie en de "vingerafdruk"
+     * van rollen/permissies uit app_meta lezen. Enkel als de code nieuwer is dan de database, lopen de upgrades.
+     */
+    public static function boot(): void
+    {
+        $meta = [];
+        try {
+            foreach (Database::all('SELECT k, v FROM app_meta') as $r) {
+                $meta[$r['k']] = $r['v'];
+            }
+        } catch (Throwable $e) {
+            // tabel bestaat nog niet (oudere database): migrate() maakt ze aan
+        }
+        $ref = self::referenceFingerprint();
+        if ((int) ($meta['schema'] ?? 0) >= self::SCHEMA && ($meta['reference'] ?? '') === $ref) {
+            return;
+        }
+        if ((int) ($meta['schema'] ?? 0) < self::SCHEMA) {
+            self::migrate();
+        }
+        self::syncReferenceData();
+        self::setMeta('schema', (string) self::SCHEMA);
+        self::setMeta('reference', $ref);
+    }
+
+    private static function referenceFingerprint(): string
+    {
+        return substr(hash('sha256', json_encode([self::PERMISSIONS, self::ROLES])), 0, 16);
+    }
+
+    public static function setMeta(string $k, string $v): void
+    {
+        if (Database::val('SELECT 1 FROM app_meta WHERE k = ?', [$k])) {
+            Database::exec('UPDATE app_meta SET v = ? WHERE k = ?', [$v, $k]);
+        } else {
+            Database::exec('INSERT INTO app_meta (k, v) VALUES (?, ?)', [$k, $v]);
+        }
+    }
+
+    /** Maakt ontbrekende indexen aan (veilig om opnieuw te doen, op SQLite en MySQL). */
+    public static function ensureIndexes(): void
+    {
+        $mysql = Database::driver() === 'mysql';
+        foreach (self::INDEXES as $name => [$table, $cols]) {
+            try {
+                Database::pdo()->exec(($mysql ? 'CREATE INDEX ' : 'CREATE INDEX IF NOT EXISTS ') . "$name ON $table ($cols)");
+            } catch (Throwable $e) {
+                // bestaat al (MySQL kent geen IF NOT EXISTS) of tabel ontbreekt
+            }
+        }
+    }
+
+    /**
+     * Eenvoudige, draagbare schema-upgrades voor bestaande databases (SQLite en MySQL); loopt enkel als app_meta
+     * een lagere schemaversie heeft dan SCHEMA.
      * Ontbrekende tabellen worden aangemaakt (alles is CREATE TABLE IF NOT EXISTS), ontbrekende kolommen toegevoegd.
      * Tabellen van onderdelen die sinds v0.13 weg zijn (website, lidgeld, inschrijvingen, zwemtest, ...) blijven in een
      * bestaande database staan, met hun gegevens; de app gebruikt ze niet meer.
      */
     public static function migrate(): void
     {
-        if ((int) ($_SESSION['schema'] ?? 0) >= self::SCHEMA) {
-            return;
-        }
-        foreach (['user_tokens', 'login_attempts', 'activity_series', 'activity_series_slots', 'activity_series_groups', 'activity_series_skips', 'member_series',
+        foreach (['app_meta', 'user_tokens', 'login_attempts', 'activity_series', 'activity_series_slots', 'activity_series_groups', 'activity_series_skips', 'member_series',
                   'absence_reports', 'broadcasts', 'series_trainers', 'activity_trainers', 'coverage_alerts'] as $table) {
             try {
                 Database::val("SELECT 1 FROM $table LIMIT 1");
@@ -90,6 +162,7 @@ final class Installer
             ['members', 'emergency_name', 'VARCHAR(120) NULL'], ['members', 'emergency_phone', 'VARCHAR(40) NULL'],
             ['members', 'medical_note', 'VARCHAR(500) NULL'], ['members', 'photo_consent', 'TINYINT NOT NULL DEFAULT 0'],
             ['users', 'ical_token', 'VARCHAR(40) NULL'], ['users', 'totp_secret', 'VARCHAR(64) NULL'], ['users', 'totp_enabled', 'TINYINT NOT NULL DEFAULT 0'],
+            ['users', 'session_version', 'INT NOT NULL DEFAULT 0'],
         ];
         foreach ($cols as [$table, $col, $def]) {
             $t = $table === 'groups' ? '`groups`' : $table;
@@ -132,7 +205,7 @@ final class Installer
             Database::exec('DELETE FROM role_permissions WHERE permission_id = ?', [$p['id']]);
             Database::exec('DELETE FROM permissions WHERE id = ?', [$p['id']]);
         }
-        $_SESSION['schema'] = self::SCHEMA;
+        self::ensureIndexes();
     }
 
     public static function syncReferenceData(): void

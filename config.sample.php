@@ -4,7 +4,7 @@ return [
     'app_name'      => 'HZS Clubapp',
     'timezone'      => 'Europe/Brussels',
     'debug'         => false,   // true toont PHP-fouten (enkel lokaal gebruiken)
-    'cookie_secure' => false,   // true zodra je via HTTPS draait
+    'cookie_secure' => false,   // over HTTPS zet de app het secure-cookie al zelf; true forceert het altijd
 
     // Basisadres van de app, gebruikt in links in e-mails (uitnodigingen, wachtwoord vergeten).
     // Laat leeg om het uit het verzoek af te leiden (enkel lokaal); zet het op de echte URL in productie.
@@ -28,8 +28,9 @@ return [
 
     // Optioneel: link naar de privacyverklaring van de club (onderaan elke pagina van de app).
     'privacy_url' => '',
-    // Beveiliging: true verplicht beheerders om tweestapsverificatie aan te zetten.
-    'security' => ['require_2fa_admin' => false],
+    // Beveiliging: true verplicht beheerders en bestuur om tweestapsverificatie aan te zetten.
+    // Weglaten = verplicht op de server, niet bij lokaal testen (localhost).
+    'security' => ['require_2fa_admin' => true],
     // Onderdelen die voorlopig uit staan; zet op true om ze te gebruiken.
     // attendance = presentielijst bij trainingen, aanwezigheidsrapport en "aanwezigheid nog in te vullen".
     'features' => ['attendance' => false],
@@ -40,6 +41,7 @@ return [
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting
         'driver' => 'sqlite',
+        // Op een server: zet het bestand BUITEN de webmap, bv. '/home/<account>/hzs-data/clubapp.sqlite'.
         'path'   => __DIR__ . '/storage/data/clubapp.sqlite',
 
         // enkel voor mysql:

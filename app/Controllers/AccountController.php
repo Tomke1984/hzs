@@ -34,8 +34,9 @@ final class AccountController
             flash('error', 'De twee nieuwe wachtwoorden komen niet overeen.');
         } else {
             Database::exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($new, PASSWORD_DEFAULT), $u['id']]);
+            Auth::revokeSessions((int) $u['id']);
             audit('PASSWORD', 'user', (int) $u['id']);
-            flash('success', 'Je wachtwoord is gewijzigd.');
+            flash('success', 'Je wachtwoord is gewijzigd. Op andere toestellen moet je opnieuw aanmelden.');
         }
         redirect(url('account'));
     }
@@ -81,6 +82,7 @@ final class AccountController
             flash('error', 'Je wachtwoord klopt niet; tweestapsverificatie blijft aan.');
         } else {
             Database::exec('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [$u['id']]);
+            Auth::revokeSessions((int) $u['id']);
             audit('2FA_OFF', 'user', (int) $u['id']);
             flash('success', 'Tweestapsverificatie is uitgezet.');
         }

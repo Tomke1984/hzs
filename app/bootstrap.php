@@ -39,7 +39,7 @@ set_exception_handler(function (Throwable $e): void {
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('X-Frame-Options: DENY');
-if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || config('cookie_secure', false)) {
+if (is_https() || config('cookie_secure', false)) {
     header('Strict-Transport-Security: max-age=31536000');
 }
 header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; form-action 'self'; frame-ancestors 'none'");
@@ -50,7 +50,7 @@ session_name('hzs_session');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => (bool) config('cookie_secure', false),
+    'secure'   => (bool) config('cookie_secure', false) || is_https(), // over HTTPS altijd een secure cookie
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
@@ -59,8 +59,7 @@ session_start();
 if (config('db') !== null) {
     Database::connect(config('db'));
     try {
-        Installer::migrate();
-        Installer::syncReferenceData(); // nieuwe permissies na een update automatisch bijvullen
+        Installer::boot(); // upgrades en nieuwe permissies enkel als de database achterloopt op de code
     } catch (Throwable $e) {
         // tabellen bestaan nog niet (voor de installatie): negeren
     }

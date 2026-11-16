@@ -293,6 +293,7 @@ $board->post('/app/series-delete', ['id' => $sid]);
 T::ok((int) T::val('SELECT COUNT(*) FROM activity_trainers WHERE activity_id NOT IN (SELECT id FROM activities)') === 0, 'geen verweesde afwijkingen na het verwijderen van een reeks');
 
 echo "Migratie van een bestaande database (v0.11)\n";
+T::oldDatabase();
 foreach (['series_trainers', 'activity_trainers', 'coverage_alerts'] as $t) {
     T::exec("DROP TABLE $t");
 }

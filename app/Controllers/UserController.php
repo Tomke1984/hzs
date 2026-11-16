@@ -215,6 +215,9 @@ final class UserController
             return $id;
         });
 
+        if ($existing && $password !== '') {
+            Auth::revokeSessions((int) $id); // nieuw wachtwoord: bestaande sessies van deze gebruiker vervallen
+        }
         audit($existing ? 'UPDATE' : 'CREATE', 'user', $id, implode(',', $roles));
         if ($existing) {
             flash('success', 'Gebruiker bijgewerkt.' . ($password !== '' ? ' Het wachtwoord is gewijzigd.' : ''));
@@ -237,6 +240,7 @@ final class UserController
             abort(404, 'Gebruiker niet gevonden.');
         }
         Database::exec('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [$id]);
+        Auth::revokeSessions($id);
         audit('2FA_RESET', 'user', $id);
         flash('success', 'Tweestapsverificatie is uitgezet voor deze gebruiker.');
         redirect(url('user_form', ['id' => $id]));

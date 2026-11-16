@@ -52,6 +52,7 @@ foreach (['registrations', 'pages', 'posts', 'dues', 'seasons', 'swimtest_reques
 T::ok(!T::val("SELECT 1 FROM permissions WHERE code IN ('fees.manage','content.manage','registrations.manage','stats.read','export.data')"), 'geen rechten meer voor verwijderde onderdelen');
 
 echo "Bestaande database (v0.12) bijwerken\n";
+T::oldDatabase();
 T::exec("INSERT INTO permissions (code, name) VALUES ('fees.manage', 'Lidgeld')");
 T::exec("INSERT INTO role_permissions (role_id, permission_id) SELECT r.id, p.id FROM roles r, permissions p WHERE r.code = 'BOARD' AND p.code = 'fees.manage'");
 T::exec('CREATE TABLE dues (id INTEGER PRIMARY KEY, member_id INT, amount_cents INT)');
@@ -76,6 +77,7 @@ foreach (['/app/series-week', '/app/series-member-add', '/app/member-days'] as $
 }
 T::ok(!T::val("SELECT 1 FROM `groups` WHERE category <> 'COMPETITION'"), 'demodata: enkel competitiegroepen');
 // Een bestaande database met een zwemschoolgroep (leden, reeks, blokindeling, training met aanwezigheid en afmelding)
+T::oldDatabase();
 $sg = T::pdo();
 T::exec("INSERT INTO `groups` (name, description, category, is_active) VALUES ('Zwemschool Oud', NULL, 'SWIM_SCHOOL', 1)");
 $swimG = (int) $sg->lastInsertId();

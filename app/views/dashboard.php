@@ -1,5 +1,8 @@
 <h1>Welkom, <?= e(Auth::user()['display_name']) ?></h1>
 
+<?php if (!empty($dbExposed)): ?>
+<div class="alert alert-error"><strong>Beveiliging:</strong> het databasebestand staat binnen de webmap van de server. Als de webserver <code>.htaccess</code> negeert, kan iemand de hele ledendatabase downloaden. Verplaats het bestand naar een map buiten de webmap en pas <code>db.path</code> in <code>config.php</code> aan (zie README, “Database buiten de webmap”).</div>
+<?php endif; ?>
 <?php if ($noTfa): ?>
 <div class="alert alert-info">Je account heeft toegang tot persoonsgegevens van minderjarigen. <a href="<?= e(url('account')) ?>#2fa">Zet tweestapsverificatie aan →</a></div>
 <?php endif; ?>

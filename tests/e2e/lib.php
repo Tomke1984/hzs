@@ -77,6 +77,18 @@ final class T
         }
     }
 
+    /**
+     * Doet alsof de database van een oudere versie komt: zonder app_meta (schemaversie) en zonder de indexen van v0.19.
+     * Het volgende verzoek voert dan de upgrades uit, zoals na een update op de server.
+     */
+    public static function oldDatabase(): void
+    {
+        foreach (self::all("SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'idx_%'") as $r) {
+            self::exec('DROP INDEX ' . $r['name']);
+        }
+        self::exec('DROP TABLE IF EXISTS app_meta');
+    }
+
     public static function pdo(): PDO
     {
         static $p = null;
@@ -177,6 +189,10 @@ final class Browser
     public int $status = 0;
     public string $body = '';
     public string $location = '';
+    /** Extra headers bij elk verzoek, bv. ['X-Forwarded-Proto: https']. */
+    public array $headers = [];
+    /** Ruwe Set-Cookie-headers van het laatste antwoord. */
+    public array $setCookies = [];
 
     public static function login(string $email): self
     {
@@ -227,7 +243,8 @@ final class Browser
 
     private function request(string $method, string $path, string $body = ''): self
     {
-        $headers = ['Host: ' . parse_url(T::$base, PHP_URL_HOST) . ':' . parse_url(T::$base, PHP_URL_PORT)];
+        $headers = array_merge(['Host: ' . parse_url(T::$base, PHP_URL_HOST) . ':' . parse_url(T::$base, PHP_URL_PORT)], $this->headers);
+        $this->setCookies = [];
         if ($this->cookies) {
             $headers[] = 'Cookie: ' . implode('; ', array_map(fn($k, $v) => "$k=$v", array_keys($this->cookies), $this->cookies));
         }
@@ -245,6 +262,7 @@ final class Browser
             if (preg_match('#^HTTP/\S+ (\d+)#', $h, $m)) {
                 $this->status = (int) $m[1];
             } elseif (stripos($h, 'Set-Cookie:') === 0 && preg_match('/^Set-Cookie:\s*([^=]+)=([^;]*)/i', $h, $m)) {
+                $this->setCookies[] = $h;
                 if ($m[2] === '' || $m[2] === 'deleted') {
                     unset($this->cookies[$m[1]]);
                 } else {

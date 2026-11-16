@@ -67,6 +67,7 @@ final class Invites
                 Database::exec('UPDATE users SET display_name = ? WHERE id = ?', [$displayName, $found['user_id']]);
             }
             Database::exec('UPDATE user_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL', [now(), $found['user_id']]);
+            Database::exec('UPDATE users SET session_version = session_version + 1 WHERE id = ?', [$found['user_id']]); // andere sessies uit
         });
     }
 

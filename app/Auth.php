@@ -2,6 +2,8 @@
 final class Auth
 {
     private const IDLE_SECONDS = 43200;
+    /** Ook bij dagelijks gebruik: na 7 dagen opnieuw aanmelden. */
+    private const ABSOLUTE_SECONDS = 604800;
     private const MAX_FAILS_PER_EMAIL = 5;
     private const MAX_FAILS_PER_IP = 20;
     private const WINDOW_SECONDS = 900;
@@ -17,17 +19,22 @@ final class Auth
             self::$loaded = true;
             $id = $_SESSION['uid'] ?? null;
             // Sessie verloopt na 12 uur zonder activiteit.
-            if ($id && time() - (int) ($_SESSION['last'] ?? 0) > self::IDLE_SECONDS) {
+            // en ten laatste 7 dagen na het aanmelden.
+            if ($id && (time() - (int) ($_SESSION['last'] ?? 0) > self::IDLE_SECONDS
+                    || time() - (int) ($_SESSION['login_at'] ?? 0) > self::ABSOLUTE_SECONDS)) {
                 unset($_SESSION['uid']);
                 $id = null;
             }
             if ($id) {
                 $_SESSION['last'] = time();
                 $u = Database::one(
-                    'SELECT id, email, display_name, member_id, is_active FROM users WHERE id = ?',
+                    'SELECT id, email, display_name, member_id, is_active, session_version FROM users WHERE id = ?',
                     [(int) $id]
                 );
-                if ($u && (int) $u['is_active'] === 1) {
+                // session_version stijgt bij een nieuw wachtwoord, 2FA uit of een reset door de beheerder:
+                // dan zijn alle andere sessies van die gebruiker meteen ongeldig.
+                if ($u && (int) $u['is_active'] === 1 && (int) $u['session_version'] === (int) ($_SESSION['sv'] ?? -1)) {
+                    unset($u['session_version']);
                     self::$user = $u;
                 } else {
                     unset($_SESSION['uid']);
@@ -83,10 +90,24 @@ final class Auth
         session_regenerate_id(true);
         unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
         $_SESSION['uid'] = $userId;
-        $_SESSION['last'] = time();
+        $_SESSION['last'] = $_SESSION['login_at'] = time();
+        $_SESSION['sv'] = (int) Database::val('SELECT session_version FROM users WHERE id = ?', [$userId]);
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
         self::$loaded = false;
         self::$roles = self::$perms = null;
+    }
+
+    /**
+     * Maakt alle bestaande sessies van een gebruiker ongeldig. Gaat het om de ingelogde gebruiker zelf,
+     * dan blijft de huidige sessie geldig (met een nieuwe sessie-id).
+     */
+    public static function revokeSessions(int $userId): void
+    {
+        Database::exec('UPDATE users SET session_version = session_version + 1 WHERE id = ?', [$userId]);
+        if ((int) ($_SESSION['uid'] ?? 0) === $userId) {
+            session_regenerate_id(true);
+            $_SESSION['sv'] = (int) Database::val('SELECT session_version FROM users WHERE id = ?', [$userId]);
+        }
     }
 
     /** Gebruiker die het wachtwoord al gaf maar nog de tweede stap moet doen (max. 10 minuten geldig). */
@@ -108,11 +129,14 @@ final class Auth
         self::$roles = self::$perms = null;
     }
 
-    /** Beheerders moeten tweestapsverificatie aanzetten als 'security.require_2fa_admin' aan staat. */
+    /**
+     * Beheerders en bestuur moeten tweestapsverificatie aanzetten als 'security.require_2fa_admin' aan staat.
+     * Niet ingesteld = verplicht op de server, niet lokaal (localhost) om testen eenvoudig te houden.
+     */
     public static function mustEnableTwoFactor(): bool
     {
         $u = self::user();
-        if (!$u || !config('security.require_2fa_admin', false) || !self::hasRole('ADMIN')) {
+        if (!$u || !config('security.require_2fa_admin', !is_local_request()) || !(self::hasRole('ADMIN') || self::hasRole('BOARD'))) {
             return false;
         }
         return !(int) Database::val('SELECT totp_enabled FROM users WHERE id = ?', [$u['id']]);

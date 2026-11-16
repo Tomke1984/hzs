@@ -59,10 +59,8 @@ final class ActivityController
             // "mine": hoort bij jou (training/clubactiviteit altijd; wedstrijd enkel voor de eigen groepen)
             $r['mine'] = true;
             if ($r['type_code'] === 'COMPETITION' && $r['audience'] !== 'CLUB' && ($mine || !$clubWide)) {
-                $r['mine'] = $mine && (int) Database::val(
-                    'SELECT COUNT(*) FROM activity_groups WHERE activity_id = ? AND group_id IN (' . Scope::in($mine) . ')',
-                    array_merge([$r['id']], $mine)
-                ) > 0;
+                // groepen van de activiteit zijn al geladen ($evGroups): geen extra query per wedstrijd
+                $r['mine'] = $mine && array_intersect(array_column($evGroups[(int) $r['id']] ?? [], 'id'), $mine) !== [];
             }
             $r['groups'] = $evGroups[(int) $r['id']] ?? [];
             $r['gnames'] = $r['audience'] === 'CLUB' ? 'Hele club' : implode(', ', array_column($r['groups'], 'name'));

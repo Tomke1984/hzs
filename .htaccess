@@ -1,5 +1,9 @@
 # Alle verzoeken gaan naar public/. app/, db/, storage/ en config.php zijn daardoor nooit bereikbaar.
 Options -Indexes
+# Tweede verdedigingslinie (ook als mod_rewrite ontbreekt): gevoelige bestanden nooit uitleveren.
+<FilesMatch "(^config\.php$|^config\.sample\.php$|\.(sqlite|sqlite-wal|sqlite-shm|db|sql|log|md|sh|ps1)$|^\.)">
+  Require all denied
+</FilesMatch>
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^$ public/ [L]

@@ -5,6 +5,16 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_v0.19 – Veiliger en sneller (review senior developer) – commit `COMMIT`_
+
+- **Database buiten de webmap:** de installer vraagt waar het SQLite-bestand moet staan (op een server: buiten `www/`). Staat het toch in de webmap, dan ziet een beheerder een rode waarschuwing op het overzicht. Extra `.htaccess`-regels weigeren `.sqlite`, `config.php`, logs en de mappen `app/`, `db/`, `docs/`, `tools/`, ook als `mod_rewrite` ontbreekt. Uitleg in de README (*Database buiten de webmap*).
+- **Afmelden op andere toestellen:** na een nieuw wachtwoord (zelf, via *Wachtwoord vergeten* of door de beheerder) of het uitzetten/resetten van 2FA zijn alle andere sessies van die gebruiker meteen ongeldig; je huidige sessie blijft. Een sessie verloopt nu ook ten laatste 7 dagen na het aanmelden (naast 12 uur zonder activiteit).
+- **Tweestapsverificatie verplicht voor beheerders én bestuur** op de server (`security.require_2fa_admin`; niet ingesteld = verplicht, behalve lokaal op localhost).
+- **Secure cookie** automatisch over HTTPS (ook achter de proxy van de hosting).
+- **Sneller:** 17 indexen op de veelgebruikte kolommen (kalender, scope, aanmelden, tokens); SQLite in WAL-modus; de schemaversie staat nu in de database (`app_meta`), zodat de upgrades en de controle van rollen/rechten niet meer bij elk verzoek zonder sessie (iCal, deellink, nieuwe bezoekers) lopen; de maandkalender doet geen extra query meer per wedstrijd.
+- Na deze update moet iedereen één keer opnieuw aanmelden.
+- Tests: nieuwe suite `v19_beveiliging` (33 controles); migratietests simuleren een oude database via `T::oldDatabase()` (474 in totaal).
+
 _Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `cb74c97`_
 
 - Ook ouders en zwemmers zien de activiteiten op het overzicht nu standaard als weekkalender (onder de kaart *Volgende training*). De lijst blijft één klik verder.
