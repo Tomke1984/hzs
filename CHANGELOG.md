@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.22 – Ouders passen de gegevens van hun kind aan – commit `HASH`_
+_v0.22 – Ouders passen de gegevens van hun kind aan – commit `bd37cf8`_
 
 - **Ouders** zien op de pagina van hun kind nu ook e-mail, telefoon, adres en noodgegevens, en kunnen die via **Gegevens wijzigen** zelf aanpassen: naam, geboortedatum, e-mail, telefoon, adres, noodcontact en medische opmerking. Groep en status blijven bij het bestuur. Ook bereikbaar via *Gegevens* op de kaart *Volgende training* op het overzicht.
 - **Volwassen leden** met een eigen account kunnen op dezelfde manier hun eigen gegevens aanpassen.
