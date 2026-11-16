@@ -5,11 +5,15 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Docker verwijderd – commit `7b3850c`_
-
-- **Dockerfile** en **`.dockerignore`** weer verwijderd, net als de sectie *Docker* in de README.
+_Niets: `dev` en `main` zijn gelijk._
 
 ## Op main
+
+### v0.21.0 – 2026-11-17 – `75499fb` – Docker verwijderd
+
+#### Docker verwijderd – commit `7b3850c`
+
+- **Dockerfile** en **`.dockerignore`** weer verwijderd, net als de sectie *Docker* in de README.
 
 ### v0.20.0 – 2026-11-17 – `3fdbe0b` – Docker
 
