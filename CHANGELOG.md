@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Fix: aanmelden op de hosting gaf "Forbidden" – commit `HASH`_
+_Fix: aanmelden op de hosting gaf "Forbidden" – commit `fdc0184`_
 
 - Sinds v0.19 stond er een `.htaccess` met *Require all denied* in de map `app/`. Op Apache-hosting waar de hoofdmap de webroot is, leest Apache die vóór de herschrijfregel naar `public/`, en weigert dus elke pagina onder `/app` – ook het overzicht na het aanmelden. Die `.htaccess` is weg (de hoofd-`.htaccess` stuurt nog altijd alles naar `public/`), en `DirectorySlash Off` voorkomt een omweg van `/app` naar `/app/`. Nagekeken op een echte Apache met `AllowOverride All`: aanmelden en `/app/...` werken, `config.php`, de database en `db/`/`docs/` blijven geweigerd.
 - Tests: 2 regressiecontroles in `v19_beveiliging`.
