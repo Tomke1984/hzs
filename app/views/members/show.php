@@ -1,16 +1,14 @@
+<?php
+  // Lege velden: wie mag aanpassen, krijgt een uitnodiging om aan te vullen in plaats van een streepje
+  $fillHref = !empty($canEditOwn) ? url('child_form', ['id' => $member['id']]) : (Auth::can('members.write') ? url('member_form', ['id' => $member['id']]) : null);
+?>
 <div class="row-between">
   <h1><?= e($member['first_name']) ?> <?= e($member['last_name']) ?></h1>
   <?php if (!empty($canEditOwn)): ?>
     <a class="btn btn-ghost" href="<?= e(url('child_form', ['id' => $member['id']])) ?>">Gegevens wijzigen</a>
   <?php endif; ?>
   <?php if (Auth::can('members.write')): ?>
-    <span class="actions-inline">
-      <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
-      <form method="post" action="<?= e(url('member_delete')) ?>" data-confirm="<?= e($member['first_name'] . ' ' . $member['last_name']) ?> definitief verwijderen? Ook de groep, de koppeling met ouders, aanwezigheden en afmeldingen van dit lid verdwijnen. Dit kan je niet ongedaan maken. (Tijdelijk weg? Zet het lid dan op inactief via Wijzigen.)">
-        <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
-        <button class="btn btn-ghost btn-danger" type="submit">Verwijderen</button>
-      </form>
-    </span>
+    <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
   <?php endif; ?>
 </div>
 
@@ -23,17 +21,19 @@
 
 <section class="card">
   <dl class="facts">
-    <dt>Status</dt><dd><span class="chip <?= $member['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $member['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span>
-      <?php if ($member['status'] !== 'ACTIVE' && ($member['status_reason'] || $member['status_date'])): ?> <span class="muted"><?= e(trim((string) $member['status_reason'] . ($member['status_date'] ? ' sinds ' . fmt_date($member['status_date']) : ''))) ?></span><?php endif; ?></dd>
+    <?php if ($member['status'] !== 'ACTIVE'): /* enkel afwijkingen tonen */ ?>
+    <dt>Status</dt><dd><span class="chip off">Inactief</span>
+      <?php if ($member['status_reason'] || $member['status_date']): ?> <span class="muted"><?= e(trim((string) $member['status_reason'] . ($member['status_date'] ? ' sinds ' . fmt_date($member['status_date']) : ''))) ?></span><?php endif; ?></dd>
+    <?php endif; ?>
     <?php if ($member['birth_date']): ?><dt>Geboortedatum</dt><dd><?= e(fmt_date($member['birth_date'])) ?></dd><?php endif; ?>
     <?php if ($showOwnContact): ?>
-      <dt>E-mail</dt><dd><?= e($member['email']) ?: '—' ?></dd>
-      <dt>Telefoon</dt><dd><?= e($member['phone']) ?: '—' ?></dd>
-      <dt>Adres</dt><dd><?= e(trim(($member['street'] ?? '') . ', ' . trim(($member['postal_code'] ?? '') . ' ' . ($member['city'] ?? '')), ', ')) ?: '—' ?></dd>
+      <dt>E-mail</dt><dd><?= e($member['email']) ?: missing_field($fillHref, 'toevoegen') ?></dd>
+      <dt>Telefoon</dt><dd><?= e($member['phone']) ?: missing_field($fillHref, 'toevoegen') ?></dd>
+      <dt>Adres</dt><dd><?= e(trim(($member['street'] ?? '') . ', ' . trim(($member['postal_code'] ?? '') . ' ' . ($member['city'] ?? '')), ', ')) ?: missing_field($fillHref, 'toevoegen') ?></dd>
     <?php endif; ?>
     <?php if ($showMedical && ($canEditOwn || $member['emergency_name'] || $member['emergency_phone'] || $member['medical_note'])): ?>
-      <dt>Noodcontact</dt><dd><?= e(trim((string) $member['emergency_name'] . ' ' . (string) $member['emergency_phone'])) ?: '—' ?></dd>
-      <dt>Medisch</dt><dd><?= e((string) $member['medical_note']) ?: '—' ?></dd>
+      <dt>Noodcontact</dt><dd><?= e(trim((string) $member['emergency_name'] . ' ' . (string) $member['emergency_phone'])) ?: missing_field($fillHref, 'toevoegen', '#nood', true) ?></dd>
+      <dt>Medisch</dt><dd><?= e((string) $member['medical_note']) ?: '<span class="muted">Niets gemeld</span>' ?></dd>
     <?php endif; ?>
   </dl>
 </section>
@@ -41,8 +41,8 @@
 <?php if ($showContact): ?>
 <?php $collapseParents = !$isMinor && !$parents; ?>
 <?php if ($collapseParents): ?>
-<details class="card collapsible">
-  <summary class="btn btn-ghost btn-small">+ Ouder of voogd toevoegen</summary>
+<details class="card collapsible parents-collapsed">
+  <summary class="add-link">+ Ouder of voogd toevoegen</summary>
   <p class="muted small">Dit lid is 18 of ouder. Een ouder of voogd is niet verplicht.</p>
   <div class="row-between">
     <h2>Ouders / voogden</h2>
@@ -236,16 +236,14 @@
   <?php if (!$cur): ?>
     <p class="muted">Nog niet in een groep.</p>
   <?php else: ?>
-    <p><?= Auth::can('groups.read') && Scope::canSeeGroup((int) $cur['group_id'])
-          ? '<a href="' . e(url('group', ['id' => $cur['group_id']])) . '">' . e($cur['group_name']) . '</a>'
-          : e($cur['group_name']) ?></p>
+    <?php if (!($availableGroups && $member['status'] === 'ACTIVE')): ?><p><?= e($cur['group_name']) ?></p><?php endif; ?>
   <?php endif; ?>
 
   <?php if ($availableGroups && $member['status'] === 'ACTIVE'): ?>
-  <form class="inline-form" method="post" action="<?= e(url('member_group')) ?>">
+  <form class="inline-form" method="post" action="<?= e(url('member_group')) ?>" data-autosubmit>
     <?= csrf_field() ?>
     <input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
-    <label><?= $cur ? 'Groep wijzigen' : 'In groep plaatsen' ?>
+    <label><span<?= $cur ? ' class="sr-only"' : '' ?>><?= $cur ? 'Groep' : 'In groep plaatsen' ?></span>
       <select name="group_id">
         <option value="0">— geen groep —</option>
         <?php foreach ($availableGroups as $g): ?>
@@ -256,6 +254,18 @@
     <button class="btn" type="submit">Opslaan</button>
   </form>
   <?php endif; ?>
+  <?php if ($cur && Auth::can('groups.read') && Scope::canSeeGroup((int) $cur['group_id'])): ?>
+    <p class="small"><a href="<?= e(url('group', ['id' => $cur['group_id']])) ?>">Naar de groep <?= e($cur['group_name']) ?> →</a></p>
+  <?php endif; ?>
 </section>
 
-<p><a href="<?= e(url('members')) ?>">← Terug naar de lijst</a></p>
+<?php if (Auth::can('members.write')): ?>
+<details class="danger-zone">
+  <summary><?= e($member['first_name']) ?> definitief verwijderen…</summary>
+  <p class="small">Ook de groep, de koppeling met ouders, aanwezigheden en afmeldingen van dit lid verdwijnen. Tijdelijk weg? Zet het lid dan op <em>Inactief</em> via <a href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>.</p>
+  <form method="post" action="<?= e(url('member_delete')) ?>" data-confirm="<?= e($member['first_name'] . ' ' . $member['last_name']) ?> definitief verwijderen? Dit kan je niet ongedaan maken.">
+    <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
+    <button class="link-danger" type="submit">Verwijderen</button>
+  </form>
+</details>
+<?php endif; ?>

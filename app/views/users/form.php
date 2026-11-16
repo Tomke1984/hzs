@@ -56,7 +56,7 @@
       <option value="">— kies een lid —</option>
       <?php foreach ($members as $m): ?>
         <option value="<?= (int) $m['id'] ?>" <?= (int) $user['member_id'] === (int) $m['id'] ? 'selected' : '' ?>>
-          <?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?= e(member_hint($m)) ?>
+          <?= e($m['first_name']) ?> <?= e($m['last_name']) ?><?= e(member_hint($m)) ?>
         </option>
       <?php endforeach; ?>
     </select>
@@ -73,7 +73,7 @@
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e(url('users')) ?>">Terug naar de lijst</a>
+    <a class="cancel-link" href="<?= e(url('users')) ?>">Annuleren</a>
   </div>
 </form>
 
@@ -93,7 +93,7 @@
       <tbody>
       <?php foreach ($children as $c): ?>
         <tr>
-          <td><a href="<?= e(url('member', ['id' => $c['member_id']])) ?>"><?= e($c['last_name']) ?> <?= e($c['first_name']) ?></a>
+          <td><a href="<?= e(url('member', ['id' => $c['member_id']])) ?>"><?= e($c['first_name']) ?> <?= e($c['last_name']) ?></a>
             <?php if ($c['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></td>
           <td><?php if (Auth::can('users.manage')): ?>
           <div class="rel-edit">
@@ -131,7 +131,7 @@
         <select name="member_id" required>
           <option value="">— kies een lid —</option>
           <?php foreach ($linkableMembers as $m): ?>
-            <option value="<?= (int) $m['id'] ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?= e(member_hint($m)) ?></option>
+            <option value="<?= (int) $m['id'] ?>"><?= e($m['first_name']) ?> <?= e($m['last_name']) ?><?= e(member_hint($m)) ?></option>
           <?php endforeach; ?>
         </select>
       </label>

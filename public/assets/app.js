@@ -185,4 +185,35 @@
     radios.forEach(function (r) { r.addEventListener('change', sync); });
     sync();
   }
+
+  // Formulier met één keuzelijst (bv. groep van een lid): meteen opslaan bij wijziging, de knop verdwijnt
+  document.querySelectorAll('form[data-autosubmit]').forEach(function (f) {
+    f.classList.add('is-auto');
+    f.addEventListener('change', function (ev) { if (ev.target.matches('select')) f.submit(); });
+  });
+
+  // Afmelden: snelle reden aanklikken = typveld leegmaken (en omgekeerd)
+  document.querySelectorAll('.absence-form').forEach(function (f) {
+    var txt = f.querySelector('input[name=reason]');
+    if (!txt) { return; }
+    f.addEventListener('change', function (ev) { if (ev.target.name === 'reason_pick') { txt.value = ''; } });
+    txt.addEventListener('input', function () { f.querySelectorAll('input[name=reason_pick]').forEach(function (r) { r.checked = false; }); });
+  });
+
+  // Afmelden openklappen: "Toch niet" klapt weer dicht (zonder JS blijft die knop verborgen)
+  document.querySelectorAll('[data-close-details]').forEach(function (b) {
+    b.hidden = false;
+    b.addEventListener('click', function () { var d = b.closest('details'); if (d) { d.open = false; } });
+  });
+
+  // Maandkalender op telefoon: bij het openen meteen naar vandaag scrollen (niet bij bladeren of een #anker)
+  (function () {
+    var grid = document.querySelector('[data-scroll-today]');
+    var today = grid && grid.querySelector('.cal-day.is-today');
+    if (!today || location.hash || !window.matchMedia('(max-width: 959px)').matches) { return; }
+    try { if (sessionStorage.getItem('hzs-keep-scroll')) { return; } } catch (e) { /* niets */ }
+    if (document.referrer && new URL(document.referrer).pathname === location.pathname) { return; }
+    var go = function () { today.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); };
+    if (document.readyState === 'complete') { go(); } else { window.addEventListener('load', go, { once: true }); }
+  })();
 })();

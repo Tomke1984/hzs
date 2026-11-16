@@ -25,7 +25,9 @@
     </dd>
   </dl>
   <?php if ($activity['description']): ?><p><?= nl2br(e($activity['description'])) ?></p><?php endif; ?>
-  <?php if (Auth::can('activities.write')): ?>
+  <?php $isPast = $activity['ends_at'] <= now(); ?>
+  <?php if ($isPast): ?><p class="muted small">Deze activiteit is voorbij.</p><?php endif; ?>
+  <?php if (Auth::can('activities.write') && (!$isPast || $activity['status'] === 'CANCELLED')): ?>
   <div class="activity-actions">
   <form method="post" action="<?= e(url('occurrence')) ?>" class="inline-form" <?= $activity['status'] === 'CANCELLED' ? '' : 'data-confirm="Deze activiteit afgelasten? Leden zien ze daarna niet meer in hun kalender."' ?>>
     <?= csrf_field() ?>
@@ -68,7 +70,7 @@
         <?php foreach ($roster as $m):
             $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; ?>
           <tr>
-            <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?><?php if (isset($absences[(int) $m['id']])): ?> <span class="chip warn">Afgemeld</span><?php if ($absences[(int) $m['id']]['reason']): ?> <span class="muted small"><?= e($absences[(int) $m['id']]['reason']) ?></span><?php endif; endif; ?></td>
+            <td><?= e($m['first_name']) ?> <?= e($m['last_name']) ?><?php if (isset($absences[(int) $m['id']])): ?> <span class="chip warn">Afgemeld</span><?php if ($absences[(int) $m['id']]['reason']): ?> <span class="muted small"><?= e($absences[(int) $m['id']]['reason']) ?></span><?php endif; endif; ?></td>
             <?php if (in_array((int) $m['id'], $registrable, true)): ?>
             <?php foreach (['UNKNOWN', 'PRESENT', 'ABSENT'] as $s): ?>
               <td class="center">
@@ -92,38 +94,27 @@
       </div>
     </form>
 
-  <?php else: ?>
-    <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Lid</th><?php if ($attendanceOn): ?><th>Status</th><?php endif; ?><th>Afmelding</th></tr></thead>
-      <tbody>
+  <?php else:
+      // Compacte lijst: eerst de afmeldingen (met reden), dan de anderen; bovenaan de tellers
+      $nAbs = count(array_filter($roster, fn($m) => isset($absences[(int) $m['id']])));
+      usort($roster, fn($x, $y) => (int) isset($absences[(int) $y['id']]) <=> (int) isset($absences[(int) $x['id']]));
+      $canAct = $canAbsence && $activity['status'] === 'PLANNED' && $activity['ends_at'] > now(); ?>
+    <p class="roster-count"><strong><?= count($roster) ?></strong> <?= count($roster) === 1 ? 'deelnemer' : 'deelnemers' ?> · <strong><?= $nAbs ?></strong> afgemeld</p>
+    <ul class="roster-list">
       <?php foreach ($roster as $m):
           $cur = $statusByMember[$m['id']] ?? 'UNKNOWN'; $abs = $absences[(int) $m['id']] ?? null; $mine = in_array((int) $m['id'], $ownIds, true); ?>
-        <tr>
-          <td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
-          <?php if ($attendanceOn): ?><td><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span></td><?php endif; ?>
-          <td>
-            <?php if ($abs): ?><span class="chip warn">Afgemeld</span> <?php if ($abs['reason']): ?><span class="muted small"><?= e($abs['reason']) ?></span> <?php endif; ?><?php endif; ?>
-            <?php if ($mine && $canAbsence): ?>
-              <form class="inline-form" method="post" action="<?= e(url('absence')) ?>">
-                <?= csrf_field() ?>
-                <input type="hidden" name="activity_id" value="<?= (int) $activity['id'] ?>">
-                <input type="hidden" name="member_id" value="<?= (int) $m['id'] ?>">
-                <?php if ($abs): ?>
-                  <input type="hidden" name="do" value="remove">
-                  <button class="btn btn-small btn-ghost" type="submit">Afmelding intrekken</button>
-                <?php else: ?>
-                  <input name="reason" maxlength="200" placeholder="Reden (optioneel)" aria-label="Reden van afwezigheid">
-                  <button class="btn btn-small" type="submit">Kan niet komen</button>
-                <?php endif; ?>
-              </form>
-            <?php endif; ?>
-          </td>
-        </tr>
+        <li class="<?= $abs ? 'is-absent' : '' ?><?= $mine ? ' is-own' : '' ?>">
+          <span class="roster-name"><?= e($m['first_name']) ?> <?= e($m['last_name']) ?></span>
+          <?php if ($attendanceOn): ?><span class="chip att-<?= strtolower($cur) ?>"><?= e(attendance_label($cur)) ?></span><?php endif; ?>
+          <?php if ($mine && $canAct): ?>
+            <span class="roster-act"><?php $absActivityId = (int) $activity['id']; $absMemberId = (int) $m['id']; $absent = $abs; $absBack = null; $absWho = ''; $absLabel = 'Kan niet komen';
+                require APP_ROOT . '/app/views/_absence.php'; ?></span>
+          <?php elseif ($abs): ?>
+            <span class="roster-abs"><span class="chip warn">Afgemeld</span><?php if ($abs['reason']): ?> <span class="muted small"><?= e($abs['reason']) ?></span><?php endif; ?></span>
+          <?php endif; ?>
+        </li>
       <?php endforeach; ?>
-      </tbody>
-    </table>
-    </div>
+    </ul>
     <?php if ($activity['status'] === 'CANCELLED'): ?><p class="muted small">Deze activiteit is geannuleerd<?= $attendanceOn ? '; aanwezigheid kan niet meer geregistreerd worden' : '' ?>.</p><?php endif; ?>
   <?php endif; ?>
 </section>
@@ -137,7 +128,7 @@
     <thead><tr><th>Lid</th><th>Noodcontact</th><th>Medische opmerking</th></tr></thead>
     <tbody>
     <?php foreach ($medical as $m): ?>
-      <tr><td><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></td>
+      <tr><td><?= e($m['first_name']) ?> <?= e($m['last_name']) ?></td>
         <td><?= e(trim(($m['emergency_name'] ?? '') . ' ' . ($m['emergency_phone'] ?? ''))) ?: '—' ?></td>
         <td><?= e($m['medical_note'] ?? '') ?: '—' ?></td></tr>
     <?php endforeach; ?>

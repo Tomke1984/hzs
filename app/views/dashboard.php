@@ -18,24 +18,20 @@
       <?php else: ?>
         <a class="next-when" href="<?= e(url('activity', ['id' => $a['id']])) ?>"><?= e(ucfirst(fmt_date($a['starts_at']))) ?> · <?= e(fmt_time($a['starts_at'])) ?>–<?= e(fmt_time($a['ends_at'])) ?></a>
         <p class="next-what"><?= e($a['title']) ?><?= $a['location'] ? ' · ' . e($a['location']) : '' ?></p>
-        <form class="next-actions" method="post" action="<?= e(url('absence')) ?>">
-          <?= csrf_field() ?>
-          <input type="hidden" name="activity_id" value="<?= (int) $a['id'] ?>">
-          <input type="hidden" name="member_id" value="<?= (int) $m['id'] ?>">
-          <input type="hidden" name="back" value="dashboard">
-          <?php if ($nt['absent']): ?>
-            <span class="chip warn">Afgemeld<?= $nt['absent']['reason'] ? ': ' . e($nt['absent']['reason']) : '' ?></span>
-            <input type="hidden" name="do" value="remove">
-            <button class="btn btn-small btn-ghost" type="submit">Toch aanwezig</button>
-          <?php else: ?>
-            <input name="reason" maxlength="200" placeholder="Reden (optioneel)" aria-label="Reden van afwezigheid">
-            <button class="btn btn-small" type="submit">Afmelden</button>
-          <?php endif; ?>
-        </form>
+        <div class="next-actions">
+          <?php $absActivityId = (int) $a['id']; $absMemberId = (int) $m['id']; $absent = $nt['absent']; $absBack = 'dashboard'; $absWho = ''; $absLabel = 'Afmelden';
+              require __DIR__ . '/_absence.php'; ?>
+        </div>
       <?php endif; ?>
     </article>
   <?php endforeach; ?>
 </section>
+<?php if ($missingEmergency): ?>
+  <p class="alert alert-info reminder">
+    <?php foreach ($missingEmergency as $i => $me): ?><?= $i ? ' · ' : '' ?><a href="<?= e(url('child_form', ['id' => $me['id']])) ?>#nood">Noodcontact voor <?= e($me['first_name']) ?> toevoegen →</a><?php endforeach; ?>
+    <span class="muted small">Zo weet de trainer wie te bellen bij een ongeval.</span>
+  </p>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php if (Auth::can('activities.read')): ?>
@@ -65,6 +61,7 @@
               <?php if ($isShort): ?><span class="short-badge">! <?= $a['short'] === 0 ? 'Geen trainer' : 'Trainer gezocht' ?></span><?php endif; ?>
               <?php if ($a['groups']): ?><span class="week-groups"><?php foreach ($a['groups'] as $g): ?><span><?= group_chip($g) ?></span><?php endforeach; ?></span><?php endif; ?>
               <?php if ($a['location']): ?><span class="week-loc"><?= e($a['location']) ?></span><?php endif; ?>
+              <?php foreach ($own[(int) $a['id']] ?? [] as $o): if ($o['absent']): ?><span class="chip warn"><?= e($o['member']['first_name']) ?> afgemeld</span><?php endif; endforeach; ?>
             </a>
           <?php endforeach; ?>
         </section>
@@ -83,6 +80,12 @@
             <?= $a['type_code'] === 'COMPETITION' ? '<span class="meet-icon" aria-label="Wedstrijd" title="Wedstrijd">🏆</span> ' : '' ?><strong><?= e($a['title']) ?></strong>
           </a>
           <?php if ($a['location']): ?><span class="muted"><?= e($a['location']) ?></span><?php endif; ?>
+          <?php if (!empty($own[(int) $a['id']])): $multi = count($own[(int) $a['id']]) > 1; ?>
+            <span class="up-absence">
+            <?php foreach ($own[(int) $a['id']] as $o): $absActivityId = (int) $a['id']; $absMemberId = (int) $o['member']['id']; $absent = $o['absent']; $absBack = 'dashboard'; $absWho = $multi ? $o['member']['first_name'] : ''; $absLabel = 'Afmelden';
+                require __DIR__ . '/_absence.php'; endforeach; ?>
+            </span>
+          <?php endif; ?>
         </li>
       <?php $prevDay = $d; endforeach; ?>
     </ul>

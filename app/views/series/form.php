@@ -56,6 +56,6 @@
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e($s['id'] ? url('series_show', ['id' => $s['id']]) : url('series')) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e($s['id'] ? url('series_show', ['id' => $s['id']]) : url('series')) ?>">Annuleren</a>
   </div>
 </form>

@@ -54,10 +54,9 @@ $nSelf = count($plan['self']);
   <p class="muted small">Vul het e-mailadres in bij het lid (Wijzigen) of nodig de ouder uit via de ledenpagina.</p>
   <ul class="list">
     <?php foreach ($plan['noEmail'] as $m): ?>
-      <li><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a><span class="muted"><?= e(member_hint($m)) ?></span></li>
+      <li><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['first_name']) ?> <?= e($m['last_name']) ?></a><span class="muted"><?= e(member_hint($m)) ?></span></li>
     <?php endforeach; ?>
   </ul>
 </section>
 <?php endif; ?>
 
-<p><a href="<?= e(url('users', ['tab' => 'members'])) ?>">← Terug naar gebruikers</a></p>

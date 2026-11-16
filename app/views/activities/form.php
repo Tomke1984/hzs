@@ -72,6 +72,6 @@
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e($activity['id'] ? url('activity', ['id' => $activity['id']]) : url('calendar')) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e($activity['id'] ? url('activity', ['id' => $activity['id']]) : url('calendar')) ?>">Annuleren</a>
   </div>
 </form>

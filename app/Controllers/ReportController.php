@@ -68,7 +68,7 @@ final class ReportController
         $members = [];
         foreach ($rows as $r) {
             $m = &$members[$r['id']];
-            $m ??= ['id' => (int) $r['id'], 'name' => $r['last_name'] . ' ' . $r['first_name'], 'group' => $r['group_name'] ?? '—', 'present' => 0, 'absent' => 0, 'last' => null, 'streak' => 0, 'streakOpen' => true];
+            $m ??= ['id' => (int) $r['id'], 'name' => $r['first_name'] . ' ' . $r['last_name'], 'group' => $r['group_name'] ?? '—', 'present' => 0, 'absent' => 0, 'last' => null, 'streak' => 0, 'streakOpen' => true];
             if ($r['status'] === 'PRESENT') {
                 $m['present']++;
                 $m['last'] ??= $r['starts_at'];

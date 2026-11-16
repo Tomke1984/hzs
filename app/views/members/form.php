@@ -78,6 +78,6 @@
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e($member['id'] ? url('member', ['id' => $member['id']]) : url('members')) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e($member['id'] ? url('member', ['id' => $member['id']]) : url('members')) ?>">Annuleren</a>
   </div>
 </form>

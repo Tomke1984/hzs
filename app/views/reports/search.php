@@ -9,7 +9,7 @@
   <p class="card muted">Niets gevonden voor “<?= e($q) ?>”.</p>
 <?php else: ?>
   <?php if ($res['members']): ?><section class="card"><h2>Leden</h2><ul class="list">
-    <?php foreach ($res['members'] as $m): ?><li><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a> <?php if ($m['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
+    <?php foreach ($res['members'] as $m): ?><li><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['first_name']) ?> <?= e($m['last_name']) ?></a> <?php if ($m['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
   <?php if ($res['groups']): ?><section class="card"><h2>Groepen</h2><ul class="list">
     <?php foreach ($res['groups'] as $g): ?><li><a href="<?= e(url('group', ['id' => $g['id']])) ?>"><?= e($g['name']) ?></a> <span class="muted small"><?= e(group_category_label($g['category'])) ?></span></li><?php endforeach; ?></ul></section><?php endif; ?>
   <?php if ($res['activities']): ?><section class="card"><h2>Activiteiten</h2><ul class="list">

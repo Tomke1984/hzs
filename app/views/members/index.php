@@ -12,6 +12,7 @@
   </div>
 <?php endif; ?>
 
+<?php if (!is_family_view()): /* ouders en zwemmers: enkel de eigen kinderen, geen zoeken of filters */ ?>
 <form class="filters" data-auto method="get" action="">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Zoek op naam">
   <select name="status" aria-label="Status">
@@ -23,6 +24,7 @@
   <button class="btn btn-small" type="submit">Zoeken</button>
   <?php if ($cat !== '' || $gid || $q !== '' || $status !== 'ACTIVE'): ?><a href="<?= e(url('members')) ?>">Wis filters</a><?php endif; ?>
 </form>
+<?php endif; ?>
 
 <?php if (!$members): ?>
   <p class="card muted">Geen leden gevonden.</p>
@@ -39,7 +41,7 @@
   <tbody>
   <?php foreach ($members as $m): ?>
     <tr>
-      <td class="col-name"><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['last_name']) ?> <?= e($m['first_name']) ?></a>
+      <td class="col-name"><a href="<?= e(url('member', ['id' => $m['id']])) ?>"><?= e($m['first_name']) ?> <?= e($m['last_name']) ?></a>
         <?php if (in_array((int) $m['id'], $missingIds, true)): ?><span class="chip warn">Ouder ontbreekt</span><?php endif; ?></td>
       <td class="col-groups"><?= implode(', ', array_map('group_chip', $groupsByMember[$m['id']] ?? [])) ?: '<span class="muted">—</span>' ?></td>
       <?php if ($showContact): ?>

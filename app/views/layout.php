@@ -65,13 +65,13 @@
   if (Coverage::canView()) {
       $tabs[] = ['Planning', 'coverage', ['coverage', 'coverage_bulk_form', 'coverage_settings'], '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 17c.4-2 1.8-3.2 3.5-3.2s3.1 1.2 3.5 3.2"/>'];
   } elseif (Auth::can('members.read')) {
-      $tabs[] = [members_label(), 'members', ['members', 'member'], '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>'];
+      $tabs[] = [members_label(), ($single = family_single_member()) ? ['member', ['id' => $single]] : 'members', ['members', 'member', 'child_form'], '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>'];
   }
   $tabBadge = Coverage::canView() ? count(Coverage::shortages()) : 0;
 ?>
 <nav class="tabbar" aria-label="Snelmenu">
   <?php foreach ($tabs as [$tl, $tr, $troutes, $ticon]): $on = in_array($tabCur, $troutes, true); ?>
-    <a class="tab<?= $on ? ' is-active' : '' ?>" href="<?= e(url($tr)) ?>"<?= $on ? ' aria-current="page"' : '' ?>>
+    <a class="tab<?= $on ? ' is-active' : '' ?>" href="<?= e(is_array($tr) ? url($tr[0], $tr[1]) : url($tr)) ?>"<?= $on ? ' aria-current="page"' : '' ?>>
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $ticon ?></svg>
       <span><?= e($tl) ?></span>
       <?php if ($tr === 'coverage' && $tabBadge): ?><span class="tab-badge" aria-label="<?= $tabBadge ?> tekorten"><?= $tabBadge ?></span><?php endif; ?>

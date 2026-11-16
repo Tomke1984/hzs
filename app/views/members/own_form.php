@@ -39,19 +39,18 @@
       <input name="city" value="<?= e((string) ($member['city'] ?? '')) ?>" maxlength="80" autocomplete="address-level2">
     </label>
   </div>
-  <fieldset>
-    <legend>Noodgegevens <span class="muted small">(enkel zichtbaar voor de trainers en het bestuur)</span></legend>
-    <div class="grid2">
+  <h2 class="form-section" id="nood">Noodgegevens</h2>
+  <p class="muted small">Enkel zichtbaar voor de trainers van de groep en het bestuur, om bij een ongeval of incident snel te kunnen handelen. Deze gegevens staan nooit in een export en je kan ze altijd zelf aanpassen of wissen.</p>
+  <div class="grid2">
       <label>Noodcontact (naam) <input name="emergency_name" value="<?= e((string) ($member['emergency_name'] ?? '')) ?>" maxlength="120"></label>
       <label>Noodcontact (telefoon) <input type="tel" name="emergency_phone" value="<?= e((string) ($member['emergency_phone'] ?? '')) ?>" maxlength="40"></label>
     </div>
     <label>Medische opmerking <span class="muted small">(enkel wat een trainer moet weten bij een incident, bv. astma of epilepsie)</span>
       <textarea name="medical_note" rows="2" maxlength="500"><?= e((string) ($member['medical_note'] ?? '')) ?></textarea>
     </label>
-  </fieldset>
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e(url('member', ['id' => $member['id']])) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e(url('member', ['id' => $member['id']])) ?>">Annuleren</a>
   </div>
 </form>

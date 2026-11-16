@@ -421,7 +421,7 @@ function back_url(string $route, array $get): string
         return url('calendar', $ctx);
     }
     return match ($route) {
-        'member' => list_url('members'),
+        'member' => family_single_member() ? url('dashboard') : list_url('members'),
         'member_form', 'member_save', 'child_form', 'child_save' => $id ? url('member', ['id' => $id]) : list_url('members'),
         'group' => list_url('groups'),
         'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : list_url('groups'),
@@ -477,4 +477,29 @@ function group_chip(string $name): string
     $c = group_color_map()[$name] ?? null;
     $dot = $c === null ? '' : '<span class="swatch g-' . (int) $c . '"></span>';
     return $dot . e($name);
+}
+
+/** Leeg veld op een detailpagina: een uitnodiging om aan te vullen (wie mag aanpassen) of een streepje. */
+function missing_field(?string $href, string $verb = 'toevoegen', string $anchor = '', bool $important = false): string
+{
+    if ($href === null) {
+        return '<span class="muted">—</span>';
+    }
+    return '<span class="' . ($important ? 'missing is-important' : 'missing') . '">Nog niet ingevuld · <a href="' . e($href . $anchor) . '">' . e($verb) . '</a></span>';
+}
+
+/** Ouder of zwemmer (geen trainer of beheer): ziet enkel de eigen kinderen of zichzelf. */
+function is_family_view(): bool
+{
+    return Auth::user() !== null && Scope::ownMemberIds() && !Auth::hasRole('TRAINER') && !Auth::can('activities.write') && !Auth::can('members.write');
+}
+
+/** Ouder met precies één kind (of zwemmer met enkel zichzelf): het lid-id, zodat "Mijn kinderen" meteen die pagina opent. */
+function family_single_member(): ?int
+{
+    if (!is_family_view()) {
+        return null;
+    }
+    $ids = Scope::ownMemberIds();
+    return count($ids) === 1 ? (int) $ids[0] : null;
 }

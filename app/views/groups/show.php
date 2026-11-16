@@ -74,7 +74,7 @@
         <?php if (Auth::can('groups.write') && $targets): ?>
         <td class="check-col"><?php if ($ms['status'] === 'ACTIVE'): ?><input type="checkbox" class="member-pick" form="move-form" name="membership_ids[]" value="<?= (int) $ms['membership_id'] ?>" aria-label="Selecteer <?= e($ms['first_name'] . ' ' . $ms['last_name']) ?>"><?php endif; ?></td>
         <?php endif; ?>
-        <td><a href="<?= e(url('member', ['id' => $ms['id']])) ?>"><?= e($ms['last_name']) ?> <?= e($ms['first_name']) ?></a>
+        <td><a href="<?= e(url('member', ['id' => $ms['id']])) ?>"><?= e($ms['first_name']) ?> <?= e($ms['last_name']) ?></a>
           <?php if ($ms['status'] !== 'ACTIVE'): ?><span class="chip off">Inactief</span><?php endif; ?></td>
         <?php if (Auth::can('groups.write')): ?>
         <td class="right">
@@ -119,7 +119,7 @@
         <option value="">— kies een lid —</option>
         <?php foreach ($candidates as $c): ?>
           <?php $blocked = in_array((int) $c['id'], $blockedIds, true); ?>
-          <option value="<?= (int) $c['id'] ?>" <?= $blocked ? 'disabled' : '' ?>><?= e($c['last_name']) ?> <?= e($c['first_name']) ?><?= e(member_hint($c)) ?><?= $blocked ? ' — ouder of voogd ontbreekt' : '' ?></option>
+          <option value="<?= (int) $c['id'] ?>" <?= $blocked ? 'disabled' : '' ?>><?= e($c['first_name']) ?> <?= e($c['last_name']) ?><?= e(member_hint($c)) ?><?= $blocked ? ' — ouder of voogd ontbreekt' : '' ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -128,4 +128,3 @@
   <?php endif; ?>
 </section>
 
-<p><a href="<?= e(url('groups')) ?>">← Terug naar de groepen</a></p>

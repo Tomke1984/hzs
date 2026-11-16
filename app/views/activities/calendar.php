@@ -2,6 +2,15 @@
 $daysInMonth = (int) $first->format('t');
 $offset = (int) $first->format('N') - 1; // maandag = 0
 $todayStr = today();
+// Hint over grijze wedstrijden enkel tonen als er deze maand ook echt zo'n wedstrijd staat
+$hasOther = false;
+foreach ($byDay as $evs) {
+    foreach ($evs as $ev) {
+        $hasOther = $hasOther || !$ev['mine'];
+    }
+}
+// Groepsfilter enkel als er iets te kiezen valt (een ouder met één kind heeft maar één groep)
+$showGroupFilter = count($groupOptions) > 1 || $gid;
 ?>
 <div class="row-between page-head">
   <h1>Kalender</h1>
@@ -22,7 +31,7 @@ $todayStr = today();
 <?php $keep = array_filter(['g' => $gid ?: '', 't' => $type]); ?>
 <form class="filters" data-auto method="get" action="">
   <input type="hidden" name="m" value="<?= e($first->format('Y-m')) ?>">
-  <?= group_filter_fields($cat, $gid, $groupOptions) ?>
+  <?php if ($showGroupFilter): ?><?= group_filter_fields($cat, $gid, $groupOptions) ?><?php endif; ?>
   <select name="t" aria-label="Soort activiteit">
     <option value="">Alle soorten</option>
     <?php foreach ($types as $ty): ?><option value="<?= e($ty['code']) ?>"<?= $type === $ty['code'] ? ' selected' : '' ?>><?= e($ty['name']) ?></option><?php endforeach; ?>
@@ -41,9 +50,7 @@ $todayStr = today();
   <?php if ($first->format('Y-m') !== date('Y-m')): ?><a class="week-now" data-keep-scroll href="<?= e(url('calendar', $keep)) ?>">Naar nu</a><?php endif; ?>
 </div>
 
-<div class="legend"><span class="chip off">Grijs: wedstrijd voor een andere groep</span></div>
-
-<div class="cal-grid" role="grid">
+<div class="cal-grid" role="grid"<?= $first->format('Y-m') === substr($todayStr, 0, 7) ? ' data-scroll-today' : '' ?>>
   <?php foreach (['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'] as $d): ?>
     <div class="cal-head"><?= $d ?></div>
   <?php endforeach; ?>
@@ -54,10 +61,10 @@ $todayStr = today();
       $date = $first->format('Y-m-') . sprintf('%02d', $day);
       $events = $byDay[$date] ?? [];
       $dt = new DateTime($date);
-      $classes = 'cal-day' . ($events ? ' has-events' : '') . ($date === $todayStr ? ' is-today' : ''); ?>
+      $classes = 'cal-day' . ($events ? ' has-events' : '') . ($date === $todayStr ? ' is-today' : '') . ($date < $todayStr ? ' is-past' : ''); ?>
     <div class="<?= $classes ?>">
       <div class="cal-num">
-        <span class="cal-dayname"><?= DAYS_NL_SHORT[(int) $dt->format('N')] ?></span> <?= $day ?>
+        <span class="cal-dayname"><?= DAYS_NL_SHORT[(int) $dt->format('N')] ?></span> <?= $day ?><?php if ($date === $todayStr): ?> <span class="today-chip">Vandaag</span><?php endif; ?>
         <?php if (Auth::can('activities.write')): ?>
           <a class="cal-add" href="<?= e(url('activity_form', ['date' => $date])) ?>" title="Activiteit toevoegen op deze dag" aria-label="Activiteit toevoegen op <?= e(fmt_date($date)) ?>">+</a>
         <?php endif; ?>
@@ -69,13 +76,15 @@ $todayStr = today();
           <?php if (!empty($ev['short'])): ?><span class="short-flag" aria-label="Trainer gezocht">!</span><?php endif; ?><span class="time"><?= e(fmt_time($ev['starts_at'])) ?></span> <?= $ev['type_code'] === 'COMPETITION' ? '<span class="meet-icon" aria-hidden="true">🏆</span>' : '' ?><?= e($ev['title']) ?><?php if ($ev['gnames'] !== ''): ?><span class="grp"><?= e($ev['gnames']) ?></span><?php endif; ?>
         </<?= $ev['open'] ? 'a' : 'span' ?>>
       <?php endforeach; ?>
+      <?php if (!$events && $date === $todayStr): ?><p class="muted small cal-none">Vandaag niets gepland.</p><?php endif; ?>
     </div>
   <?php endfor; ?>
 </div>
 
-<?php if (!empty($legend)): ?>
+<?php if (!empty($legend) || $hasOther): ?>
 <ul class="cal-legend" aria-label="Legende">
-  <?php foreach ($legend as [$lname, $lcol]): ?><li><span class="swatch g-<?= e($lcol) ?>"></span><?= e($lname) ?></li><?php endforeach; ?>
+  <?php foreach ($legend ?? [] as [$lname, $lcol]): ?><li><span class="swatch g-<?= e($lcol) ?>"></span><?= e($lname) ?></li><?php endforeach; ?>
+  <?php if ($hasOther): ?><li><span class="swatch swatch-other"></span>Grijs: wedstrijd voor een andere groep</li><?php endif; ?>
   <?php if (!empty($hasShort)): ?><li><span class="short-flag short-flag-legend" aria-hidden="true">!</span>Trainer gezocht · <a href="<?= e(url('coverage', ['show' => 'problems', 'view' => 'list'])) ?>">trainersplanning</a></li><?php endif; ?>
 </ul>
 <?php endif; ?>

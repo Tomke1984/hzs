@@ -10,7 +10,9 @@ final class DashboardController
         $view = in_array($_GET['view'] ?? '', ['list', 'week'], true) ? $_GET['view'] : ($_SESSION['dashboard_view'] ?? 'week');
         $_SESSION['dashboard_view'] = $view;
         $offset = max(-8, min(52, (int) ($_GET['w'] ?? 0)));
-        $monday = week_monday($offset);
+        // Ouders en zwemmers: de week begint vandaag (rollend), zodat de eerstvolgende dagen altijd in beeld zijn.
+        // Trainers en bestuur houden ma–zo (zelfde week als de trainersplanning).
+        $monday = $family ? date('Y-m-d', strtotime(today() . ' ' . ($offset * 7) . ' days')) : week_monday($offset);
         $byDay = [];
         if (Auth::can('activities.read')) {
             [$sql, $params] = Scope::activityFilter('a');
@@ -78,6 +80,16 @@ final class DashboardController
         }
         $mode = $view;
 
+        // Ouders en zwemmers: per activiteit de eigen kinderen (of jezelf) met afmeldstatus, om meteen te kunnen afmelden.
+        $own = [];
+        if ($family) {
+            $acts = $upcoming;
+            foreach ($byDay as $items) {
+                $acts = array_merge($acts, $items);
+            }
+            $own = self::ownPerActivity($acts);
+        }
+
         // Uitnodigingen die nog niet geactiveerd zijn (actie voor wie gebruikers beheert)
         $pendingInvites = Auth::can('users.manage')
             ? (int) Database::val("SELECT COUNT(*) FROM users WHERE is_active = 1 AND password_hash LIKE '!%'")
@@ -85,13 +97,64 @@ final class DashboardController
 
         $guardianMissing = Auth::can('members.contact') ? Guardianship::missingCount() : 0;
         $nextTrainings = $family ? self::nextTrainings() : [];
+        // Herinnering voor ouders en volwassen leden: noodcontact nog niet ingevuld
+        $missingEmergency = $family ? array_values(array_filter(Database::all(
+            "SELECT * FROM members WHERE status = 'ACTIVE' AND id IN (" . Scope::in(Scope::ownMemberIds()) . ")
+             AND COALESCE(emergency_name, '') = '' AND COALESCE(emergency_phone, '') = '' ORDER BY first_name",
+            Scope::ownMemberIds()
+        ), fn($m) => Guardianship::canEditOwn((int) Auth::user()['id'], $m))) : [];
 
         render('dashboard', array_merge(
-            compact('upcoming', 'pendingInvites', 'guardianMissing', 'mode', 'offset', 'monday', 'byDay', 'family', 'nextTrainings'),
+            compact('upcoming', 'pendingInvites', 'guardianMissing', 'mode', 'offset', 'monday', 'byDay', 'family', 'nextTrainings', 'own', 'missingEmergency'),
             self::coach(),
             self::office(),
             self::coverage()
         ), 'Overzicht');
+    }
+
+    /**
+     * Eigen leden (kinderen of jezelf) per toekomstige training/activiteit, met afmeldstatus.
+     * @param list<array> $acts
+     * @return array<int, list<array{member:array,absent:?array}>> per activiteit-id
+     */
+    private static function ownPerActivity(array $acts): array
+    {
+        $ownIds = Scope::ownMemberIds();
+        if (!$acts || !$ownIds) {
+            return [];
+        }
+        $members = [];
+        foreach (Database::all("SELECT id, first_name FROM members WHERE status = 'ACTIVE' AND id IN (" . Scope::in($ownIds) . ') ORDER BY first_name', $ownIds) as $m) {
+            $members[(int) $m['id']] = $m;
+        }
+        $out = [];
+        foreach ($acts as $a) {
+            $aid = (int) $a['id'];
+            if (isset($out[$aid]) || $a['ends_at'] <= now() || $a['status'] !== 'PLANNED') {
+                continue;
+            }
+            if ($a['audience'] === 'CLUB') {
+                $ids = array_keys($members);
+            } else {
+                $ids = array_map('intval', array_column(Database::all(
+                    'SELECT DISTINCT gm.member_id FROM activity_groups ag JOIN group_memberships gm ON gm.group_id = ag.group_id
+                     WHERE ag.activity_id = ? AND gm.member_id IN (' . Scope::in($ownIds) . ')',
+                    array_merge([$aid], $ownIds)
+                ), 'member_id'));
+            }
+            $absent = [];
+            if ($ids) {
+                foreach (Database::all('SELECT member_id, reason FROM absence_reports WHERE activity_id = ? AND member_id IN (' . Scope::in($ids) . ')', array_merge([$aid], $ids)) as $r) {
+                    $absent[(int) $r['member_id']] = $r;
+                }
+            }
+            foreach ($ids as $mid) {
+                if (isset($members[$mid])) {
+                    $out[$aid][] = ['member' => $members[$mid], 'absent' => $absent[$mid] ?? null];
+                }
+            }
+        }
+        return $out;
     }
 
     /** Trainersplanning competitie: tekorten in de komende 14 dagen en de eigen trainingen van deze week. */

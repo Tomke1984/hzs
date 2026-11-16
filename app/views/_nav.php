@@ -20,7 +20,7 @@ $menu = [
         ['Overzicht', 'dashboard', 'home', null, ['dashboard'], 0],
     ]],
     ['Club', [
-        [members_label(), 'members', 'users', 'members.read', ['members', 'member', 'member_form', 'member_save', 'membership_add', 'membership_move', 'membership_end', 'member_group', 'invite_member', 'invite_parent', 'invite_bulk', 'invite_resend', 'user_child_add', 'user_child_remove', 'user_child_relation'], 0],
+        [members_label(), 'members', 'users', 'members.read', ['members', 'member', 'child_form', 'member_form', 'member_save', 'membership_add', 'membership_move', 'membership_end', 'member_group', 'invite_member', 'invite_parent', 'invite_bulk', 'invite_resend', 'user_child_add', 'user_child_remove', 'user_child_relation'], 0],
         ['Groepen', 'groups', 'groups', 'groups.read', ['groups', 'group', 'group_form', 'group_save', 'group_delete'], 0],
         ['Gebruikers', 'users', 'key', 'users.manage', ['users', 'user_form', 'user_save', 'user_trainer_add', 'user_trainer_remove'], 0],
         ['Auditlog', 'audit', 'shield', 'audit.read', ['audit'], 0],
@@ -41,7 +41,7 @@ $menu = [
     <div class="side-section">
       <?php if ($label): ?><div class="side-label"><?= e($label) ?></div><?php endif; ?>
       <?php foreach ($items as [$text, $route, $icon, , $routes, $count]): $active = in_array($cur, $routes, true); ?>
-        <a class="side-link<?= $active ? ' is-active' : '' ?>" href="<?= e(url($route)) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
+        <a class="side-link<?= $active ? ' is-active' : '' ?>" href="<?= e($route === 'members' && ($single = family_single_member()) ? url('member', ['id' => $single]) : url($route)) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
           <svg class="side-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $icons[$icon] ?></svg>
           <span><?= e($text) ?></span>
           <?php if ($count): ?><span class="badge" aria-label="<?= (int) $count ?> openstaand"><?= (int) $count ?></span><?php endif; ?>

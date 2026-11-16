@@ -169,14 +169,25 @@ final class ActivityController
             flash('success', 'Afmelding ingetrokken.');
             redirect($back);
         }
-        $reason = mb_substr(input('reason'), 0, 200);
+        // Reden: zelf getypt, anders de snelle keuze (Ziek, School, Op reis)
+        $reason = trim(input('reason'));
+        if ($reason === '') {
+            $reason = in_array(input('reason_pick'), ['Ziek', 'School', 'Op reis'], true) ? input('reason_pick') : '';
+        }
+        $reason = mb_substr($reason, 0, 200);
         if (!Database::val('SELECT 1 FROM absence_reports WHERE activity_id = ? AND member_id = ?', [$activity['id'], $mid])) {
             Database::exec(
                 'INSERT INTO absence_reports (activity_id, member_id, reported_by, reason, created_at) VALUES (?,?,?,?,?)',
                 [$activity['id'], $mid, Auth::user()['id'], $reason === '' ? null : $reason, now()]
             );
         }
-        flash('success', 'Afgemeld. De trainer ziet dit bij de aanwezigheden.');
+        $who = (string) Database::val('SELECT first_name FROM members WHERE id = ?', [$mid]);
+        flash('success', sprintf(
+            '%s is afgemeld voor %s. De trainer ziet dit bij de %s.',
+            $who,
+            fmt_date($activity['starts_at']) . ' ' . fmt_time($activity['starts_at']),
+            feature('attendance') ? 'aanwezigheden' : 'training'
+        ));
         redirect($back);
     }
 

@@ -33,6 +33,6 @@
   </fieldset>
   <div class="actions">
     <button class="btn" type="submit">Toepassen</button>
-    <a class="btn btn-ghost" href="<?= e(url('series')) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e(url('series')) ?>">Annuleren</a>
   </div>
 </form>

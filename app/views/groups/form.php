@@ -30,6 +30,6 @@
   </fieldset>
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>
-    <a class="btn btn-ghost" href="<?= e($group['id'] ? url('group', ['id' => $group['id']]) : url('groups')) ?>">Annuleren</a>
+    <a class="cancel-link" href="<?= e($group['id'] ? url('group', ['id' => $group['id']]) : url('groups')) ?>">Annuleren</a>
   </div>
 </form>
