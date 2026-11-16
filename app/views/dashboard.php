@@ -11,7 +11,8 @@
 <section class="next-trainings" aria-label="Volgende training">
   <?php foreach ($nextTrainings as $nt): $a = $nt['activity']; $m = $nt['member']; ?>
     <article class="card next-card<?= $nt['absent'] ? ' is-absent' : '' ?>">
-      <p class="next-label">Volgende training<?= count($nextTrainings) > 1 ? ' · ' . e($m['first_name']) : '' ?></p>
+      <div class="row-between"><p class="next-label">Volgende training<?= count($nextTrainings) > 1 ? ' · ' . e($m['first_name']) : '' ?></p>
+        <a class="small" href="<?= e(url('member', ['id' => $m['id']])) ?>">Gegevens<?= count($nextTrainings) > 1 ? '' : ' van ' . e($m['first_name']) ?> →</a></div>
       <?php if (!$a): ?>
         <p class="muted">Geen training gepland.</p>
       <?php else: ?>

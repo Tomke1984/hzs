@@ -146,8 +146,12 @@ final class MemberController
             );
         }
 
+        // Ouder of volwassen lid zelf: ziet en wijzigt de eigen gegevens (contact, adres, noodgegevens).
+        $canEditOwn = !Auth::can('members.write') && Guardianship::canEditOwn((int) Auth::user()['id'], $member);
+
         render('members/show', [
-            'showMedical' => Auth::can('members.medical'),
+            'canEditOwn' => $canEditOwn,
+            'showMedical' => Auth::can('members.medical') || $canEditOwn,
             'member' => $member,
             'isMinor' => Guardianship::isMinor($member['birth_date']),
             'guardianMissing' => $guardianMissing,
@@ -157,6 +161,7 @@ final class MemberController
             'memberships' => $memberships,
             'availableGroups' => $availableGroups,
             'showContact' => Auth::can('members.contact'),
+            'showOwnContact' => Auth::can('members.contact') || $canEditOwn,
         ], $member['first_name'] . ' ' . $member['last_name']);
     }
 
@@ -266,6 +271,79 @@ final class MemberController
                 : 'Lid toegevoegd. Koppel het lid hieronder aan een groep.');
         }
         redirect(url('member', ['id' => $id]));
+    }
+
+    /** Formulier waarmee een ouder de gegevens van zijn kind (of een volwassen lid zijn eigen gegevens) aanpast. */
+    public static function ownForm(): void
+    {
+        $member = self::loadOwn((int) ($_GET['id'] ?? 0));
+        render('members/own_form', ['member' => $member, 'errors' => []], 'Gegevens wijzigen');
+    }
+
+    public static function ownSave(): void
+    {
+        $member = self::loadOwn((int) input('id', '0'));
+        $fields = ['first_name', 'last_name', 'birth_date', 'email', 'phone', 'street', 'postal_code', 'city', 'emergency_name', 'emergency_phone', 'medical_note'];
+        $data = [];
+        foreach ($fields as $f) {
+            $data[$f] = input($f);
+        }
+        $errors = [];
+        if ($data['first_name'] === '' || $data['last_name'] === '') {
+            $errors[] = 'Voornaam en achternaam zijn verplicht.';
+        }
+        if (mb_strlen($data['first_name']) > 80 || mb_strlen($data['last_name']) > 80) {
+            $errors[] = 'Naam is te lang.';
+        }
+        if ($data['birth_date'] !== '' && (!valid_date($data['birth_date']) || $data['birth_date'] > today())) {
+            $errors[] = 'Geboortedatum is ongeldig.';
+        }
+        // Een kind kan niet "volwassen" gemaakt worden om de koppeling met de ouder te omzeilen: enkel de club past dat aan.
+        if (Guardianship::isMinor($member['birth_date']) && $data['birth_date'] !== (string) $member['birth_date'] && !Guardianship::isMinor($data['birth_date'] ?: null)) {
+            $errors[] = 'Een geboortedatum waardoor je kind 18 of ouder wordt, kan enkel het bestuur aanpassen.';
+        }
+        if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'E-mailadres is ongeldig.';
+        }
+        if (mb_strlen($data['email']) > 190 || mb_strlen($data['phone']) > 40) {
+            $errors[] = 'E-mail of telefoon is te lang.';
+        }
+        if (mb_strlen($data['street']) > 120 || mb_strlen($data['postal_code']) > 10 || mb_strlen($data['city']) > 80) {
+            $errors[] = 'Adres is te lang.';
+        }
+        if (mb_strlen($data['emergency_name']) > 120 || mb_strlen($data['emergency_phone']) > 40 || mb_strlen($data['medical_note']) > 500) {
+            $errors[] = 'Noodcontact of medische opmerking is te lang (opmerking max. 500 tekens).';
+        }
+        if ($errors) {
+            http_response_code(422);
+            render('members/own_form', ['member' => array_merge($member, $data), 'errors' => $errors], 'Gegevens wijzigen');
+            return;
+        }
+        $nullable = fn($v) => $v === '' ? null : $v;
+        $changed = [];
+        foreach ($fields as $f) {
+            if ((string) ($member[$f] ?? '') !== $data[$f]) {
+                $changed[] = $f;
+            }
+        }
+        Database::exec(
+            'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?',
+            [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']),
+                $nullable($data['postal_code']), $nullable($data['city']), $nullable($data['emergency_name']), $nullable($data['emergency_phone']), $nullable($data['medical_note']), $member['id']]
+        );
+        audit('UPDATE_OWN', 'member', (int) $member['id'], $changed ? 'gewijzigd: ' . implode(', ', $changed) : 'geen wijzigingen');
+        flash('success', $changed ? 'Gegevens opgeslagen.' : 'Er was niets gewijzigd.');
+        redirect(url('member', ['id' => $member['id']]));
+    }
+
+    /** Lid laden voor de ouder (of het volwassen lid zelf); anders 404. */
+    private static function loadOwn(int $id): array
+    {
+        $member = $id ? Database::one('SELECT * FROM members WHERE id = ?', [$id]) : null;
+        if (!$member || !Guardianship::canEditOwn((int) Auth::user()['id'], $member)) {
+            abort(404, 'Dit lid bestaat niet of je kan de gegevens niet aanpassen.');
+        }
+        return $member;
     }
 
     /**

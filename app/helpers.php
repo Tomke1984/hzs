@@ -49,7 +49,7 @@ const PLAIN_ROUTES = ['weekplanning'];
  */
 const APP_PATHS = [
     'dashboard' => ['app'],
-    'members' => ['app/leden'], 'member' => ['app/leden/{id}'], 'member_form' => ['app/leden/{id}/wijzigen', 'app/leden/nieuw'],
+    'members' => ['app/leden'], 'member' => ['app/leden/{id}'], 'member_form' => ['app/leden/{id}/wijzigen', 'app/leden/nieuw'], 'child_form' => ['app/leden/{id}/mijn-gegevens'],
     'groups' => ['app/groepen'], 'group' => ['app/groepen/{id}'], 'group_form' => ['app/groepen/{id}/wijzigen', 'app/groepen/nieuw'],
     'users' => ['app/gebruikers'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
     'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
@@ -422,7 +422,7 @@ function back_url(string $route, array $get): string
     }
     return match ($route) {
         'member' => list_url('members'),
-        'member_form', 'member_save' => $id ? url('member', ['id' => $id]) : list_url('members'),
+        'member_form', 'member_save', 'child_form', 'child_save' => $id ? url('member', ['id' => $id]) : list_url('members'),
         'group' => list_url('groups'),
         'group_form', 'group_save' => $id ? url('group', ['id' => $id]) : list_url('groups'),
         'user_form', 'user_save', 'invite_bulk' => list_url('users'),

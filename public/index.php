@@ -22,6 +22,9 @@ $routes = [
     'member_form'      => ['GET' => ['MemberController', 'form', 'members.write']],
     'member_save'      => ['POST' => ['MemberController', 'save', 'members.write']],
     'member_delete'    => ['POST' => ['MemberController', 'delete', 'members.write']],
+    // Ouders (en volwassen leden) passen zelf de gegevens van hun kind (of zichzelf) aan; de controller controleert de koppeling.
+    'child_form'       => ['GET' => ['MemberController', 'ownForm', 'members.read']],
+    'child_save'       => ['POST' => ['MemberController', 'ownSave', 'members.read']],
 
     'groups'           => ['GET' => ['GroupController', 'index', 'groups.read']],
     'group'            => ['GET' => ['GroupController', 'show', 'groups.read']],

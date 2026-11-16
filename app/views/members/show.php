@@ -1,5 +1,8 @@
 <div class="row-between">
   <h1><?= e($member['first_name']) ?> <?= e($member['last_name']) ?></h1>
+  <?php if (!empty($canEditOwn)): ?>
+    <a class="btn btn-ghost" href="<?= e(url('child_form', ['id' => $member['id']])) ?>">Gegevens wijzigen</a>
+  <?php endif; ?>
   <?php if (Auth::can('members.write')): ?>
     <span class="actions-inline">
       <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
@@ -23,12 +26,12 @@
     <dt>Status</dt><dd><span class="chip <?= $member['status'] === 'ACTIVE' ? 'ok' : 'off' ?>"><?= $member['status'] === 'ACTIVE' ? 'Actief' : 'Inactief' ?></span>
       <?php if ($member['status'] !== 'ACTIVE' && ($member['status_reason'] || $member['status_date'])): ?> <span class="muted"><?= e(trim((string) $member['status_reason'] . ($member['status_date'] ? ' sinds ' . fmt_date($member['status_date']) : ''))) ?></span><?php endif; ?></dd>
     <?php if ($member['birth_date']): ?><dt>Geboortedatum</dt><dd><?= e(fmt_date($member['birth_date'])) ?></dd><?php endif; ?>
-    <?php if ($showContact): ?>
+    <?php if ($showOwnContact): ?>
       <dt>E-mail</dt><dd><?= e($member['email']) ?: '—' ?></dd>
       <dt>Telefoon</dt><dd><?= e($member['phone']) ?: '—' ?></dd>
       <dt>Adres</dt><dd><?= e(trim(($member['street'] ?? '') . ', ' . trim(($member['postal_code'] ?? '') . ' ' . ($member['city'] ?? '')), ', ')) ?: '—' ?></dd>
     <?php endif; ?>
-    <?php if ($showMedical && ($member['emergency_name'] || $member['emergency_phone'] || $member['medical_note'])): ?>
+    <?php if ($showMedical && ($canEditOwn || $member['emergency_name'] || $member['emergency_phone'] || $member['medical_note'])): ?>
       <dt>Noodcontact</dt><dd><?= e(trim((string) $member['emergency_name'] . ' ' . (string) $member['emergency_phone'])) ?: '—' ?></dd>
       <dt>Medisch</dt><dd><?= e((string) $member['medical_note']) ?: '—' ?></dd>
     <?php endif; ?>

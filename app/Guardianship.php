@@ -18,6 +18,19 @@ final class Guardianship
         return $birthDate !== null && $birthDate !== '' && valid_date($birthDate) && $birthDate > self::cutoff();
     }
 
+    /**
+     * Mag deze gebruiker de gegevens van dit lid zelf aanpassen? Ja voor een gekoppelde ouder/voogd,
+     * en voor een volwassen lid dat zijn eigen account heeft.
+     */
+    public static function canEditOwn(int $userId, array $member): bool
+    {
+        if (Database::val('SELECT 1 FROM guardian_links WHERE user_id = ? AND member_id = ?', [$userId, (int) $member['id']])) {
+            return true;
+        }
+        return !self::isMinor($member['birth_date'] ?? null)
+            && (bool) Database::val('SELECT 1 FROM users WHERE id = ? AND member_id = ?', [$userId, (int) $member['id']]);
+    }
+
     public static function count(int $memberId): int
     {
         return (int) Database::val('SELECT COUNT(*) FROM guardian_links WHERE member_id = ?', [$memberId]);
