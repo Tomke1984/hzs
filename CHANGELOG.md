@@ -5,7 +5,13 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.23 – UX-analyse ronde 2 – commit `8209323`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.22.0 – 2026-11-17 – `d9ae867` – ouders passen gegevens aan, fix voor Apache-hosting en UX-analyse ronde 2
+
+#### v0.23 – UX-analyse ronde 2 – commit `8209323`
 
 - **Ouders en zwemmers, overzicht:** de weekkalender begint vandaag (altijd de komende 7 dagen in beeld, ook midden in de week). In de *Lijst* kan je ook voor latere trainingen meteen afmelden, per kind. *Afmelden* vraagt pas na de tik een reden: *Ziek*, *School*, *Op reis* of zelf typen (optioneel), met *Toch niet* om terug te gaan. De melding zegt nu *Lucas is afgemeld voor ma 23 nov 18:00. De trainer ziet dit bij de training.* (en verwijst niet meer naar de verborgen aanwezigheden).
 - **Noodcontact:** zolang het ontbreekt, staat er op het overzicht een herinnering met een link; op de kindpagina staat *Nog niet ingevuld · toevoegen*. Het formulier heeft een duidelijke tussentitel *Noodgegevens* met een korte privacyzin (wie ziet dit en waarvoor).
@@ -15,19 +21,17 @@ _v0.23 – UX-analyse ronde 2 – commit `8209323`_
 - **Consistentie:** een lid verwijderen zit nu ook in een ingeklapte gevarenzone onderaan (zoals bij een activiteit); *Terug* staat er nog maar één keer (ook op de groeps- en uitnodigingspagina); *Annuleren* is in alle formulieren een link naast *Opslaan*; namen staan overal als *voornaam achternaam* (lijsten blijven op achternaam gesorteerd); de groep van een lid wijzig je met de keuzelijst, die meteen opslaat; *+ Ouder of voogd toevoegen* is een link in plaats van een losse kaart.
 - Tests: nieuwe suite `v23_ux2` (29 controles); alle suites geslaagd (526 controles).
 
-_Fix: aanmelden op de hosting gaf "Forbidden" – commit `fdc0184`_
+#### Fix: aanmelden op de hosting gaf "Forbidden" – commit `fdc0184`
 
 - Sinds v0.19 stond er een `.htaccess` met *Require all denied* in de map `app/`. Op Apache-hosting waar de hoofdmap de webroot is, leest Apache die vóór de herschrijfregel naar `public/`, en weigert dus elke pagina onder `/app` – ook het overzicht na het aanmelden. Die `.htaccess` is weg (de hoofd-`.htaccess` stuurt nog altijd alles naar `public/`), en `DirectorySlash Off` voorkomt een omweg van `/app` naar `/app/`. Nagekeken op een echte Apache met `AllowOverride All`: aanmelden en `/app/...` werken, `config.php`, de database en `db/`/`docs/` blijven geweigerd.
 - Tests: 2 regressiecontroles in `v19_beveiliging`.
 
-_v0.22 – Ouders passen de gegevens van hun kind aan – commit `bd37cf8`_
+#### v0.22 – Ouders passen de gegevens van hun kind aan – commit `bd37cf8`
 
 - **Ouders** zien op de pagina van hun kind nu ook e-mail, telefoon, adres en noodgegevens, en kunnen die via **Gegevens wijzigen** zelf aanpassen: naam, geboortedatum, e-mail, telefoon, adres, noodcontact en medische opmerking. Groep en status blijven bij het bestuur. Ook bereikbaar via *Gegevens* op de kaart *Volgende training* op het overzicht.
 - **Volwassen leden** met een eigen account kunnen op dezelfde manier hun eigen gegevens aanpassen.
 - Beveiliging: enkel voor het eigen kind (of jezelf); een geboortedatum waardoor een kind 18+ wordt, kan enkel het bestuur invullen; elke wijziging staat in het auditlog met de gewijzigde velden.
 - Tests: nieuwe suite `v22_ouders` (20 controles).
-
-## Op main
 
 ### v0.21.0 – 2026-11-17 – `75499fb` – Docker verwijderd
 
