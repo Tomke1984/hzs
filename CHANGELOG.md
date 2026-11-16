@@ -5,12 +5,22 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Bladeren zonder naar boven te springen – commit `d830b73`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.19.0 – 2026-11-16 – `bc63da9` – minimale competitie-app met trainersplanning, nieuwe kalenderweergaven, UX en beveiliging
+
+Samenvatting: de app is teruggebracht tot een minimale competitie-app (geen website, lidgeld, inschrijvingen, zwemtest of zwemschool meer; aanwezigheden verborgen) met een volledige **trainersplanning** (groepstrainers als vaste trainers, afmelden met vervanger, niet op training en wedstrijd tegelijk, mails bij tekorten, meerdere tegelijk), **weekkalender** als standaard, overzicht per rol, definitief verwijderen van leden, gebruikers, groepen en activiteiten, en een beveiligingsronde. **Let op bij de update:** neem eerst een back-up van de database; bestaande zwemschoolgroepen en de gegevens van verwijderde modules worden bij de eerste aanvraag opgeruimd; iedereen moet één keer opnieuw aanmelden; beheerders en bestuur moeten tweestapsverificatie instellen.
+
+Details (nieuwste eerst):
+
+#### Bladeren zonder naar boven te springen – commit `d830b73`
 
 - In de weekkalender (overzicht en trainersplanning) en de maandkalender blijf je bij ‹ ›, *Naar nu* en *Week*/*Lijst* op dezelfde hoogte op de pagina, in plaats van telkens naar boven te springen (vooral op telefoon storend).
 - Tests: 2 extra controles in `v18_ux`.
 
-_v0.19 – Veiliger en sneller (review senior developer) – commit `36da600`_
+#### v0.19 – Veiliger en sneller (review senior developer) – commit `36da600`
 
 - **Database buiten de webmap:** de installer vraagt waar het SQLite-bestand moet staan (op een server: buiten `www/`). Staat het toch in de webmap, dan ziet een beheerder een rode waarschuwing op het overzicht. Extra `.htaccess`-regels weigeren `.sqlite`, `config.php`, logs en de mappen `app/`, `db/`, `docs/`, `tools/`, ook als `mod_rewrite` ontbreekt. Uitleg in de README (*Database buiten de webmap*).
 - **Afmelden op andere toestellen:** na een nieuw wachtwoord (zelf, via *Wachtwoord vergeten* of door de beheerder) of het uitzetten/resetten van 2FA zijn alle andere sessies van die gebruiker meteen ongeldig; je huidige sessie blijft. Een sessie verloopt nu ook ten laatste 7 dagen na het aanmelden (naast 12 uur zonder activiteit).
@@ -20,12 +30,12 @@ _v0.19 – Veiliger en sneller (review senior developer) – commit `36da600`_
 - Na deze update moet iedereen één keer opnieuw aanmelden.
 - Tests: nieuwe suite `v19_beveiliging` (33 controles); migratietests simuleren een oude database via `T::oldDatabase()` (474 in totaal).
 
-_Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `cb74c97`_
+#### Overzicht: weekkalender ook standaard voor ouders en zwemmers – commit `cb74c97`
 
 - Ook ouders en zwemmers zien de activiteiten op het overzicht nu standaard als weekkalender (onder de kaart *Volgende training*). De lijst blijft één klik verder.
 - Test `v18_ux` hangt niet meer af van de weekdag waarop hij loopt.
 
-_v0.18 – UX-advies front-end doorgevoerd – commit `8fd9f7f`_
+#### v0.18 – UX-advies front-end doorgevoerd – commit `8fd9f7f`
 
 - **Overzicht per rol.** Ouders en zwemmers: bovenaan *Volgende training* per kind met meteen *Afmelden* / *Toch aanwezig*, daaronder de komende activiteiten als lijst (standaard). Trainers en bestuur: weekkalender en *Waar is actie nodig* (tekorten, afmeldingen van zwemmers, niet-geactiveerde uitnodigingen, minderjarigen zonder ouder) in plaats van de tegels met aantallen.
 - **Weekkalender kijkt vooruit:** op zaterdag en zondag toont hij de volgende week. Compacte navigatie ‹ 16–22 nov › met *Naar nu*; dagkoppen als "ma 16"; datums zonder jaartal als het dit jaar is.
@@ -36,75 +46,75 @@ _v0.18 – UX-advies front-end doorgevoerd – commit `8fd9f7f`_
 - **Mobiel:** vaste tabbalk onderaan (Overzicht, Kalender, Planning of Leden, Menu, met teller); compacte ledenlijst (naam, groep, ouder; status enkel als die afwijkt); filters passen meteen toe en staan naast elkaar; geen schaduwrand meer links.
 - Tests: nieuwe suite `v18_ux` (28 controles), bestaande suites aangepast (441 in totaal).
 
-_Clubkampioenschap terug in de trainersplanning – commit `0600c9a`_
+#### Clubkampioenschap terug in de trainersplanning – commit `0600c9a`
 
 - Wedstrijden voor de hele club (zoals het clubkampioenschap) staan weer in de trainersplanning, met de vinkjes om meerdere trainers in te plannen. Enkel **clubactiviteiten** (samenkomst, pastadag, teambuilding, …) vragen geen trainers; die stonden er al niet in. Dit draait het tweede punt van de vorige versie terug.
 
-_Meerdere trainers per wedstrijd, geen trainers voor clubactiviteiten – commit `57da167`_
+#### Meerdere trainers per wedstrijd, geen trainers voor clubactiviteiten – commit `57da167`
 
 - **Wedstrijd:** *Trainers toevoegen* toont nu een lijst met vinkjes; vink iedereen aan die meegaat en klik *Inplannen*. Wie al ingepland is of op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. De knop voor jezelf heet bij een wedstrijd *Ik ga mee*.
 - **Activiteiten voor de hele club** (zoals het clubkampioenschap) staan niet meer in de trainersplanning en tellen niet meer als tekort (geen rode markering, geen mails). Clubactiviteiten stonden er al niet in.
 - Tests: 8 extra controles (413 in totaal).
 
-_Kalender: filter op soort activiteit – commit `25ceabf`_
+#### Kalender: filter op soort activiteit – commit `25ceabf`
 
 - In de kalender kan je naast de groep nu ook filteren op **soort**: Training, Wedstrijd of Clubactiviteit. De filter blijft behouden bij *Vorige*/*Volgende*; *Wis filter* zet alles terug.
 - Tests: 5 extra controles in `smoke` (405 in totaal).
 
-_Activiteiten verwijderen – commit `14d1e46`_
+#### Activiteiten verwijderen – commit `14d1e46`
 
 - **Nieuwe rode knop *Verwijderen*** op de activiteitspagina (naast *Schrappen*), voor wie activiteiten mag beheren. Na bevestiging is de activiteit definitief weg, ook als er al aanwezigheden geregistreerd waren; afmeldingen en trainersplanning ervan worden mee gewist. Een training uit een reeks komt niet terug bij het bijwerken van de reeks. *Schrappen* werkt zoals voorheen.
 - Knoppen op de activiteitspagina netjes onder de gegevens; groepsblokjes buiten de kalenderlegende weer vol gekleurd.
 - Tests: 8 extra controles in `v15_verwijderen` (400 in totaal).
 
-_Kalender: legende in dezelfde kleuren – commit `988daad`_
+#### Kalender: legende in dezelfde kleuren – commit `988daad`
 
 - De legende onder de maandkalender gebruikt nu dezelfde lichte tint met gekleurde rand als de activiteiten (en hetzelfde geel voor wedstrijden).
 
-_Kalender: lichtere groepskleuren – commit `21df560`_
+#### Kalender: lichtere groepskleuren – commit `21df560`
 
 - In de maandkalender zijn de activiteiten nu licht getint in de groepskleur met een gekleurde rand links en donkere tekst, in plaats van een vol gekleurd vlak. Tekorten (rood met `!`) springen zo duidelijk in het oog. Wedstrijden houden hun gele rand; activiteiten van andere groepen en geschrapte activiteiten zijn lichtgrijs.
 
-_Tekorten beter zichtbaar – commit `50a725d`_
+#### Tekorten beter zichtbaar – commit `50a725d`
 
 - **Kalender (maand):** een training of wedstrijd zonder genoeg trainers is nu een rood vlak met `!` in plaats van enkel een rode rand.
 - **Weekkalenders en lijst:** volledig rood kader, rode achtergrond en een rood label *Geen trainer* / *Trainer gezocht*.
 - **Overzicht:** de weekkalender toont tekorten nu ook (voor trainers en coördinator); klik opent de trainerskaart.
 - Tests: 1 extra controle (392 in totaal).
 
-_Overzicht: kalender bovenaan – commit `f93ec13`_
+#### Overzicht: kalender bovenaan – commit `f93ec13`
 
 - Op het overzicht staat het blok met de activiteiten (weekkalender of lijst) nu bovenaan; *Trainer gezocht* en *Jij geeft training* komen eronder.
 
-_Weekkalender is de standaardweergave – commit `e4c3106`_
+#### Weekkalender is de standaardweergave – commit `e4c3106`
 
 - Het overzicht en de trainersplanning openen standaard als **weekkalender**; de lijst blijft één klik verder. Wie de lijst kiest, houdt die zolang hij aangemeld is. De knop *Weekkalender* staat nu eerst.
 - Tests: 2 extra controles (391 in totaal).
 
-_Eigen trainingen gemarkeerd – commit `72db314`_
+#### Eigen trainingen gemarkeerd – commit `72db314`
 
 - **De trainingen van de aangemelde trainer vallen op** met een blauwe rand, lichtblauwe achtergrond en het label *Jij geeft training* (bij een wedstrijd *Jij gaat mee*; in de weekkalender kort *Jij*). Dit geldt in de trainersplanning (lijst en weekkalender) en op het overzicht (lijst en weekkalender). Wie afgemeld is of op wedstrijd staat, wordt niet gemarkeerd.
 - Test voor de automatische herinnering hangt niet meer af van de weekdag waarop hij loopt.
 - Tests: 4 extra controles (389 in totaal).
 
-_Overzicht als weekkalender – commit `e54ede9`_
+#### Overzicht als weekkalender – commit `e54ede9`
 
 - **Op het overzicht (startpagina) kan je de activiteiten nu als Lijst of als Weekkalender bekijken**, net als in de trainersplanning. De weekkalender toont maandag tot zondag met uur, soort, groep en locatie; bladeren met *Vorige* en *Volgende*; de keuze wordt onthouden. Werkt voor iedereen, ook ouders (enkel hun eigen groepen).
 - Weeknavigatie op telefoon compacter (ook in de trainersplanning).
 - Tests: 4 extra controles (385 in totaal).
 
-_Trainersplanning als weekkalender – commit `f3e7bc5`_
+#### Trainersplanning als weekkalender – commit `f3e7bc5`
 
 - **Wisselen tussen Lijst en Weekkalender** (knoppen rechtsboven in de trainersplanning; de app onthoudt je keuze). De weekkalender toont maandag tot zondag naast elkaar, met per training of wedstrijd het uur, *In orde* / *Trainer gezocht* en de trainers (afgemeld of op wedstrijd doorstreept). Bladeren met *Vorige* en *Volgende*.
 - Klik op een training in de weekkalender om je af te melden, over te nemen of iemand in te plannen. Op telefoon staan de dagen onder elkaar.
 - Tests: 6 extra controles (381 in totaal).
 
-_Groepenoverzicht toont de vaste trainers – commit `57d58aa`_
+#### Groepenoverzicht toont de vaste trainers – commit `57d58aa`
 
 - Elke groepskaart in *Groepen* toont de vaste trainer(s) van de groep (de groepstrainers die standaard training geven), of *Geen trainer* als er nog niemand is.
 - Tests: 1 extra controle in `v12_trainersplanning` (375 in totaal).
 
-_Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedstrijd tegelijk – commit `75ede6b`_
+#### Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedstrijd tegelijk – commit `75ede6b`
 
 - **De trainers van een groep zijn de vaste trainers** van alle trainingen van die groep (aanpassen via *Groep wijzigen*). De aparte instelling *vaste trainer per blok* is weg; *Vaste trainers en instellingen* toont per groep de trainers en het minimum.
 - **Afmelden vraagt een vervanger** als er anders een tekort is: kies wie overneemt, of *Nog geen vervanger – trainer gezocht* (dan gaat er meteen een mail naar de collega's). Ook bij *Meerdere tegelijk*.
@@ -112,41 +122,41 @@ _Vaste trainers = groepstrainers, vervanger verplicht, niet op training en wedst
 - De coördinator ziet nu alle groepen in kalender en activiteiten.
 - Tests: `v12_trainersplanning` herschreven (67 controles, 374 in totaal).
 
-_Meerdere tegelijk: duidelijkere werkwijze – commit `7b6eacd`_
+#### Meerdere tegelijk: duidelijkere werkwijze – commit `7b6eacd`
 
 - **Bulk toewijzen herwerkt** tot een aparte pagina *Meerdere trainingen tegelijk* (knop bovenaan de trainersplanning) met 3 stappen: 1) trainer en actie (inplannen of afmelden), 2) groep, dag en periode, 3) een lijst met wat er verandert, vooraf aangevinkt, met één knop "X inplannen voor N trainingen". Trainingen waar niets verandert staan grijs met de reden.
 - De vinkjes per kaart en het bulkvak in de gewone trainersplanning zijn weg. Werkt ook op telefoon.
 
-_Reeksen importeren weer verwijderd – commit `79b3156`_
+#### Reeksen importeren weer verwijderd – commit `79b3156`
 
 - **Reeksen importeren** (commit `fa9b2f8`) is teruggedraaid: geen knop *Importeren* meer bij Trainingsreeksen, `SeriesImport` en de testsuite `v16_import` zijn weg. Reeksen maak je zoals voorheen via *+ Nieuwe reeks*.
 
-_Leden en gebruikers definitief verwijderen – commit `431ef98`_
+#### Leden en gebruikers definitief verwijderen – commit `431ef98`
 
 - **Lid verwijderen** (knop op de ledenpagina, bestuur en beheerder): het lid verdwijnt met zijn groep, ouderkoppelingen, aanwezigheden en afmeldingen, en ook uit oude tabellen (lidgeld, resultaten, ...) als die nog bestaan. Een gekoppeld account blijft bestaan zonder lid.
 - **Gebruiker verwijderen** (onderaan *Gebruiker wijzigen*, enkel beheerder): rollen, koppelingen met kinderen en groepen en de plaats in de trainersplanning verdwijnen; leden blijven. Niet voor je eigen account of de laatste beheerder; waarschuwing als een minderjarige zo geen ouder meer heeft.
 - Groepen konden al verwijderd worden. Alle verwijderingen staan in het auditlog. Inactief zetten blijft mogelijk voor wie tijdelijk weg is.
 - Tests: nieuwe suite `v15_verwijderen` (32 controles, 410 in totaal).
 
-_Aanwezigheden voorlopig verborgen – commit `17d3120`_
+#### Aanwezigheden voorlopig verborgen – commit `17d3120`
 
 - **Aanwezigheden verborgen** achter een schakelaar (`'features' => ['attendance' => false]` in `config.php`, standaard uit): geen menu-item *Aanwezigheden*, geen aanwezigheidsrapport (404), geen presentielijst bij een activiteit, geen blok *Aanwezigheid nog in te vullen*. Code en bestaande gegevens blijven; met `true` komt alles terug.
 - Bij een activiteit staat nu *Deelnemers en afmeldingen*: ouders en leden kunnen zich nog altijd afmelden, trainers en bestuur zien wie afgemeld is.
 - Tests: testserver zonder opcache (instellingen wijzigen tijdens een test); 378 controles.
 
-_Wordt v0.14.0 – zwemschool uit de app – commit `e94820e`_
+#### Wordt v0.14.0 – zwemschool uit de app – commit `e94820e`
 
 - **Zwemschool volledig uit de app:** geen keuze meer tussen zwemschool en competitie (alle groepen zijn competitiegroepen), geen filter daarop in leden, kalender, reeksen en aanwezigheden; zwemblokken weg (indeling per lid, lijst *Nog niet ingedeeld*, *Weekoverzicht zwemschool*, *Trainingsmoment per lid*). Alle leden van een groep staan op de lijsten van hun groep.
 - **Update (schema 14) verwijdert bestaande zwemschoolgroepen** zoals *Groep verwijderen*: leden blijven bestaan zonder groep; reeksen en activiteiten enkel voor die groepen verdwijnen met hun aanwezigheden en afmeldingen; de blokindeling (`member_series`) wordt gewist. Dit is onomkeerbaar: maak eerst een back-up van de database.
 - Groep verwijderen ruimt nu ook afmeldingen van leden bij de verwijderde activiteiten op (voorkomt een fout door de databasekoppeling).
 - Demodata: groepen Miniemen, Kadetten en Wedstrijdploeg (allemaal competitie). Tests: 376 controles (o.a. de verwijdering van een bestaande zwemschoolgroep zonder ledenverlies).
 
-_Trainersplanning: trainers in bulk toewijzen – commit `c34e358`_
+#### Trainersplanning: trainers in bulk toewijzen – commit `c34e358`
 
 - **Meerdere tegelijk** in de trainersplanning: vinkje per training/wedstrijd, snel aanvinken (*Alle tekorten*, *Alles*, *Niets*, alle trainingen van een blok) en in één keer een trainer **inplannen** of **afmelden** met reden (bv. vakantie). Overgeslagen gevallen worden geteld in de melding; ontstaat er een tekort binnen 3 dagen, dan vertrekt meteen de mail.
 - Ongebruikte JavaScript van het oude inschrijfformulier verwijderd. Tests: 14 extra controles (364 in totaal).
 
-_Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit `1aebc7c`_
+#### Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit `1aebc7c`
 
 - **App teruggebracht tot de kern:** kalender voor leden en ouders, leden, groepen, gebruikers, trainingsreeksen en zwemblokken, trainersplanning, aanwezigheden, bericht sturen, account (2FA, iCal), auditlog en zoeken.
 - **Verwijderd:** publieke website (pagina's, nieuws, publieke kalender, trainingsuren, contact, SEO/sitemap), websitebeheer, statistieken, lidgeld en seizoenen, inschrijvingen, zwemtestwachtlijst, contactberichten, nieuwsbrief, fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit en wachtlijst per groep/blok, CSV-exports. Velden *Doelstellingen*, *Lidgeld*, *Capaciteit*, *Doorstroomgroep*, *Op website tonen* en *Foto-toestemming* zijn uit de formulieren.
@@ -155,7 +165,7 @@ _Wordt v0.13.0 – minimale app (enkel ledenapp met login) – commit `1aebc7c`_
 - Config: `stats`, `registration`, `fees` en `contact` zijn niet meer nodig; `privacy_url` toont de link naar het privacybeleid op de clubwebsite onderaan elke pagina.
 - Tests: suite `smoke` uitgebreid (verwijderde adressen, menu, formulieren, schema, update zonder gegevensverlies); 350 controles. README en analyse herschreven.
 
-_Wordt v0.12.0 – trainersplanning competitie – commit `c16f215`_
+#### Wordt v0.12.0 – trainersplanning competitie – commit `c16f215`
 
 - **Trainersplanning competitie** (`/app/trainersplanning`, menu *Planning*): per week alle trainingen en wedstrijden van de competitie met hun trainers en een status *In orde* / *Trainer gezocht*; tabbladen *Alles*, *Enkel tekorten*, *Mijn planning*. Zwemschool valt erbuiten.
 - **Vaste trainer per blok** (reeks + weekdag) en **minimum aantal trainers** per competitiegroep (*Vaste trainers en instellingen*); per wedstrijd/activiteit een eigen aantal (*Aantal trainers nodig*).
@@ -166,8 +176,6 @@ _Wordt v0.12.0 – trainersplanning competitie – commit `c16f215`_
 - **Nieuwe rol *Coördinator competitie*** en permissie `coverage.manage` (ook bestuur en beheerder). Demo-accounts `coordinator@demo.local` en `competitie@demo.local`.
 - Database (schema 12, automatisch bij de eerste aanvraag): tabellen `series_trainers`, `activity_trainers`, `coverage_alerts`; kolommen `groups.min_trainers`, `groups.share_token`, `activities.min_trainers`. Opruimen bij het verwijderen van activiteiten, reeksen en groepen.
 - **Testsuite in de repository:** `php tests/e2e/run.php` (suites `smoke` en `v12_trainersplanning`, 296 controles). README en analyse bijgewerkt.
-
-## Op main
 
 ### v0.11.0 – 2026-10-26 – `f8dd83d` – grote functionele uitbreiding: 20 verbeteringen in 4 blokken
 **Blok A – dagelijks werk**
