@@ -5,18 +5,22 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.26 – Draaien op Coolify met Railpack – commit `316f0d4`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.26.0 – 2026-11-17 – `ceda951` – draaien op Coolify met Railpack, zoekveld menubalk
+
+#### v0.26 – Draaien op Coolify met Railpack – commit `316f0d4`
 
 - **Railpack (FrankenPHP):** `composer.json` (PHP 8.4, geen pakketten) zodat Railpack de app als PHP herkent, en een eigen `Caddyfile` met **enkel `public/` als webmap**. De standaard van Railpack levert de hele projectmap uit, inclusief `storage/` met de database; die gaf ook de 404 omdat er in de hoofdmap geen `index.php` staat. Verborgen bestanden worden geweigerd, CSS/JS krijgen een jaar cache.
 - **`config.php` op het volume:** met de omgevingsvariabele `HZS_CONFIG` (bv. `/app/storage/config.php`) schrijft de installer `config.php` op de blijvende opslag in plaats van in de app-map, die bij elke deploy leeg is. Zonder `HZS_CONFIG` blijft alles zoals vroeger (`config.php` in de projectmap; anders `storage/config.php`).
 - README: nieuwe sectie *Op Coolify (Railpack)* met de instellingen per app (volume `/app/storage`, `HZS_CONFIG`, `http://`-domein achter de Cloudflare Tunnel, auto deploy).
 - CI draait nu op PHP 8.4 (zoals Railpack). Tests: nieuwe suite `v26_deploy` (10 controles), 613 in totaal. Lokaal ook getest met FrankenPHP: installatie, aanmelden en alle hoofdpagina's werken; database, `config.php`, `README.md` en verborgen bestanden geven 404.
 
-_Menubalk: zoekveld even breed als de geselecteerde pagina – commit `a328518`_
+#### Menubalk: zoekveld even breed als de geselecteerde pagina – commit `a328518`
 
 - Het zoekveld in de menubalk links heeft nu dezelfde breedte, inspringing en afronding als de witte markering van de geselecteerde pagina.
-
-## Op main
 
 ### v0.25.0 – 2026-11-17 – `3f03beb` – vinkje "Ik ben geen robot" in plaats van tweestapsverificatie
 
