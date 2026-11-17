@@ -277,6 +277,16 @@ CREATE TABLE IF NOT EXISTS coverage_alerts (
   sent_at VARCHAR(19) NOT NULL
 ){{ENGINE}};
 
+CREATE TABLE IF NOT EXISTS coverage_offers (
+  id {{PK}},
+  activity_id INT NOT NULL,
+  user_id INT NOT NULL,
+  token_hash VARCHAR(64) NOT NULL UNIQUE,
+  asked_by INT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  used_at VARCHAR(19) NULL
+){{ENGINE}};
+
 CREATE TABLE IF NOT EXISTS app_meta (
   k VARCHAR(40) NOT NULL PRIMARY KEY,
   v VARCHAR(200) NOT NULL

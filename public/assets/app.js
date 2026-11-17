@@ -67,6 +67,37 @@
     });
   })();
 
+  // Trainersplanning: paneel "Ik kan niet" als bottom sheet (zonder JavaScript opent de link de pagina met het paneel open)
+  (function () {
+    var sheets = document.querySelectorAll('dialog.sheet');
+    if (!sheets.length) { return; }
+    sheets.forEach(function (d) {
+      if (d.hasAttribute('open') && d.showModal) { d.removeAttribute('open'); d.showModal(); }
+      d.addEventListener('click', function (ev) { if (ev.target === d) { d.close(); } });
+    });
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest('[data-sheet]');
+      if (t) {
+        var d = document.getElementById(t.getAttribute('data-sheet'));
+        if (d && d.showModal) { ev.preventDefault(); d.showModal(); }
+        return;
+      }
+      var c = ev.target.closest('[data-sheet-close]');
+      if (c && c.closest('dialog')) { ev.preventDefault(); c.closest('dialog').close(); }
+    });
+  })();
+
+  // Raster trainersplanning: op een groot scherm blijft de pagina op dezelfde hoogte (paneel staat rechts);
+  // op een smal scherm spring je naar het paneel onder het raster.
+  (function () {
+    var cells = document.querySelectorAll('.plan-grid a.cell');
+    if (!cells.length) { return; }
+    var wide = window.matchMedia && window.matchMedia('(min-width: 1100px)').matches;
+    cells.forEach(function (a) {
+      if (wide) { a.setAttribute('data-keep-scroll', ''); } else { a.setAttribute('href', a.getAttribute('href') + '#paneel'); }
+    });
+  })();
+
   // "Ik ben geen robot": zoekt in de browser het getal n met sha256(salt + n) = challenge (proof of work, zie app/Captcha.php).
   // Eigen SHA-256 in JavaScript: crypto.subtle werkt niet op hosting zonder HTTPS.
   (function () {

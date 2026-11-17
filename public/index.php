@@ -72,6 +72,10 @@ $routes = [
     'coverage_action'  => ['POST' => ['CoverageController', 'action', null]],
     'coverage_bulk'    => ['POST' => ['CoverageController', 'bulk', null]],
     'coverage_bulk_form' => ['GET' => ['CoverageController', 'bulkForm', null]],
+    'coverage_away'    => ['GET' => ['CoverageController', 'away', null]],
+    'coverage_away_save' => ['POST' => ['CoverageController', 'awaySave', null]],
+    // "Ik neem over" uit de mail, zonder aan te melden (persoonlijke link per trainer)
+    'coverage_take'    => ['GET' => ['CoverageController', 'take', 'public'], 'POST' => ['CoverageController', 'takeSave', 'public']],
     'coverage_settings' => ['GET' => ['CoverageController', 'settings', 'coverage.manage']],
     'coverage_settings_save' => ['POST' => ['CoverageController', 'settingsSave', 'coverage.manage']],
     'coverage_share'   => ['POST' => ['CoverageController', 'share', 'coverage.manage']],

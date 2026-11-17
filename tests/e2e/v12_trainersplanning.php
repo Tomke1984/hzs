@@ -25,7 +25,7 @@ $board = Browser::login('bestuur@demo.local');
 
 $coord->get('/app/trainersplanning');
 T::ok($coord->status === 200 && $coord->has('Vaste trainers en instellingen'), 'coördinator ziet de trainersplanning met instellingen');
-T::ok($coord->has('class="week-grid"'), 'standaardweergave trainersplanning: weekkalender');
+T::ok($coord->has('class="plan-grid"'), 'standaardweergave trainersplanning coördinator: raster (v0.28)');
 $coord->get('/app');
 T::ok($coord->has('class="week-grid week-plain"'), 'standaardweergave overzicht: weekkalender');
 // De rest van de test werkt met de lijst (de gekozen weergave wordt onthouden)
@@ -120,7 +120,7 @@ T::ok(T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND use
 T::ok(T::outbox() === '', 'geen mail: er is een vervanger');
 $kobe->post('/app/coverage-action', ['activity_id' => $day2, 'do' => 'absent', 'user_id' => $kobeId, 'note' => 'Ziek', 'replacement' => 'none']);
 $kobe->follow();
-T::ok($kobe->has('Je bent afgemeld.') && $kobe->has('kregen een mail'), '"Nog geen vervanger": afgemeld en mail vertrokken');
+T::ok($kobe->has('Je bent afgemeld.') && ($kobe->has('kregen een mail') || $kobe->has('We vroegen')), '"Nog geen vervanger": afgemeld en mail vertrokken');
 $box = T::outbox();
 T::ok(str_contains($box, 'aan coordinator@demo.local') && str_contains($box, 'aan competitie@demo.local') && str_contains($box, 'aan trainer@demo.local'), 'mail naar coördinator en alle groepstrainers');
 T::ok(!str_contains($box, 'aan bestuur@demo.local') && !str_contains($box, 'aan ouder@demo.local'), 'geen mail naar bestuur of ouders');

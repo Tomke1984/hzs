@@ -6,6 +6,16 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Trainersplanning gebruiksvriendelijker_
+
+- **Mijn trainingen** (standaard voor trainers): je komende trainingen en wedstrijden (6 weken) als grote kaarten, elk met één knop **Ik kan niet**. Die opent een paneel onderaan: reden met één tik (Ziek, Werk, Op reis, Familie of zelf typen), dan **wie neemt over** (enkel collega's die op dat moment vrij zijn) of **Vraag het aan de groep**. Afgemeld? Dan zie je of er al een vervanger is, met *Toch wel* om het terug te draaien.
+- **Vraag het aan de groep:** elke vrije collega krijgt een persoonlijke mail *Kan jij overnemen?* met een knop **Ik neem over**, zonder aan te melden. Wie eerst klikt, staat ingepland; wie te laat is, ziet wie al overneemt. Wie het vroeg, krijgt een mail. Openen van de link verandert niets (mailscanners), pas de knop.
+- **Hier kan je helpen:** onder je eigen trainingen staan de tekorten op momenten dat jij vrij bent, met *Ik neem over* / *Ik ga mee*.
+- **Ik ben een tijd weg…** (`/app/trainersplanning/afwezig`): geef een periode en reden op, je ziet meteen welke trainingen dat raakt en kiest per training een vervanger of *Vraag de groep*; waar genoeg trainers overblijven, hoeft niets.
+- **Raster** (standaard voor de coördinator): 5 weken × groepen plus een rij wedstrijden, groen (genoeg), oranje (te weinig) of rood (niemand). Klik op een vak: rechts (op telefoon eronder) zie je wie ingepland is en voeg je met één klik toe wie vrij is (wie niet vrij is, staat erbij met de reden).
+- Week en Lijst blijven bestaan; de keuze wordt onthouden. *Nog geen vervanger* bij het gewone afmelden vraagt het nu ook meteen aan de vrije collega's.
+- Migratie `019`: tabel `coverage_offers`. Tests: nieuwe suite `v28_trainersplanning2` (36 controles).
+
 _v0.28.0-dev – Beheerder maakt accounts zonder uitnodiging_
 
 - Overal waar de app een account maakt, kan de **beheerder** nu zelf een wachtwoord invullen in plaats van een uitnodiging te sturen: ouder uitnodigen (op de pagina van een kind), eigen account voor een kind, het vinkje *eigen account* bij een meerderjarig lid, en *Account aanmaken met wachtwoord (geen mail)*. Dan vertrekt er geen mail en kan de gebruiker meteen aanmelden; geef het wachtwoord zelf door. Leeg laten = uitnodiging per mail zoals voorheen.

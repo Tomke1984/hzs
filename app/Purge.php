@@ -16,9 +16,9 @@ final class Purge
      */
     public const MEMBER_DELETE = ['attendance', 'absence_reports', 'group_memberships', 'guardian_links', 'member_series'];
     public const MEMBER_NULL = [['users', 'member_id']];
-    public const USER_DELETE = ['user_roles', 'user_tokens', 'guardian_links', 'group_trainers', 'series_trainers', 'activity_trainers'];
+    public const USER_DELETE = ['user_roles', 'user_tokens', 'guardian_links', 'group_trainers', 'series_trainers', 'activity_trainers', 'coverage_offers'];
     public const USER_NULL = [['activities', 'created_by'], ['activity_series', 'created_by'], ['attendance', 'updated_by'],
-                              ['absence_reports', 'reported_by'], ['activity_trainers', 'updated_by'], ['broadcasts', 'sender_id']];
+                              ['absence_reports', 'reported_by'], ['activity_trainers', 'updated_by'], ['broadcasts', 'sender_id'], ['coverage_offers', 'asked_by']];
 
     public static function member(int $id): void
     {

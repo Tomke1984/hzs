@@ -267,6 +267,7 @@ final class Coverage
         Database::exec('DELETE FROM absence_reports WHERE activity_id = ?', [$activityId]);
         Database::exec('DELETE FROM activity_trainers WHERE activity_id = ?', [$activityId]);
         Database::exec('DELETE FROM coverage_alerts WHERE activity_id = ?', [$activityId]);
+        Database::exec('DELETE FROM coverage_offers WHERE activity_id = ?', [$activityId]);
     }
 
     public static function forgetSeries(int $seriesId): void
@@ -412,5 +413,99 @@ final class Coverage
                 error_log('Trainersplanning, herinneringen: ' . $e->getMessage());
             }
         });
+    }
+
+    /**
+     * Trainers die op het moment van deze activiteit al elders staan (zelfde regel als conflict()): id => titel.
+     * Eén query voor alle trainers, zodat we per activiteit snel kunnen tonen wie vrij is.
+     * @return array<int,string>
+     */
+    public static function busy(array $activity): array
+    {
+        $ids = array_map('intval', array_column(Database::all(
+            "SELECT id FROM activities WHERE id <> ? AND status = 'PLANNED' AND starts_at < ? AND ends_at > ?",
+            [(int) $activity['id'], $activity['ends_at'], $activity['starts_at']]
+        ), 'id'));
+        $out = [];
+        foreach ($ids ? self::list('0000-00-00', '9999-12-31', $ids) : [] as $o) {
+            if ($activity['type_code'] === 'COMPETITION' && $o['type_code'] === 'TRAINING') {
+                continue;
+            }
+            foreach ($o['trainers'] as $t) {
+                if (!$t['absent']) {
+                    $out[$t['id']] ??= $o['title'];
+                }
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Wie kan je voor deze activiteit vragen of inplannen: trainers uit de pool die er nog niet op staan
+     * (ook niet afgemeld) en op dat moment nergens anders staan. @return array<int,string> id => naam
+     */
+    public static function free(array $activity, array $pool, ?array $busy = null): array
+    {
+        $busy ??= self::busy($activity);
+        $listed = array_flip(array_map(fn($t) => $t['id'], $activity['trainers']));
+        return array_filter($pool, fn($name, $id) => !isset($listed[$id]) && !isset($busy[$id]), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * "Vraag het aan de groep": elke vrije collega krijgt een persoonlijke mail met een knop "Ik neem over"
+     * (werkt zonder aan te melden, tot de activiteit voorbij is). Geeft het aantal gemailde collega's.
+     */
+    public static function askGroup(int $activityId, ?int $askedBy, string $who, string $reason = ''): int
+    {
+        $a = self::one($activityId);
+        if (!$a || $a['missing'] < 1 || $a['ends_at'] <= now()) {
+            return 0;
+        }
+        $free = self::free($a, self::pool());
+        if (!$free) {
+            return 0;
+        }
+        $emails = [];
+        foreach (Database::all('SELECT id, email, display_name FROM users WHERE id IN (' . Scope::in(array_keys($free)) . ')', array_keys($free)) as $u) {
+            if (filter_var($u['email'], FILTER_VALIDATE_EMAIL)) {
+                $emails[(int) $u['id']] = $u;
+            }
+        }
+        $when = fmt_day_month($a['starts_at']) . ' · ' . fmt_time($a['starts_at']) . '–' . fmt_time($a['ends_at']);
+        $isMeet = $a['type_code'] === 'COMPETITION';
+        $messages = [];
+        foreach ($emails as $uid => $u) {
+            Database::exec('UPDATE coverage_offers SET used_at = ? WHERE activity_id = ? AND user_id = ? AND used_at IS NULL', [now(), $activityId, $uid]);
+            $token = bin2hex(random_bytes(24));
+            Database::exec(
+                'INSERT INTO coverage_offers (activity_id, user_id, token_hash, asked_by, created_at) VALUES (?,?,?,?,?)',
+                [$activityId, $uid, hash('sha256', $token), $askedBy, now()]
+            );
+            $link = Invites::baseUrl() . '/' . url('coverage_take', ['t' => $token]);
+            $first = explode(' ', trim((string) $u['display_name']))[0];
+            $subject = ($isMeet ? 'Kan jij mee naar ' : 'Kan jij overnemen? ') . $a['title'] . ' ' . fmt_date($a['starts_at']);
+            $body = "Dag $first,\n\n" . $who . ' kan niet' . ($reason !== '' ? " ($reason)" : '') . '. Er ' . ($a['missing'] === 1 ? 'is nog 1 trainer' : 'zijn nog ' . $a['missing'] . ' trainers') . " nodig voor:\n\n"
+                . '  ' . $a['title'] . ($a['gnames'] !== '' ? ' (' . $a['gnames'] . ')' : '') . "\n  $when\n" . ($a['location'] ? '  ' . $a['location'] . "\n" : '')
+                . "\nKan jij? Klik hier (je hoeft niet aan te melden):\n$link\n\n"
+                . "Kan je niet? Dan hoef je niets te doen. Wie eerst klikt, staat ingepland.\n\n– " . config('app_name', 'HZS Clubapp');
+            $messages[] = [$u['email'], $subject, $body];
+        }
+        if ($messages) {
+            Mailer::sendMany($messages);
+        }
+        return count($messages);
+    }
+
+    /** Geldige "Ik neem over"-link: aanbod + gebruiker, of null. */
+    public static function offer(string $token): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{48}$/', $token)) {
+            return null;
+        }
+        return Database::one(
+            'SELECT o.*, u.display_name, u.email FROM coverage_offers o JOIN users u ON u.id = o.user_id
+             WHERE o.token_hash = ? AND u.is_active = 1',
+            [hash('sha256', $token)]
+        );
     }
 }

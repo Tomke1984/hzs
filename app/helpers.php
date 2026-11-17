@@ -98,7 +98,7 @@ function base_path(): string
 /** Vaste, leesbare adressen voor de publieke site (route => pad). Pagina's staan op /<adres>, nieuws op /nieuws/<adres>. */
 const PRETTY_ROUTES = ['login' => 'aanmelden', 'activate' => 'activeren', 'forgot' => 'wachtwoord-vergeten'];
 /** Routes die bewust op ?r= blijven (bevestigingslinks in mails, formulierdoel). */
-const PLAIN_ROUTES = ['weekplanning'];
+const PLAIN_ROUTES = ['weekplanning', 'coverage_take'];
 /**
  * Leesbare adressen voor de beheer-app (onder /app): route => [adres met id, adres zonder id (nieuw)].
  * Alle andere app-routes (vooral POST-acties) krijgen /app/<route-met-streepjes>.
@@ -110,7 +110,7 @@ const APP_PATHS = [
     'users' => ['app/gebruikers'], 'mail_settings' => ['app/instellingen/mail'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
     'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
     'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'],
-    'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'], 'coverage_bulk_form' => ['app/trainersplanning/meerdere'],
+    'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'], 'coverage_bulk_form' => ['app/trainersplanning/meerdere'], 'coverage_away' => ['app/trainersplanning/afwezig'],
     'attendance_report' => ['app/aanwezigheidsrapport'], 'audit' => ['app/auditlog'], 'search' => ['app/zoeken'], 'mail' => ['app/bericht-sturen'],
     'account' => ['app/account'],
 ];
@@ -377,6 +377,20 @@ function fmt_day(string $d): string
     return DAYS_NL_SHORT[(int) $t->format('N')] . ' ' . $t->format('j');
 }
 
+/** Opsomming in het Nederlands: "A", "A en B", "A, B en C". */
+function nl_list(array $items): string
+{
+    $last = array_pop($items);
+    return $items ? implode(', ', $items) . ' en ' . $last : (string) $last;
+}
+
+/** Dag met maand: "ma 23 nov". */
+function fmt_day_month(string $d): string
+{
+    $t = new DateTime(substr($d, 0, 10));
+    return fmt_day($d) . ' ' . MONTHS_NL_SHORT[(int) $t->format('n')];
+}
+
 /** Titel van een week: "9–15 nov" of "30 nov – 6 dec" (jaar enkel als het niet dit jaar is). */
 function fmt_week_range(string $monday): string
 {
@@ -507,6 +521,7 @@ function back_url(string $route, array $get): string
         'series_bulk' => list_url('series'),
         'coverage_settings' => list_url('coverage'),
         'coverage_bulk_form' => list_url('coverage'),
+        'coverage_away' => list_url('coverage'),
         default => url('dashboard'),
     };
 }
