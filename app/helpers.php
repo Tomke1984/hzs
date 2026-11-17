@@ -262,10 +262,19 @@ function ical_idle_days(): int
 
 /** Adres van een bestand in public/assets met de wijzigingsdatum erachter, zodat browsers het lang mogen bewaren
  *  en na een update toch meteen de nieuwe versie ophalen. */
+/**
+ * Adres van een bestand in public/assets met een versie op basis van de inhoud, zodat de browser na een update
+ * meteen het nieuwe bestand laadt. Niet op de wijzigingsdatum: bij een build in een container (Coolify/Railpack)
+ * krijgen alle bestanden dezelfde datum, waardoor de browser na een deploy de oude CSS bleef gebruiken.
+ */
 function asset(string $file): string
 {
-    $mtime = @filemtime(APP_ROOT . '/public/assets/' . $file);
-    return 'assets/' . $file . ($mtime ? '?v=' . $mtime : '');
+    static $cache = [];
+    if (!isset($cache[$file])) {
+        $hash = @md5_file(APP_ROOT . '/public/assets/' . $file);
+        $cache[$file] = 'assets/' . $file . ($hash ? '?v=' . substr($hash, 0, 10) : '');
+    }
+    return $cache[$file];
 }
 
 function now(): string

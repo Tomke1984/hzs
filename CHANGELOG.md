@@ -6,6 +6,11 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Fix: nieuwe opmaak verscheen niet na een deploy_
+
+- Het raster van de trainersplanning stond op hzs-dev zonder opmaak: de browser gebruikte nog de oude CSS. De versie in het adres van CSS en JavaScript kwam van de wijzigingsdatum van het bestand, en die is in een container-build (Coolify/Railpack) bij elke deploy dezelfde. Nu komt de versie uit de inhoud van het bestand: na elke wijziging laadt de browser meteen de nieuwe versie.
+- Test in `v24_onderhoud` aangepast.
+
 _v0.28.0-dev – Trainersplanning gebruiksvriendelijker_
 
 - **Mijn trainingen** (standaard voor trainers): je komende trainingen en wedstrijden (6 weken) als grote kaarten, elk met één knop **Ik kan niet**. Die opent een paneel onderaan: reden met één tik (Ziek, Werk, Op reis, Familie of zelf typen), dan **wie neemt over** (enkel collega's die op dat moment vrij zijn) of **Vraag het aan de groep**. Afgemeld? Dan zie je of er al een vervanger is, met *Toch wel* om het terug te draaien.
