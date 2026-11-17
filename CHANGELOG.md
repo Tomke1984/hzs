@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.27 – Database terugzetten via de installer – commit `COMMIT`_
+_v0.27 – Database terugzetten via de installer – commit `2b8acaf`_
 
 - **Lokale gegevens naar de server zonder SSH:** `install.php` heeft onderaan *Of: bestaande database terugzetten*. Laad een SQLite-database van je computer (`clubapp.sqlite`) of een back-up van de app (`hzs-….sqlite.gz`) op; je meldt daarna aan met je bestaande accounts.
 - Controles: echt een SQLite-database, niet beschadigd, minstens één gebruiker; staan er versleutelde medische gegevens in, dan is de `app_key` van de oorspronkelijke installatie verplicht én wordt nagekeken of die klopt. Een database met gebruikers wordt nooit overschreven; na het terugzetten is de installer vergrendeld en wordt de database bij het eerste bezoek bijgewerkt.
