@@ -51,7 +51,7 @@ De repo bevat wat Railpack nodig heeft: `composer.json` (PHP 8.4, geen externe p
 
 1. **Build strategy:** Railpack. *Base directory* `/`, poort `80`.
 2. **Persistent Storage:** een volume met *Destination path* `/app/storage`. Daar staan de database, `config.php`, de sleutel, sessies en back-ups; het blijft bewaard bij elke nieuwe deploy. Productie en dev krijgen elk een **eigen** volume (een deploy van `dev` voert migraties uit).
-3. **Environment Variables:** `HZS_CONFIG=/app/storage/config.php` (de installer schrijft `config.php` dan op het volume in plaats van in de app-map, die bij elke deploy leeg is).
+3. **Environment Variables:** optioneel `HZS_CONFIG=/app/storage/config.php`. Sinds v0.28 schrijft de installer `config.php` zonder die variabele al naar `storage/config.php`, dus op het volume (de app-map is na elke deploy weer leeg). De installer toont bovenaan waar de instellingen komen.
 4. **Domein** achter een Cloudflare Tunnel: `http://…` invullen in Coolify (Cloudflare doet HTTPS; met `https://` ontstaat een doorverwijzingslus). De app herkent HTTPS via `X-Forwarded-Proto`.
 5. **Auto Deploy** aan (Advanced). Repo als *public repository* toegevoegd: maak in Coolify onder *Webhooks* een GitHub-webhook en voeg die toe in GitHub (*Settings → Webhooks*, enkel *push*).
 6. Eerste keer: open `/install.php`, kies SQLite en laat het pad leeg (dan `storage/data/` op het volume). Of zet onderaan bij **Bestaande database terugzetten** een database van je eigen computer op de server (zie hieronder).
@@ -60,7 +60,7 @@ De repo bevat wat Railpack nodig heeft: `composer.json` (PHP 8.4, geen externe p
 
 Controle na de deploy: `/storage/data/clubapp.sqlite`, `/config.php` en `/README.md` moeten **404** geven.
 
-`config.php` zoekt de app op in deze volgorde: `HZS_CONFIG`, `config.php` in de projectmap, `storage/config.php`.
+`config.php` zoekt de app op in deze volgorde: `HZS_CONFIG`, `config.php` in de projectmap, `storage/config.php`. Een nieuwe installatie schrijft naar `HZS_CONFIG`, anders naar een bestaande `config.php` in de projectmap, anders naar `storage/config.php`. **Vraagt de app na een deploy opnieuw om te installeren** (config.php kwijt) terwijl de database er nog staat, dan herkent de installer die database (*Bestaande database gevonden*) en herstelt hij enkel de instellingen; een nieuwe installatie over een bestaande database kan niet.
 
 ### Database buiten de webmap (SQLite op een server)
 

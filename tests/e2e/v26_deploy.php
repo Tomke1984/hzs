@@ -41,3 +41,30 @@ array_map('unlink', ["$tmp/storage/config.php", "$tmp/app/helpers.php"]);
 $admin = Browser::login('admin@demo.local');
 $admin->get('/app');
 T::ok($admin->status === 200, 'app werkt');
+
+echo "config.php kwijt (bv. na een deploy): bestaande database herkennen en instellingen herstellen\n";
+$admin->get('/app/leden');
+T::ok($admin->status === 200, 'voor het testen: app werkt');
+// Situatie zoals in Coolify zonder blijvende config.php: database op het volume, config.php weg
+copy(T::$dir . '/storage/data/test.sqlite', T::$dir . '/storage/data/clubapp.sqlite');
+rename(T::$dir . '/config.php', T::$dir . '/config.php.weg');
+$anon = new Browser();
+$anon->get('/');
+T::ok($anon->status === 302 && str_contains($anon->location, 'install.php'), 'zonder config.php: naar de installer');
+$anon->get('/install.php');
+T::ok($anon->has('Bestaande database gevonden') && $anon->has('Instellingen herstellen') && !$anon->has('name="admin_password"'), 'installer herkent de bestaande database en biedt geen nieuwe installatie aan');
+T::ok($anon->has(T::$dir . '/storage/config.php'), 'toont waar de instellingen komen: storage/config.php (op het volume)');
+$anon->post('/install.php', ['mode' => 'install', 'driver' => 'sqlite', 'admin_name' => 'X', 'admin_email' => 'x@voorbeeld.be', 'admin_password' => 'EenLangWachtwoord9!', 'admin_password2' => 'EenLangWachtwoord9!']);
+T::ok($anon->has('Bestaande database gevonden') && (int) T::val("SELECT COUNT(*) FROM users WHERE email = 'x@voorbeeld.be'") === 0, 'een nieuwe installatie over de bestaande database kan niet');
+$anon->get('/install.php');
+$anon->post('/install.php', ['mode' => 'recover']);
+T::ok($anon->has('Instellingen hersteld') && is_file(T::$dir . '/storage/config.php'), 'instellingen hersteld in storage/config.php');
+T::ok(str_contains((string) file_get_contents(T::$dir . '/storage/config.php'), "__DIR__ . '/data/clubapp.sqlite'"), 'pad naar de database relatief, zodat het ook na een verhuis klopt');
+$back = Browser::login('admin@demo.local');
+$back->get('/app/leden');
+T::ok($back->status === 200, 'aanmelden met het bestaande account werkt weer');
+$back->get('/');
+T::ok($back->status !== 302 || !str_contains($back->location, 'install.php'), 'geen installer meer bij een volgend bezoek');
+// terugzetten voor de rest van de suite
+unlink(T::$dir . '/storage/config.php');
+rename(T::$dir . '/config.php.weg', T::$dir . '/config.php');

@@ -33,14 +33,19 @@ function write_config(array $dbCfg, string $defaultDbPath, string $appKey): arra
 {
     $dbExport = $dbCfg['driver'] === 'mysql'
         ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($dbCfg['host'], true) . ",\n        'port' => " . (int) $dbCfg['port'] . ",\n        'name' => " . var_export($dbCfg['name'], true) . ",\n        'user' => " . var_export($dbCfg['user'], true) . ",\n        'pass' => " . var_export($dbCfg['pass'], true) . ",\n    ]"
-        : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbCfg['path'] === $defaultDbPath && config_file() === APP_ROOT . '/config.php' ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbCfg['path'], true)) . ",\n    ]";
+        : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbCfg['path'] === $defaultDbPath && config_write_file() === APP_ROOT . '/config.php' ? "__DIR__ . '/storage/data/clubapp.sqlite'"
+            : ($dbCfg['path'] === $defaultDbPath && config_write_file() === APP_ROOT . '/storage/config.php' ? "__DIR__ . '/data/clubapp.sqlite'" : var_export($dbCfg['path'], true))) . ",\n    ]";
     $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . (is_local_request() ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n    // Sleutel voor versleutelde velden (medische opmerking). Bewaar een kopie veilig: zonder sleutel zijn die velden onleesbaar.\n    'app_key' => " . var_export($appKey, true) . ",\n];\n";
-    $cfgFile = config_file();
+    $cfgFile = config_write_file();
     if (!is_dir(dirname($cfgFile))) {
         @mkdir(dirname($cfgFile), 0750, true);
     }
     $written = @file_put_contents($cfgFile, $configPhp) !== false;
     @chmod($cfgFile, 0640);
+    // Ook controleren dat de app het bestand bij het volgende bezoek terugvindt (anders: telkens opnieuw de installer).
+    if ($written && config_file() !== $cfgFile) {
+        $written = false;
+    }
     return [$written, $cfgFile, $configPhp];
 }
 
@@ -126,6 +131,23 @@ function import_database(string $dbPath, string $appKeyInput): array
     return [[], "$users gebruikers en $members leden teruggezet. Meld aan met je bestaande account."];
 }
 
+/** Bestaande database met gebruikers op de standaardplek, terwijl config.php ontbreekt (bv. kwijt na een nieuwe deploy)? */
+function orphan_database(string $path): ?array
+{
+    if (config('db') !== null || !is_file($path) || filesize($path) === 0) {
+        return null;
+    }
+    try {
+        $pdo = new PDO('sqlite:' . $path);
+        $users = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        $members = (int) $pdo->query('SELECT COUNT(*) FROM members')->fetchColumn();
+        $enc = $pdo->query("SELECT medical_note FROM members WHERE medical_note LIKE 'enc1:%' LIMIT 1")->fetchColumn();
+        return $users > 0 ? ['users' => $users, 'members' => $members, 'encrypted' => $enc !== false ? (string) $enc : null] : null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
 if (installer_blocked()) {
     http_response_code(403);
     page('Reeds geïnstalleerd', '<div class="card narrow"><h1>Reeds geïnstalleerd</h1><p>De installer is vergrendeld omdat er al een gebruiker bestaat. Verwijder <code>public/install.php</code> van de server.</p><p><a class="btn" href="index.php">Naar de app</a></p></div>');
@@ -139,6 +161,43 @@ $v = [
 $defaultDbPath = APP_ROOT . '/storage/data/clubapp.sqlite';
 
 $importErrors = [];
+$orphan = orphan_database($defaultDbPath);
+$keyFile = APP_ROOT . '/storage/app.key';
+$fileKey = is_file($keyFile) ? trim((string) file_get_contents($keyFile)) : '';
+if ($orphan !== null) {
+    // Er staat al een database met gebruikers: nooit een nieuwe installatie, enkel de instellingen herstellen.
+    $recoverErrors = [];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'recover') {
+        verify_csrf();
+        $key = trim((string) ($_POST['app_key'] ?? '')) ?: $fileKey;
+        $raw = $key !== '' ? base64_decode($key, true) : false;
+        if ($key !== '' && ($raw === false || strlen($raw) !== SODIUM_CRYPTO_SECRETBOX_KEYBYTES)) {
+            $recoverErrors[] = 'De sleutel (app_key) is ongeldig: verwacht base64 van 32 bytes.';
+        } elseif ($orphan['encrypted'] !== null && ($key === '' || Crypto::decryptWith($orphan['encrypted'], (string) $raw) === null)) {
+            $recoverErrors[] = 'De database bevat versleutelde medische gegevens; vul de juiste sleutel (app_key) van de oorspronkelijke installatie in.';
+        } else {
+            [$written, $cfgFile, $configPhp] = write_config(['driver' => 'sqlite', 'path' => $defaultDbPath], $defaultDbPath, $key !== '' ? $key : Crypto::newKey());
+            $body = '<div class="card narrow"><h1>Instellingen hersteld</h1><p>De app gebruikt weer de bestaande database (' . (int) $orphan['users'] . ' gebruikers, ' . (int) $orphan['members'] . ' leden). Meld aan met je bestaande account.</p>';
+            if (!$written) {
+                $body .= '<div class="alert alert-error">Kon <code>' . e($cfgFile) . '</code> niet wegschrijven (of de app vindt het daar niet terug). Maak het bestand zelf aan met deze inhoud:</div><pre>' . e($configPhp) . '</pre>';
+            } else {
+                $body .= '<p class="muted small">Opgeslagen in <code>' . e($cfgFile) . '</code>.</p>';
+            }
+            page('Instellingen hersteld', $body . '<p><a class="btn" href="aanmelden">Aanmelden</a></p></div>');
+        }
+    }
+    page('Bestaande database gevonden', '<div class="card narrow"><h1>Bestaande database gevonden</h1>'
+        . '<p>Op de server staat al een database met <strong>' . (int) $orphan['users'] . ' gebruikers</strong> en ' . (int) $orphan['members'] . ' leden, maar de instellingen (<code>config.php</code>) ontbreken. '
+        . 'Dat gebeurt bijvoorbeeld als <code>config.php</code> buiten het blijvende volume stond en een nieuwe deploy het wiste. De database wordt niet aangeraakt.</p>'
+        . ($recoverErrors ? '<div class="alert alert-error"><ul><li>' . implode('</li><li>', array_map('e', $recoverErrors)) . '</li></ul></div>' : '')
+        . '<form method="post" action="install.php" class="form">' . csrf_field() . '<input type="hidden" name="mode" value="recover">'
+        . ($orphan['encrypted'] !== null && $fileKey === ''
+            ? '<label>Sleutel (app_key) van de oorspronkelijke installatie <input name="app_key" autocomplete="off" required></label><p class="muted small">Nodig om de versleutelde medische gegevens te lezen.</p>'
+            : ($fileKey !== '' ? '<p class="muted small">De sleutel uit <code>storage/app.key</code> wordt gebruikt.</p>' : ''))
+        . '<button class="btn" type="submit">Instellingen herstellen</button></form>'
+        . '<p class="muted small">Nieuwe instellingen worden bewaard in <code>' . e(config_write_file()) . '</code>.</p></div>');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'import') {
     verify_csrf();
     $importPath = trim((string) ($_POST['import_path'] ?? '')) ?: $defaultDbPath;
@@ -229,6 +288,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'import'
 ob_start(); ?>
 <div class="card narrow wide">
   <h1>Installatie</h1>
+  <p class="muted small">De instellingen komen in <code><?= e(config_write_file()) ?></code><?= getenv('HZS_CONFIG') ? ' (HZS_CONFIG)' : '' ?>.
+    Op Coolify moet dat op het blijvende volume (<code>/app/storage</code>) staan, anders vraagt de app na elke deploy opnieuw om te installeren.</p>
   <?php if ($errors): ?>
     <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
   <?php endif; ?>

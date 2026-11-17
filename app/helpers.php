@@ -16,6 +16,20 @@ function config_file(): string
     return APP_ROOT . '/config.php';
 }
 
+/**
+ * Waar schrijft de installer een nieuwe config.php? HZS_CONFIG als die gezet is; anders een bestaande config.php in de
+ * projectmap; anders storage/config.php. storage/ is in Coolify het blijvende volume (de projectmap is na elke deploy
+ * weer leeg) en is op Apache-hosting afgeschermd met .htaccess.
+ */
+function config_write_file(): string
+{
+    $read = config_file();
+    if ($read !== APP_ROOT . '/config.php' || is_file($read)) {
+        return $read;
+    }
+    return APP_ROOT . '/storage/config.php';
+}
+
 
 function e($v): string
 {

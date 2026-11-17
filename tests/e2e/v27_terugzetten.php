@@ -42,12 +42,13 @@ T::ok($b->has('kunnen de versleutelde gegevens niet gelezen worden'), 'verkeerde
 $b->get('/install.php');
 $b->postFiles('/install.php', ['mode' => 'import', 'app_key' => 'geen-sleutel'], ['database' => ['clubapp.sqlite', $sqlite]]);
 T::ok($b->has('sleutel (app_key) is ongeldig'), 'ongeldige sleutel: geweigerd');
-T::ok(!is_file(T::$dir . '/config.php') && !is_file(T::$dir . '/storage/data/clubapp.sqlite'), 'na een fout niets weggeschreven');
+T::ok(!is_file(T::$dir . '/config.php') && !is_file(T::$dir . '/storage/config.php') && !is_file(T::$dir . '/storage/data/clubapp.sqlite'), 'na een fout niets weggeschreven');
 
 $b->get('/install.php');
 $b->postFiles('/install.php', ['mode' => 'import', 'app_key' => $key], ['database' => ['hzs-20261117.sqlite.gz', $gz]]);
 T::ok($b->has('Database teruggezet') && $b->has("$users gebruikers"), 'back-up (.sqlite.gz) met de juiste sleutel teruggezet');
-$cfg = require T::$dir . '/config.php';
+// sinds v0.28: zonder HZS_CONFIG komt een nieuwe config.php in storage/ (in Coolify het blijvende volume)
+$cfg = require T::$dir . '/storage/config.php';
 T::ok(($cfg['db']['path'] ?? '') === T::$dir . '/storage/data/clubapp.sqlite' || str_ends_with((string) ($cfg['db']['path'] ?? ''), '/storage/data/clubapp.sqlite'), 'config.php wijst naar de teruggezette database');
 T::ok(($cfg['app_key'] ?? '') === $key, 'config.php bevat de opgegeven sleutel');
 T::ok(is_file(T::$dir . '/storage/data/clubapp.sqlite'), 'databasebestand staat op zijn plaats');
@@ -62,9 +63,10 @@ $a->get('/app/kalender');
 T::ok($a->status === 200, 'kalender werkt na het terugzetten');
 
 echo "Nooit een bestaande database overschrijven\n";
-rename(T::$dir . '/config.php', T::$dir . '/config.imported.php');
+rename(T::$dir . '/storage/config.php', T::$dir . '/storage/config.imported.php');
+$before = md5_file(T::$dir . '/storage/data/clubapp.sqlite');
 $c = new Browser();
 $c->get('/install.php');
 $c->postFiles('/install.php', ['mode' => 'import', 'app_key' => $key], ['database' => ['clubapp.sqlite', $sqlite]]);
-T::ok($c->has('wordt niet overschreven'), 'database met gebruikers op dezelfde plek: geweigerd');
-rename(T::$dir . '/config.imported.php', T::$dir . '/config.php');
+T::ok($c->has('Bestaande database gevonden') && md5_file(T::$dir . '/storage/data/clubapp.sqlite') === $before, 'database met gebruikers op dezelfde plek: niet overschreven (enkel instellingen herstellen)');
+rename(T::$dir . '/storage/config.imported.php', T::$dir . '/storage/config.php');

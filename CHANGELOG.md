@@ -6,6 +6,13 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Fix: hzs-dev vroeg telkens opnieuw om te installeren_
+
+- **Oorzaak:** zonder de omgevingsvariabele `HZS_CONFIG` schreef de installer `config.php` in de app-map. In Coolify is die map na elke nieuwe deploy (bij elke push naar `dev`) weer leeg, terwijl de database op het blijvende volume (`/app/storage`) bleef staan. Gevolg: na elke deploy weer de installatiepagina.
+- **Oplossing:** een nieuwe installatie schrijft `config.php` nu naar `storage/config.php` (in Coolify het volume; op Apache-hosting afgeschermd), tenzij `HZS_CONFIG` gezet is of er al een `config.php` in de projectmap staat. De installer toont bovenaan waar de instellingen komen en controleert dat de app ze terugvindt.
+- **Herstellen zonder gegevensverlies:** staat er al een database met gebruikers maar ontbreekt `config.php`, dan toont de installer *Bestaande database gevonden* met één knop **Instellingen herstellen** (met de sleutel uit `storage/app.key`, of vul ze in). Een nieuwe installatie over een bestaande database kan niet meer.
+- Tests: 9 extra controles in `v26_deploy`, `v27_terugzetten` aangepast.
+
 _v0.28.0-dev – Eigen accounts voor leden en kinderen_
 
 - **Meerderjarige leden krijgen automatisch een account:** bij een nieuw of gewijzigd lid van 18+ met e-mailadres staat het vinkje *eigen account aanmaken en uitnodiging sturen* standaard aan. Het lid krijgt meteen een uitnodiging om een wachtwoord te kiezen en ziet daarna de eigen kalender en groep.
