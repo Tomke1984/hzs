@@ -91,16 +91,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $dbExport = $v['driver'] === 'mysql'
                 ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($v['host'], true) . ",\n        'port' => " . (int) $v['port'] . ",\n        'name' => " . var_export($v['name'], true) . ",\n        'user' => " . var_export($v['user'], true) . ",\n        'pass' => " . var_export($dbPass, true) . ",\n    ]"
-                : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbPath === $defaultDbPath ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbPath, true)) . ",\n    ]";
+                : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbPath === $defaultDbPath && config_file() === APP_ROOT . '/config.php' ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbPath, true)) . ",\n    ]";
             $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . ($v['driver'] === 'sqlite' ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n    // Sleutel voor versleutelde velden (medische opmerking, 2FA). Bewaar een kopie veilig: zonder sleutel zijn die velden onleesbaar.\n    'app_key' => " . var_export(Crypto::newKey(), true) . ",\n];\n";
 
-            $written = @file_put_contents(APP_ROOT . '/config.php', $configPhp) !== false;
-            @chmod(APP_ROOT . '/config.php', 0640);
+            $cfgFile = config_file();
+            if (!is_dir(dirname($cfgFile))) {
+                @mkdir(dirname($cfgFile), 0750, true);
+            }
+            $written = @file_put_contents($cfgFile, $configPhp) !== false;
+            @chmod($cfgFile, 0640);
 
             $body = '<div class="card narrow"><h1>Installatie voltooid</h1>';
             $body .= '<p>Het beheeraccount <strong>' . e($v['admin_email']) . '</strong> is aangemaakt.</p>';
             if (!$written) {
-                $body .= '<div class="alert alert-error">Kon <code>config.php</code> niet wegschrijven. Maak het bestand zelf aan in de projectmap met deze inhoud:</div><pre>' . e($configPhp) . '</pre>';
+                $body .= '<div class="alert alert-error">Kon <code>' . e($cfgFile) . '</code> niet wegschrijven. Maak het bestand zelf aan met deze inhoud:</div><pre>' . e($configPhp) . '</pre>';
             }
             if ($v['demo'] === '1') {
                 $body .= '<div class="alert alert-success"><strong>Demo-accounts</strong> (wachtwoord voor allemaal: <code>Demo1234!</code>)<br>'

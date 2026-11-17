@@ -13,8 +13,8 @@ spl_autoload_register(function (string $class): void {
 
 require APP_ROOT . '/app/helpers.php';
 
-$GLOBALS['CONFIG'] = is_file(APP_ROOT . '/config.php')
-    ? require APP_ROOT . '/config.php'
+$GLOBALS['CONFIG'] = is_file(config_file())
+    ? require config_file()
     : ['app_name' => 'HZS Clubapp', 'timezone' => 'Europe/Brussels', 'debug' => true, 'cookie_secure' => false, 'db' => null];
 
 date_default_timezone_set(config('timezone', 'Europe/Brussels'));

@@ -1,4 +1,22 @@
 <?php
+/**
+ * Waar staat config.php? 1) omgevingsvariabele HZS_CONFIG (containers: Coolify/Railpack, zodat het bestand op het
+ * blijvende volume staat), 2) config.php in de projectmap (lokaal, FTP-hosting), 3) storage/config.php.
+ */
+function config_file(): string
+{
+    foreach ([getenv('HZS_CONFIG'), $_SERVER['HZS_CONFIG'] ?? null, $_ENV['HZS_CONFIG'] ?? null] as $env) {
+        if (is_string($env) && $env !== '') {
+            return $env;
+        }
+    }
+    if (!is_file(APP_ROOT . '/config.php') && is_file(APP_ROOT . '/storage/config.php')) {
+        return APP_ROOT . '/storage/config.php';
+    }
+    return APP_ROOT . '/config.php';
+}
+
+
 function e($v): string
 {
     return htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

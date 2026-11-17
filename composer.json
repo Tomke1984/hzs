@@ -1,0 +1,13 @@
+{
+    "name": "tomke1984/hzs-clubapp",
+    "description": "HZS Clubapp – clubapp van Hasseltse Zwemvereniging Spartacus. Geen externe pakketten; dit bestand dient om de PHP-versie vast te leggen (o.a. voor Railpack/Coolify).",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform-check": false
+    }
+}

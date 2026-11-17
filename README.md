@@ -43,6 +43,21 @@ Opnieuw beginnen: stop de server, verwijder `config.php` en `storage/data/clubap
 4. Verwijder daarna `public/install.php`.
 5. Zet in `config.php` `debug` op `false`. Over HTTPS krijgt het sessiecookie automatisch de vlag *Secure*; `cookie_secure` op `true` forceert dat altijd.
 
+### Op Coolify (Railpack)
+
+De repo bevat wat Railpack nodig heeft: `composer.json` (PHP 8.4, geen externe pakketten) zodat Railpack de app als PHP herkent, en een eigen `Caddyfile` voor FrankenPHP met **enkel `public/` als webmap**. Zonder die Caddyfile zou Railpack de hele projectmap uitleveren, inclusief `storage/` met de database. Per app in Coolify (productie op `main`, test op `dev`):
+
+1. **Build strategy:** Railpack. *Base directory* `/`, poort `80`.
+2. **Persistent Storage:** een volume met *Destination path* `/app/storage`. Daar staan de database, `config.php`, de sleutel, sessies en back-ups; het blijft bewaard bij elke nieuwe deploy. Productie en dev krijgen elk een **eigen** volume (een deploy van `dev` voert migraties uit).
+3. **Environment Variables:** `HZS_CONFIG=/app/storage/config.php` (de installer schrijft `config.php` dan op het volume in plaats van in de app-map, die bij elke deploy leeg is).
+4. **Domein** achter een Cloudflare Tunnel: `http://…` invullen in Coolify (Cloudflare doet HTTPS; met `https://` ontstaat een doorverwijzingslus). De app herkent HTTPS via `X-Forwarded-Proto`.
+5. **Auto Deploy** aan (Advanced). Repo als *public repository* toegevoegd: maak in Coolify onder *Webhooks* een GitHub-webhook en voeg die toe in GitHub (*Settings → Webhooks*, enkel *push*).
+6. Eerste keer: open `/install.php`, kies SQLite en laat het pad leeg (dan `storage/data/` op het volume).
+
+Controle na de deploy: `/storage/data/clubapp.sqlite`, `/config.php` en `/README.md` moeten **404** geven.
+
+`config.php` zoekt de app op in deze volgorde: `HZS_CONFIG`, `config.php` in de projectmap, `storage/config.php`.
+
 ### Database buiten de webmap (SQLite op een server)
 
 Gebruik je SQLite op de server, zet het databasebestand dan **buiten de webmap** (de map die de webserver uitlevert, vaak `www/` of `public_html/`), bv. `/home/<account>/hzs-data/clubapp.sqlite`. Vul dat pad in bij de installatie (veld *SQLite: pad naar het databasebestand*) of pas `db.path` in `config.php` aan. Een bestaande database verplaatsen: zet de app even offline, verplaats `clubapp.sqlite` (en eventuele `clubapp.sqlite-wal`/`-shm`) en pas `db.path` aan.
@@ -135,6 +150,7 @@ app/PasswordPolicy.php  wachtwoordregels (lengte, veelgebruikte wachtwoorden, na
 app/Purge.php           definitief verwijderen van leden en gebruikers (lijst van alle verwijzingen)
 app/Coverage.php        trainersplanning competitie: bezetting per activiteit, tekorten, herinneringsmails
 app/views/              PHP-templates met escaping via e()
+Caddyfile, composer.json  webserver en PHP-versie voor Coolify/Railpack (FrankenPHP)
 db/schema.sql           volledig, actueel schema voor een nieuwe installatie (SQLite en MySQL, tokens {{PK}}/{{ENGINE}})
 db/migrations/          genummerde upgrades voor bestaande databases (NNN_naam.php, idempotent)
 docs/                   functionele en technische analyse
@@ -162,7 +178,7 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan), `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie) `v24_onderhoud` (sessiemap, back-up, wachtwoord vergeten, wachtwoordregels, vervallende links, cache-busting, versleuteling, migraties, Purge-bewaking, oude tabellen) en `v25_captcha` (vinkje "Ik ben geen robot" bij aanmelden en wachtwoord vergeten, reservevraag zonder JavaScript, honeypot, 2FA verwijderd).
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan), `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie) `v24_onderhoud` (sessiemap, back-up, wachtwoord vergeten, wachtwoordregels, vervallende links, cache-busting, versleuteling, migraties, Purge-bewaking, oude tabellen) `v26_deploy` (Caddyfile met public/ als webmap, composer.json, plaats van config.php via HZS_CONFIG) en `v25_captcha` (vinkje "Ik ben geen robot" bij aanmelden en wachtwoord vergeten, reservevraag zonder JavaScript, honeypot, 2FA verwijderd).
 
 Op GitHub draaien bij elke push naar `dev` of `main` automatisch de syntaxcontrole, PHPStan en alle suites (tabblad *Actions*; groen vinkje of rood kruisje bij de commit).
 

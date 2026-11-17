@@ -14,3 +14,5 @@ storage/backup/*
 !storage/backup/.gitkeep
 storage/app.key
 storage/backup-last-run
+storage/config.php
+vendor/

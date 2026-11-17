@@ -118,6 +118,7 @@ De app is gecontroleerd van 320 tot 1920 px (geen horizontale scroll). Het menu 
 
 ## 11. Deployment en exploitatie
 - Subdomein (bv. app.khzs.be) met HTTPS; webroot naar `public/`.
+- **Coolify (Railpack/FrankenPHP):** `composer.json` (PHP ^8.4, geen pakketten) zorgt voor de detectie, de eigen `Caddyfile` zet de webmap op `public/` (de standaard van Railpack is de hele projectmap), weigert verborgen bestanden en geeft assets een jaar cache. Blijvende opslag: volume op `/app/storage`; `HZS_CONFIG=/app/storage/config.php` laat de installer `config.php` daar schrijven (`config_file()`: `HZS_CONFIG`, dan `config.php` in de projectmap, dan `storage/config.php`). Achter een Cloudflare Tunnel staat het domein in Coolify als `http://`. Details in de README, *Op Coolify (Railpack)*.
 - `config.php` buiten versiebeheer; `debug` uit; bij SQLite het databasebestand buiten de webmap (README); `app_url` en `privacy_url` instellen.
 - `public/install.php` na installatie verwijderen.
 - Mail instellen (smtp aanbevolen); de herinneringen van de trainersplanning gebruiken dezelfde mail en `app_url`.
