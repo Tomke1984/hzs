@@ -31,7 +31,7 @@ final class Auth
                     'SELECT id, email, display_name, member_id, is_active, session_version FROM users WHERE id = ?',
                     [(int) $id]
                 );
-                // session_version stijgt bij een nieuw wachtwoord, 2FA uit of een reset door de beheerder:
+                // session_version stijgt bij een nieuw wachtwoord of een reset door de beheerder:
                 // dan zijn alle andere sessies van die gebruiker meteen ongeldig.
                 if ($u && (int) $u['is_active'] === 1 && (int) $u['session_version'] === (int) ($_SESSION['sv'] ?? -1)) {
                     unset($u['session_version']);
@@ -89,12 +89,6 @@ final class Auth
             // nieuwere PHP met een sterkere standaard (of hogere kost): hash meteen bijwerken
             Database::exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $u['id']]);
         }
-        if ((int) ($u['totp_enabled'] ?? 0) === 1 && !empty($u['totp_secret'])) {
-            // Wachtwoord klopt, maar de tweede stap (code uit de authenticator-app) moet nog volgen.
-            $_SESSION['pending_uid'] = (int) $u['id'];
-            $_SESSION['pending_at'] = time();
-            return true;
-        }
         self::completeLogin((int) $u['id']);
         return true;
     }
@@ -103,7 +97,6 @@ final class Auth
     public static function completeLogin(int $userId): void
     {
         session_regenerate_id(true);
-        unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
         $_SESSION['uid'] = $userId;
         $_SESSION['last'] = $_SESSION['login_at'] = time();
         $_SESSION['sv'] = (int) Database::val('SELECT session_version FROM users WHERE id = ?', [$userId]);
@@ -125,36 +118,12 @@ final class Auth
         }
     }
 
-    /** Gebruiker die het wachtwoord al gaf maar nog de tweede stap moet doen (max. 10 minuten geldig). */
-    public static function pendingUserId(): ?int
-    {
-        $id = (int) ($_SESSION['pending_uid'] ?? 0);
-        if ($id && time() - (int) ($_SESSION['pending_at'] ?? 0) <= 600) {
-            return $id;
-        }
-        unset($_SESSION['pending_uid'], $_SESSION['pending_at']);
-        return null;
-    }
-
     /** Laat een verzoek zonder sessie (bv. een agenda-abonnement) onder de rechten van één gebruiker lopen. */
     public static function actAs(array $user): void
     {
         self::$loaded = true;
         self::$user = $user;
         self::$roles = self::$perms = null;
-    }
-
-    /**
-     * Beheerders en bestuur moeten tweestapsverificatie aanzetten als 'security.require_2fa_admin' aan staat.
-     * Niet ingesteld = verplicht op de server, niet lokaal (localhost) om testen eenvoudig te houden.
-     */
-    public static function mustEnableTwoFactor(): bool
-    {
-        $u = self::user();
-        if (!$u || !config('security.require_2fa_admin', !is_local_request()) || !(self::hasRole('ADMIN') || self::hasRole('BOARD'))) {
-            return false;
-        }
-        return !(int) Database::val('SELECT totp_enabled FROM users WHERE id = ?', [$u['id']]);
     }
 
     public static function logout(): void

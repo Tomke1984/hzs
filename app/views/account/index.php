@@ -1,8 +1,4 @@
 <h1>Mijn account</h1>
-<?php if ($forced): ?>
-  <div class="alert alert-warning"><strong>Tweestapsverificatie is verplicht voor beheerders.</strong> Zet ze hieronder aan om verder te kunnen.</div>
-<?php endif; ?>
-
 <section class="card">
   <dl class="facts">
     <dt>Naam</dt><dd><?= e($u['display_name']) ?></dd>
@@ -31,34 +27,6 @@
   <?php else: ?>
     <form method="post" action="<?= e(url('account_ical')) ?>">
       <?= csrf_field() ?><button class="btn" type="submit">Persoonlijke agenda-link maken</button>
-    </form>
-  <?php endif; ?>
-</section>
-
-<section class="card" id="2fa">
-  <h2>Tweestapsverificatie</h2>
-  <?php if ($setupSecret): ?>
-    <p>1. Open een authenticator-app (Google Authenticator, Microsoft Authenticator, 1Password, Aegis, …) en kies “Account toevoegen” → “Sleutel handmatig invoeren”.</p>
-    <p>2. Vul deze sleutel in (tijdgebonden, 6 cijfers):</p>
-    <p><code class="big"><?= e(trim(chunk_split($setupSecret, 4, ' '))) ?></code></p>
-    <p class="small muted">Of gebruik deze koppeling op je telefoon: <a href="<?= e($otpUri) ?>">sleutel toevoegen in je app</a>.</p>
-    <p>3. Vul de code in die de app nu toont.</p>
-    <form class="inline-form" method="post" action="<?= e(url('account_2fa_enable')) ?>" autocomplete="off">
-      <?= csrf_field() ?>
-      <label>Code <input name="code" inputmode="numeric" maxlength="7" required autocomplete="one-time-code"></label>
-      <button class="btn" type="submit">Aanzetten</button>
-    </form>
-  <?php elseif ((int) $u['totp_enabled'] === 1): ?>
-    <p><span class="chip ok">Aan</span> Bij het aanmelden vragen we naast je wachtwoord een code uit je authenticator-app.</p>
-    <form class="inline-form" method="post" action="<?= e(url('account_2fa_disable')) ?>" data-confirm="Tweestapsverificatie uitzetten?">
-      <?= csrf_field() ?>
-      <label>Je wachtwoord <input type="password" name="current_password" required autocomplete="current-password"></label>
-      <button class="btn btn-ghost" type="submit">Uitzetten</button>
-    </form>
-  <?php else: ?>
-    <p class="muted">Een extra beveiliging bovenop je wachtwoord. Aanbevolen voor beheerders en bestuur, omdat zij persoonsgegevens van minderjarigen zien.</p>
-    <form method="post" action="<?= e(url('account_2fa_start')) ?>">
-      <?= csrf_field() ?><button class="btn" type="submit">Instellen</button>
     </form>
   <?php endif; ?>
 </section>

@@ -5,7 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+_v0.25 – Controlevraag in plaats van tweestapsverificatie – commit `HASH`_
+
+- **Tweestapsverificatie is weg:** niemand moet nog een code uit een authenticator-app invullen, ook beheerders en bestuur niet. Het scherm in *Mijn account*, de knop op de gebruikersfiche en de melding op het overzicht zijn verdwenen. De bewaarde 2FA-geheimen worden bij de update uit de database gewist (migratie 017).
+- **Controlevraag (captcha)** bij *Aanmelden* en *Wachtwoord vergeten*: een eenvoudige rekenvraag zoals *Hoeveel is drie plus 5?* (antwoord in cijfers). Daarnaast een verborgen veld dat enkel bots invullen en een minimumtijd van 2 seconden. Zonder externe dienst (geen Google of Cloudflare, geen cookies van derden, geen sleutels nodig). Een fout antwoord telt niet als fout wachtwoord; de limiet van 5 foute wachtwoorden per 15 minuten blijft.
+- Instelling `security.require_2fa_admin` in `config.php` is niet meer nodig (mag blijven staan, wordt genegeerd).
+- Tests: nieuwe suite `v25_captcha` (23 controles); aanmelden in de tests beantwoordt de controlevraag.
 
 ## Op main
 

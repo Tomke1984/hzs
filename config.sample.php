@@ -28,9 +28,6 @@ return [
 
     // Optioneel: link naar de privacyverklaring van de club (onderaan elke pagina van de app).
     'privacy_url' => '',
-    // Beveiliging: true verplicht beheerders en bestuur om tweestapsverificatie aan te zetten.
-    // Weglaten = verplicht op de server, niet bij lokaal testen (localhost).
-    'security' => ['require_2fa_admin' => true],
     // Onderdelen die voorlopig uit staan; zet op true om ze te gebruiken.
     // attendance = presentielijst bij trainingen, aanwezigheidsrapport en "aanwezigheid nog in te vullen".
     'features' => ['attendance' => false],
@@ -42,7 +39,7 @@ return [
     'backup' => ['auto' => true, 'dir' => '', 'keep_days' => 14],
     // Deellink weekplanning: dagen geldig. iCal-link: vervalt na zoveel dagen zonder gebruik.
     'links' => ['share_days' => 365, 'ical_idle_days' => 180],
-    // Sleutel voor versleutelde velden (medische opmerking, 2FA-geheim): base64 van 32 bytes, bv. via
+    // Sleutel voor versleutelde velden (medische opmerking): base64 van 32 bytes, bv. via
     //   php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
     // Leeg = de app maakt eenmalig storage/app.key aan. Bewaar een kopie van de sleutel veilig, APART van de back-ups:
     // zonder sleutel zijn die velden onleesbaar.

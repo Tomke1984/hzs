@@ -172,7 +172,7 @@ final class Installer
             ['members', 'status_reason', 'VARCHAR(60) NULL'], ['members', 'status_date', 'VARCHAR(10) NULL'],
             ['members', 'emergency_name', 'VARCHAR(120) NULL'], ['members', 'emergency_phone', 'VARCHAR(40) NULL'],
             ['members', 'medical_note', 'VARCHAR(500) NULL'], ['members', 'photo_consent', 'TINYINT NOT NULL DEFAULT 0'],
-            ['users', 'ical_token', 'VARCHAR(40) NULL'], ['users', 'totp_secret', 'VARCHAR(64) NULL'], ['users', 'totp_enabled', 'TINYINT NOT NULL DEFAULT 0'],
+            ['users', 'ical_token', 'VARCHAR(40) NULL'],
             ['users', 'session_version', 'INT NOT NULL DEFAULT 0'],
         ];
         foreach ($cols as [$table, $col, $def]) {

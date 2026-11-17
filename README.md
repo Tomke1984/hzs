@@ -59,7 +59,7 @@ Terugzetten (SQLite): zet de app even offline, pak het bestand uit (`gunzip hzs-
 
 ### Versleuteling
 
-De **medische opmerking** en het **2FA-geheim** staan versleuteld in de database (libsodium). Wie enkel de database (of een back-up) in handen krijgt, kan ze niet lezen. De sleutel staat in `config.php` (`app_key`, nieuwe installaties) of, bij een bestaande installatie, in `storage/app.key` (eenmalig automatisch aangemaakt; beheerders krijgen dan de raad hem naar `config.php` te verplaatsen).
+De **medische opmerking** staat versleuteld in de database (libsodium). Wie enkel de database (of een back-up) in handen krijgt, kan ze niet lezen. De sleutel staat in `config.php` (`app_key`, nieuwe installaties) of, bij een bestaande installatie, in `storage/app.key` (eenmalig automatisch aangemaakt; beheerders krijgen dan de raad hem naar `config.php` te verplaatsen).
 
 **Bewaar een kopie van de sleutel veilig en apart van de back-ups.** Zonder sleutel zijn die velden onleesbaar, ook in een back-up. Wie medische info bekijkt (behalve de ouder of het lid zelf), komt in de auditlog (`VIEW_MEDICAL`, hooguit één regel per dag per lid).
 
@@ -110,7 +110,7 @@ Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 e
 - **Communicatie:** (aanwezigheidsrapport per groep/periode als `features.attendance` aan staat); **bericht sturen** naar groep, trainingsreeks, activiteit of club (voorbeeldscherm, max. 400, trainer enkel eigen groepen, alles gelogd); **afmelden** door ouders/leden met reden; persoonlijke **agenda-link** (iCal) die je kan intrekken.
 - **Noodcontact en medische opmerking** (enkel met `members.medical`); reden bij stopzetting; waarschuwing bij **dubbele leden**.
 - **Auditlog** (`audit.read`, enkel beheerders), **globaal zoeken** in het menu, **dashboards per rol**.
-- **Tweestapsverificatie (TOTP)** per account (`/app/account`, geheim handmatig invoeren, geen QR-code); verplicht voor **beheerders en bestuur** op de server (`security.require_2fa_admin`; niet ingesteld = verplicht behalve op localhost); een beheerder kan 2FA van een gebruiker uitzetten.
+- **Controlevraag (captcha)** bij *Aanmelden* en *Wachtwoord vergeten* (sinds v0.25, in plaats van tweestapsverificatie): een eenvoudige rekenvraag ("Hoeveel is drie plus 5?", antwoord in cijfers of woorden), een verborgen veld dat enkel bots invullen en een minimumtijd van 2 seconden (`captcha.min_seconds`). Zonder externe dienst: geen cookies of tracking van derden, geen sleutels. Samen met de limiet van 5 foute wachtwoorden per 15 minuten.
 - **Privacy:** zet `privacy_url` in `config.php` naar het privacybeleid op de clubwebsite; de link staat dan onderaan elke pagina.
 
 ### Mobiel en techniek
@@ -130,7 +130,7 @@ app/Controllers/        Auth, Account, Dashboard, Member, Group, Activity, Serie
 app/Installer.php       installatie, oude ingebouwde upgrades, indexen, referentiedata; boot() bij elk verzoek (één kleine query)
 app/Migrator.php        genummerde migraties uit db/migrations/ (tabel schema_migrations)
 app/Backup.php          dagelijkse back-up (SQLite/MySQL), waarschuwing bij een te oude back-up
-app/Crypto.php          versleuteling van gevoelige velden (medische opmerking, 2FA-geheim)
+app/Crypto.php          versleuteling van gevoelige velden (medische opmerking)
 app/PasswordPolicy.php  wachtwoordregels (lengte, veelgebruikte wachtwoorden, naam/e-mail)
 app/Purge.php           definitief verwijderen van leden en gebruikers (lijst van alle verwijzingen)
 app/Coverage.php        trainersplanning competitie: bezetting per activiteit, tekorten, herinneringsmails
@@ -162,7 +162,7 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, 2FA voor bestuur, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan), `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie) en `v24_onderhoud` (sessiemap, back-up, wachtwoord vergeten, wachtwoordregels, vervallende links, cache-busting, versleuteling, migraties, Purge-bewaking, oude tabellen).
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan), `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie) `v24_onderhoud` (sessiemap, back-up, wachtwoord vergeten, wachtwoordregels, vervallende links, cache-busting, versleuteling, migraties, Purge-bewaking, oude tabellen) en `v25_captcha` (controlevraag bij aanmelden en wachtwoord vergeten, honeypot, minimumtijd, 2FA verwijderd).
 
 Op GitHub draaien bij elke push naar `dev` of `main` automatisch de syntaxcontrole, PHPStan en alle suites (tabblad *Actions*; groen vinkje of rood kruisje bij de commit).
 

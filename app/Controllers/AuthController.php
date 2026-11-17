@@ -20,6 +20,12 @@ final class AuthController
             render('login', ['email' => $email], 'Aanmelden');
             return;
         }
+        if (!Captcha::check('login')) {
+            http_response_code(422);
+            flash('error', 'Het antwoord op de controlevraag klopt niet. Probeer het opnieuw met de nieuwe vraag.');
+            render('login', ['email' => $email], 'Aanmelden');
+            return;
+        }
         if ($email === '' || $password === '' || !Auth::attempt($email, $password)) {
             if ($email !== '') {
                 Auth::recordFailure($email);
@@ -29,45 +35,6 @@ final class AuthController
             render('login', ['email' => $email], 'Aanmelden');
             return;
         }
-        if (Auth::pendingUserId()) {
-            redirect(url('login_2fa'));
-        }
-        redirect(url('dashboard'));
-    }
-
-    /** Tweede stap bij het aanmelden: code uit de authenticator-app. */
-    public static function showTwoFactor(): void
-    {
-        if (!Auth::pendingUserId()) {
-            redirect(url('login'));
-        }
-        render('auth/twofactor', [], 'Verificatiecode');
-    }
-
-    public static function twoFactor(): void
-    {
-        $uid = Auth::pendingUserId();
-        if (!$uid) {
-            flash('error', 'Je aanmelding is verlopen. Meld opnieuw aan.');
-            redirect(url('login'));
-        }
-        $key = '2fa:' . $uid;
-        if (Auth::throttled($key)) {
-            http_response_code(429);
-            flash('error', 'Te veel foute codes. Probeer het over 15 minuten opnieuw.');
-            render('auth/twofactor', [], 'Verificatiecode');
-            return;
-        }
-        $u = Database::one('SELECT id, totp_secret, is_active FROM users WHERE id = ?', [$uid]);
-        if (!$u || (int) $u['is_active'] !== 1 || !Totp::verify((string) Crypto::decrypt($u['totp_secret']), (string) ($_POST['code'] ?? ''))) {
-            Auth::recordFailure($key);
-            http_response_code(401);
-            flash('error', 'Deze code klopt niet. Een code is 30 seconden geldig: probeer de volgende.');
-            render('auth/twofactor', [], 'Verificatiecode');
-            return;
-        }
-        Database::exec('DELETE FROM login_attempts WHERE email = ?', [$key]);
-        Auth::completeLogin($uid);
         redirect(url('dashboard'));
     }
 
@@ -80,6 +47,12 @@ final class AuthController
     public static function forgot(): void
     {
         $email = strtolower(input('email'));
+        if (!Captcha::check('forgot')) {
+            http_response_code(422);
+            flash('error', 'Het antwoord op de controlevraag klopt niet. Probeer het opnieuw met de nieuwe vraag.');
+            render('auth/forgot', ['sent' => false, 'email' => $email], 'Wachtwoord vergeten');
+            return;
+        }
         if (Auth::forgotThrottled($email)) {
             http_response_code(429);
             flash('error', 'Te veel aanvragen vanaf dit toestel. Probeer het over een uur opnieuw.');

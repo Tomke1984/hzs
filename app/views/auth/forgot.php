@@ -10,6 +10,7 @@
     <label>E-mailadres
       <input type="email" name="email" value="<?= e($email) ?>" required autofocus autocomplete="username">
     </label>
+    <?= Captcha::field('forgot') ?>
     <button class="btn" type="submit">Stuur me een link</button>
   </form>
   <p class="center"><a href="<?= e(url('login')) ?>">Terug naar aanmelden</a></p>

@@ -76,22 +76,12 @@ T::ok($phone->status === 302 && str_contains($phone->location, 'aanmelden'), 'an
 $laptop->get('/app/leden');
 T::ok($laptop->status === 200, 'huidige sessie werkt nog');
 
-// Beheerder zet 2FA van een gebruiker uit: diens sessies vervallen
-$swimmer = Browser::login('zwemmer@demo.local');
-$sid = (int) T::val("SELECT id FROM users WHERE email = 'zwemmer@demo.local'");
-$admin->get('/app/gebruikers/' . $sid . '/wijzigen');
-$admin->post('/app/user-2fa-reset', ['id' => $sid]);
-$swimmer->get('/app');
-T::ok($swimmer->status === 302, 'reset door beheerder meldt de gebruiker af');
-$admin->get('/app');
-T::ok($admin->status === 200, 'beheerder zelf blijft aangemeld');
-
 // Wachtwoord vergeten + nieuwe link: oude sessies vervallen
 $parent = Browser::login('ouder@demo.local');
 T::clearMails();
 $anon = new Browser();
 $anon->get('/wachtwoord-vergeten');
-$anon->post('/wachtwoord-vergeten', ['email' => 'ouder@demo.local']);
+$anon->post('/wachtwoord-vergeten', ['email' => 'ouder@demo.local', 'captcha' => $anon->captcha()]);
 preg_match('/token=([a-f0-9]{64})/', T::outbox(), $m);
 T::ok(isset($m[1]), 'resetlink verstuurd');
 $anon->get('/activeren?token=' . ($m[1] ?? ''));
@@ -107,18 +97,6 @@ T::exec('UPDATE users SET is_active = 0 WHERE id = ?', [$cid]);
 $coach->get('/app');
 T::ok($coach->status === 302, 'uitgezet account is meteen afgemeld');
 T::exec('UPDATE users SET is_active = 1 WHERE id = ?', [$cid]);
-
-echo "Tweestapsverificatie voor bestuur\n";
-T::config(['security' => ['require_2fa_admin' => true]]);
-$bb = Browser::login('bestuur@demo.local');
-$bb->get('/app/leden');
-T::ok($bb->status === 302 && str_contains($bb->location, 'account'), 'bestuur moet eerst 2FA aanzetten');
-$tt = Browser::login('competitie@demo.local');
-$tt->get('/app');
-T::ok($tt->status === 200, 'trainer hoeft geen 2FA');
-T::config(['security' => ['require_2fa_admin' => false]]);
-$bb->get('/app/leden');
-T::ok($bb->status === 200, 'met require_2fa_admin = false geen verplichting');
 
 echo "Secure cookie over HTTPS\n";
 $h = new Browser();

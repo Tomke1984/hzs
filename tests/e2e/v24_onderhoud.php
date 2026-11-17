@@ -49,17 +49,17 @@ T::clearMails();
 $anon = new Browser();
 for ($i = 0; $i < 4; $i++) {
     $anon->get('/wachtwoord-vergeten');
-    $anon->post('/wachtwoord-vergeten', ['email' => 'zwemmer@demo.local']);
+    $anon->post('/wachtwoord-vergeten', ['email' => 'zwemmer@demo.local', 'captcha' => $anon->captcha()]);
 }
 $uid = (int) T::val("SELECT id FROM users WHERE email = 'zwemmer@demo.local'");
 T::ok((int) T::val("SELECT COUNT(*) FROM user_tokens WHERE user_id = ? AND purpose = 'RESET'", [$uid]) === 3, 'hooguit 3 resetmails per uur per account');
 T::ok(substr_count(T::outbox(), 'token=') === 3, 'de mails vertrekken (na het antwoord)');
 $anon->get('/wachtwoord-vergeten');
-$anon->post('/wachtwoord-vergeten', ['email' => 'bestaat-niet@demo.local']);
+$anon->post('/wachtwoord-vergeten', ['email' => 'bestaat-niet@demo.local', 'captcha' => $anon->captcha()]);
 T::ok($anon->status === 200 && $anon->has('Bestaat er een account'), 'onbekend adres: zelfde melding');
 for ($i = 0; $i < 6; $i++) {
     $anon->get('/wachtwoord-vergeten');
-    $anon->post('/wachtwoord-vergeten', ['email' => "x$i@demo.local"]);
+    $anon->post('/wachtwoord-vergeten', ['email' => "x$i@demo.local", 'captcha' => $anon->captcha()]);
 }
 T::ok($anon->status === 429, 'na 10 aanvragen per uur vanaf hetzelfde IP-adres: geblokkeerd (' . $anon->status . ')');
 $ok = Browser::login('bestuur@demo.local');
@@ -139,23 +139,18 @@ if ($coach->status === 200) {
     $tr->get('/app/leden/' . $mid);
     T::ok($tr->has('Allergie: noten'), 'beheerder ziet de ontsleutelde tekst');
 }
-// Bestaande, onversleutelde gegevens worden bij de update versleuteld; 2FA blijft werken
-$sec = 'JBSWY3DPEHPK3PXP';
+// Bestaande, onversleutelde gegevens worden bij de update versleuteld; de oude 2FA-kolommen verdwijnen (v0.25, migratie 017)
 T::exec("UPDATE members SET medical_note = 'Oud: epilepsie' WHERE id = ?", [$mid]);
-T::exec("UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE email = 'bestuur@demo.local'", [$sec]);
+T::exec('ALTER TABLE users ADD COLUMN totp_secret VARCHAR(255) NULL');
+T::exec('ALTER TABLE users ADD COLUMN totp_enabled TINYINT NOT NULL DEFAULT 0');
+T::exec("UPDATE users SET totp_secret = 'JBSWY3DPEHPK3PXP', totp_enabled = 1 WHERE email = 'bestuur@demo.local'");
 T::oldDatabase();
 $tr->get('/app');
 T::ok(str_starts_with((string) T::val('SELECT medical_note FROM members WHERE id = ?', [$mid]), 'enc1:'), 'oude medische opmerking versleuteld bij de update');
-T::ok(str_starts_with((string) T::val("SELECT totp_secret FROM users WHERE email = 'bestuur@demo.local'"), 'enc1:'), 'TOTP-geheim versleuteld bij de update');
-require_once T::$dir . '/app/Totp.php';
-$b = new Browser();
-$b->get('/aanmelden');
-$b->post('/aanmelden', ['email' => 'bestuur@demo.local', 'password' => 'Demo1234!']);
-$b->get('/app/login-2fa');
-$b->post('/app/login-2fa', ['code' => Totp::code($sec)]);
+T::ok((int) T::val("SELECT COUNT(*) FROM pragma_table_info('users') WHERE name IN ('totp_secret', 'totp_enabled')") === 0, 'oude 2FA-kolommen opgeruimd bij de update');
+$b = Browser::login('bestuur@demo.local');
 $b->get('/app');
-T::ok($b->status === 200, 'aanmelden met 2FA werkt met het versleutelde geheim');
-T::exec("UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE email = 'bestuur@demo.local'");
+T::ok($b->status === 200, 'wie vroeger 2FA had, meldt nu aan met wachtwoord en controlevraag');
 $admin->get('/app');
 T::ok($admin->has('<strong>Sleutel:</strong>'), 'beheerder krijgt de raad de sleutel naar config.php te verplaatsen');
 T::config(['app_key' => trim((string) file_get_contents(T::$dir . '/storage/app.key'))]);
@@ -170,14 +165,14 @@ T::ok((bool) T::val("SELECT 1 FROM schema_migrations WHERE name = '016_versleute
 foreach ([['groups', 'fee_cents'], ['groups', 'goals'], ['groups', 'next_group_id'], ['activities', 'signup_capacity'], ['activity_series', 'capacity']] as [$t, $c]) {
     T::ok(!T::val("SELECT 1 FROM pragma_table_info('$t') WHERE name = ?", [$c]), "oude kolom $t.$c verwijderd");
 }
-file_put_contents(T::$dir . '/db/migrations/017_test.php', "<?php\nreturn function (): void { Database::exec('CREATE TABLE IF NOT EXISTS migratie_test (id INTEGER)'); Database::exec('INSERT INTO migratie_test (id) VALUES (1)'); };\n");
+file_put_contents(T::$dir . '/db/migrations/999_test.php', "<?php\nreturn function (): void { Database::exec('CREATE TABLE IF NOT EXISTS migratie_test (id INTEGER)'); Database::exec('INSERT INTO migratie_test (id) VALUES (1)'); };\n");
 $tr->get('/app');
 $tr->get('/app');
 T::ok((int) T::val('SELECT COUNT(*) FROM migratie_test') === 1, 'nieuwe migratie loopt precies één keer');
-T::ok(T::val("SELECT v FROM app_meta WHERE k = 'migration'") === '017_test', 'laatste migratie onthouden');
-unlink(T::$dir . '/db/migrations/017_test.php');
+T::ok(T::val("SELECT v FROM app_meta WHERE k = 'migration'") === '999_test', 'laatste migratie onthouden');
+unlink(T::$dir . '/db/migrations/999_test.php');
 T::exec('DROP TABLE migratie_test');
-T::exec("DELETE FROM schema_migrations WHERE name = '017_test'");
+T::exec("DELETE FROM schema_migrations WHERE name = '999_test'");
 
 echo "Purge: elke verwijzing naar een lid of gebruiker is gedekt\n";
 require_once T::$dir . '/app/Purge.php';

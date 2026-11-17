@@ -1,6 +1,6 @@
 <?php
 /**
- * Versleuteling van gevoelige velden in de database (medische opmerking, TOTP-geheim) met libsodium (XSalsa20-Poly1305).
+ * Versleuteling van gevoelige velden in de database (medische opmerking) met libsodium (XSalsa20-Poly1305).
  *
  * Sleutel: 'app_key' in config.php (base64, 32 bytes). Ontbreekt die, dan maakt de app eenmalig storage/app.key aan.
  * Wie de database lekt maar niet de sleutel, kan deze velden niet lezen. Bewaar de sleutel daarom NIET naast de

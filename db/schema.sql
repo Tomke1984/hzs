@@ -29,8 +29,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at VARCHAR(19) NOT NULL,
   ical_token VARCHAR(40) NULL,
   ical_last_used VARCHAR(10) NULL,
-  totp_secret VARCHAR(255) NULL,
-  totp_enabled TINYINT NOT NULL DEFAULT 0,
   session_version INT NOT NULL DEFAULT 0,
   FOREIGN KEY (member_id) REFERENCES members(id)
 ){{ENGINE}};

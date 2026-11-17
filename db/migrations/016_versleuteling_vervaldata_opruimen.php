@@ -8,13 +8,17 @@
 return function (): void {
     if (Database::driver() === 'mysql') {
         Database::pdo()->exec('ALTER TABLE members MODIFY medical_note TEXT NULL');
-        Database::pdo()->exec('ALTER TABLE users MODIFY totp_secret VARCHAR(255) NULL');
+        if (Migrator::hasColumn('users', 'totp_secret')) { // sinds v0.25 verdwenen (017)
+            Database::pdo()->exec('ALTER TABLE users MODIFY totp_secret VARCHAR(255) NULL');
+        }
     }
     foreach (Database::all("SELECT id, medical_note FROM members WHERE medical_note IS NOT NULL AND medical_note <> '' AND medical_note NOT LIKE 'enc1:%'") as $m) {
         Database::exec('UPDATE members SET medical_note = ? WHERE id = ?', [Crypto::encrypt($m['medical_note']), $m['id']]);
     }
-    foreach (Database::all("SELECT id, totp_secret FROM users WHERE totp_secret IS NOT NULL AND totp_secret <> '' AND totp_secret NOT LIKE 'enc1:%'") as $u) {
-        Database::exec('UPDATE users SET totp_secret = ? WHERE id = ?', [Crypto::encrypt($u['totp_secret']), $u['id']]);
+    if (Migrator::hasColumn('users', 'totp_secret')) {
+        foreach (Database::all("SELECT id, totp_secret FROM users WHERE totp_secret IS NOT NULL AND totp_secret <> '' AND totp_secret NOT LIKE 'enc1:%'") as $u) {
+            Database::exec('UPDATE users SET totp_secret = ? WHERE id = ?', [Crypto::encrypt($u['totp_secret']), $u['id']]);
+        }
     }
 
     Migrator::addColumn('groups', 'share_expires', 'VARCHAR(10) NULL');

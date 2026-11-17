@@ -9,6 +9,7 @@
     <label>Wachtwoord
       <input type="password" name="password" required autocomplete="current-password">
     </label>
+    <?= Captcha::field('login') ?>
     <button class="btn" type="submit">Aanmelden</button>
   </form>
   <p class="center"><a href="<?= e(url('forgot')) ?>">Wachtwoord vergeten?</a></p>

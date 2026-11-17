@@ -784,3 +784,6 @@ details.parents-collapsed > summary.add-link::-webkit-details-marker { display: 
 form[data-autosubmit] select { max-width: 360px; }
 .link-btn { background: none; border: 0; padding: 8px 4px; color: var(--blue); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
 .text-bad { color: var(--bad); }
+
+/* Controlevraag: verborgen veld voor bots (niet display:none, sommige bots slaan dat over) */
+.hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

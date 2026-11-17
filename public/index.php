@@ -11,7 +11,6 @@ if (config('db') === null) {
  */
 $routes = [
     'login'            => ['GET' => ['AuthController', 'showLogin', 'public'], 'POST' => ['AuthController', 'login', 'public']],
-    'login_2fa'        => ['GET' => ['AuthController', 'showTwoFactor', 'public'], 'POST' => ['AuthController', 'twoFactor', 'public']],
     'forgot'           => ['GET' => ['AuthController', 'showForgot', 'public'], 'POST' => ['AuthController', 'forgot', 'public']],
     'activate'         => ['GET' => ['AuthController', 'showActivate', 'public'], 'POST' => ['AuthController', 'activate', 'public']],
     'logout'           => ['POST' => ['AuthController', 'logout', null]],
@@ -40,7 +39,6 @@ $routes = [
     'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
     'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
     'user_delete'      => ['POST' => ['UserController', 'delete', 'users.manage']],
-    'user_2fa_reset'   => ['POST' => ['UserController', 'resetTwoFactor', 'users.manage']],
     'user_child_add'   => ['POST' => ['UserController', 'addChild', 'users.manage']],
     'user_child_relation' => ['POST' => ['UserController', 'updateRelation', 'users.manage']],
     'user_child_remove' => ['POST' => ['UserController', 'removeChild', 'users.manage']],
@@ -84,9 +82,6 @@ $routes = [
     'account'          => ['GET' => ['AccountController', 'index', null]],
     'account_password' => ['POST' => ['AccountController', 'password', null]],
     'account_ical'     => ['POST' => ['AccountController', 'icalReset', null]],
-    'account_2fa_start' => ['POST' => ['AccountController', 'twoFactorStart', null]],
-    'account_2fa_enable' => ['POST' => ['AccountController', 'twoFactorEnable', null]],
-    'account_2fa_disable' => ['POST' => ['AccountController', 'twoFactorDisable', null]],
     'ical'             => ['GET' => ['AccountController', 'ical', 'public']],
 ];
 
@@ -142,10 +137,6 @@ if ($permission !== 'public') {
     header('Cache-Control: no-store');
     header('X-Robots-Tag: noindex, nofollow');
     Auth::requireLogin();
-    if (Auth::mustEnableTwoFactor() && !in_array($route, ['account', 'account_2fa_start', 'account_2fa_enable', 'logout'], true)) {
-        flash('warning', 'Beheerders moeten eerst tweestapsverificatie aanzetten.');
-        redirect(url('account') . '#2fa');
-    }
     if ($permission !== null) {
         Auth::require($permission);
     }

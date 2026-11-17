@@ -1,5 +1,5 @@
 <?php
-/** Eigen account: wachtwoord, persoonlijke agenda-link en tweestapsverificatie. */
+/** Eigen account: wachtwoord en persoonlijke agenda-link. */
 final class AccountController
 {
     public static function index(): void
@@ -7,18 +7,16 @@ final class AccountController
         self::page();
     }
 
-    private static function page(?string $setupSecret = null): void
+    private static function page(): void
     {
-        $u = Database::one('SELECT id, email, display_name, ical_token, totp_enabled FROM users WHERE id = ?', [Auth::user()['id']]);
+        $u = Database::one('SELECT id, email, display_name, ical_token FROM users WHERE id = ?', [Auth::user()['id']]);
         $ical = null;
         if ($u['ical_token']) {
             $ical = Invites::baseUrl() . '/' . url('ical', ['t' => $u['ical_token']]);
         }
         render('account/index', [
-            'u' => $u, 'ical' => $ical, 'setupSecret' => $setupSecret,
-            'otpUri' => $setupSecret ? Totp::uri($u['email'], $setupSecret) : '',
+            'u' => $u, 'ical' => $ical,
             'roles' => array_map('role_label', Auth::roles()),
-            'forced' => Auth::mustEnableTwoFactor(),
         ], 'Mijn account');
     }
 
@@ -47,46 +45,6 @@ final class AccountController
         Database::exec('UPDATE users SET ical_token = ?, ical_last_used = ? WHERE id = ?', input('do') === 'remove' ? [null, null, Auth::user()['id']] : [$token, today(), Auth::user()['id']]);
         flash('success', input('do') === 'remove' ? 'Je agenda-link is uitgeschakeld.' : 'Je persoonlijke agenda-link is aangemaakt. Een eerdere link werkt niet meer.');
         redirect(url('account') . '#agenda');
-    }
-
-    public static function twoFactorStart(): void
-    {
-        $secret = Totp::newSecret();
-        $_SESSION['totp_setup'] = $secret;
-        self::page($secret);
-    }
-
-    public static function twoFactorEnable(): void
-    {
-        $secret = (string) ($_SESSION['totp_setup'] ?? '');
-        if ($secret === '') {
-            redirect(url('account'));
-        }
-        if (!Totp::verify($secret, (string) ($_POST['code'] ?? ''))) {
-            http_response_code(422);
-            flash('error', 'Die code klopt niet. Controleer de tijd op je telefoon en probeer de volgende code.');
-            self::page($secret);
-            return;
-        }
-        Database::exec('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [Crypto::encrypt($secret), Auth::user()['id']]);
-        unset($_SESSION['totp_setup']);
-        audit('2FA_ON', 'user', (int) Auth::user()['id']);
-        flash('success', 'Tweestapsverificatie staat aan. Bij het volgende aanmelden vragen we de code uit je app.');
-        redirect(url('account'));
-    }
-
-    public static function twoFactorDisable(): void
-    {
-        $u = Database::one('SELECT id, password_hash FROM users WHERE id = ?', [Auth::user()['id']]);
-        if (!password_verify((string) ($_POST['current_password'] ?? ''), $u['password_hash'])) {
-            flash('error', 'Je wachtwoord klopt niet; tweestapsverificatie blijft aan.');
-        } else {
-            Database::exec('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [$u['id']]);
-            Auth::revokeSessions((int) $u['id']);
-            audit('2FA_OFF', 'user', (int) $u['id']);
-            flash('success', 'Tweestapsverificatie is uitgezet.');
-        }
-        redirect(url('account'));
     }
 
     /** Agenda-abonnement: publiek adres met een geheime sleutel; toont enkel wat de eigenaar zelf in de app ziet. */
