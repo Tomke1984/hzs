@@ -161,8 +161,8 @@ final class ActivityController
         $mid = (int) input('member_id', '0');
         $back = input('back') === 'dashboard' ? url('dashboard') : url('activity', ['id' => $activity['id']]);
         $inRoster = in_array($mid, array_map('intval', array_column(Scope::targetMembers($activity), 'id')), true);
-        if (!in_array($mid, Scope::ownMemberIds(), true) || !$inRoster) {
-            abort(403, 'Je kan enkel afmelden voor jezelf of je eigen kinderen.');
+        if (!can_report_absence($mid) || !$inRoster) {
+            abort(403, 'Je kan enkel afmelden voor jezelf of je eigen kinderen. Ben je jonger dan 18, dan meldt je ouder je af.');
         }
         if ($activity['status'] !== 'PLANNED' || $activity['ends_at'] <= now()) {
             flash('error', 'Afmelden kan enkel voor een geplande activiteit die nog niet voorbij is.');

@@ -24,6 +24,9 @@ $routes = [
     // Ouders (en volwassen leden) passen zelf de gegevens van hun kind (of zichzelf) aan; de controller controleert de koppeling.
     'child_form'       => ['GET' => ['MemberController', 'ownForm', 'members.read']],
     'child_save'       => ['POST' => ['MemberController', 'ownSave', 'members.read']],
+    // Ouder vraagt een eigen account aan voor een minderjarig kind (kalender bekijken) of trekt het in.
+    'child_account'    => ['POST' => ['MemberController', 'childAccount', 'members.read']],
+    'child_account_delete' => ['POST' => ['MemberController', 'childAccountDelete', 'members.read']],
 
     'groups'           => ['GET' => ['GroupController', 'index', 'groups.read']],
     'group'            => ['GET' => ['GroupController', 'show', 'groups.read']],

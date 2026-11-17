@@ -525,6 +525,23 @@ function missing_field(?string $href, string $verb = 'toevoegen', string $anchor
     return '<span class="' . ($important ? 'missing is-important' : 'missing') . '">Nog niet ingevuld · <a href="' . e($href . $anchor) . '">' . e($verb) . '</a></span>';
 }
 
+/**
+ * Mag de aangemelde gebruiker dit lid afmelden? Ouders voor hun kinderen en volwassen leden voor zichzelf.
+ * Een minderjarig lid met een eigen account niet: afmelden blijft bij de ouders.
+ */
+function can_report_absence(int $memberId): bool
+{
+    $u = Auth::user();
+    if (!$u || !in_array($memberId, Scope::ownMemberIds(), true)) {
+        return false;
+    }
+    if ((int) ($u['member_id'] ?? 0) === $memberId
+        && !Database::val('SELECT 1 FROM guardian_links WHERE user_id = ? AND member_id = ?', [(int) $u['id'], $memberId])) {
+        return !Guardianship::isMinor((string) Database::val('SELECT birth_date FROM members WHERE id = ?', [$memberId]) ?: null);
+    }
+    return true;
+}
+
 /** Ouder of zwemmer (geen trainer of beheer): ziet enkel de eigen kinderen of zichzelf. */
 function is_family_view(): bool
 {

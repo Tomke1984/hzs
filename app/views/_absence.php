@@ -6,6 +6,12 @@
  */
 $absLabel ??= 'Afmelden';
 $absWho ??= '';
+// Minderjarig lid met een eigen account: afmelden doen de ouders.
+if (!can_report_absence((int) $absMemberId)) {
+    echo $absent ? '<span class="chip warn">Afgemeld' . (!empty($absent['reason']) ? ': ' . e($absent['reason']) : '') . '</span> ' : '';
+    echo '<span class="muted small">Kan je niet komen? Vraag je ouder om je af te melden.</span>';
+    return;
+}
 ?>
 <?php if ($absent): ?>
   <form class="absence-form" method="post" action="<?= e(url('absence')) ?>">

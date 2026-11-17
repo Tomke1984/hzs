@@ -74,29 +74,12 @@ final class InviteController
     public static function member(): void
     {
         $memberId = (int) input('member_id', '0');
-        $member = Database::one('SELECT id, first_name, last_name, email FROM members WHERE id = ?', [$memberId]);
-        if (!$member) {
+        if (!Database::val('SELECT COUNT(*) FROM members WHERE id = ?', [$memberId])) {
             abort(404, 'Dit lid bestaat niet.');
         }
-        $back = url('member', ['id' => $memberId]);
-        $email = strtolower((string) $member['email']);
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            flash('error', 'Dit lid heeft geen geldig e-mailadres. Vul het eerst in bij Wijzigen.');
-            redirect($back);
-        }
-        if (Database::val('SELECT COUNT(*) FROM users WHERE member_id = ?', [$memberId]) || Database::val('SELECT COUNT(*) FROM users WHERE email = ?', [$email])) {
-            flash('error', 'Er bestaat al een account voor dit lid of dit e-mailadres.');
-            redirect($back);
-        }
-        $uid = Database::tx(fn() => Invites::createPendingUser($email, $member['first_name'] . ' ' . $member['last_name'], 'SWIMMER', $memberId));
-        [$sent, $link] = Invites::sendInvite($uid, 'Je kunt er je eigen kalender en groepen bekijken.');
-        audit('INVITE', 'user', $uid);
-        $msg = $sent ? "Uitnodiging verstuurd naar $email." : "Uitnodiging kon niet verstuurd worden naar $email. Controleer de mailinstellingen.";
-        if (Mailer::driver() === 'log') {
-            $msg .= " (Testmodus: geen echte mail; zie storage/mail. Link: $link)";
-        }
-        flash($sent ? 'success' : 'error', $msg);
-        redirect($back);
+        $r = Invites::inviteMember($memberId);
+        flash($r['ok'] ? 'success' : 'error', $r['uid'] === null && str_starts_with($r['msg'], 'Geen geldig') ? 'Dit lid heeft geen geldig e-mailadres. Vul het eerst in bij Wijzigen.' : $r['msg']);
+        redirect(url('member', ['id' => $memberId]));
     }
 
     /** Uitnodiging opnieuw versturen voor een account dat nog niet geactiveerd is. */

@@ -148,6 +148,11 @@ final class MemberController
 
         // Ouder of volwassen lid zelf: ziet en wijzigt de eigen gegevens (contact, adres, noodgegevens).
         $canEditOwn = !Auth::can('members.write') && Guardianship::canEditOwn((int) Auth::user()['id'], $member);
+        // Minderjarig lid met een eigen account: enkel de eigen e-mail en telefoon; de rest blijft bij de ouders.
+        $minorSelf = !Auth::can('members.write') && Guardianship::isMinorSelf((int) Auth::user()['id'], $member);
+        // Ouder (of gebruikersbeheer): eigen account voor het kind aanvragen of intrekken.
+        $childAccountManage = Guardianship::canManageChildAccount((int) Auth::user()['id'], $member);
+        $childAccount = $childAccountManage ? Database::one('SELECT id, email, is_active, password_hash FROM users WHERE member_id = ?', [$member['id']]) : null;
 
         // Medische info is een bijzonder persoonsgegeven: wie ze bekijkt (behalve de ouder of het lid zelf) komt in de auditlog.
         if (Auth::can('members.medical') && !$canEditOwn && ($member['medical_note'] ?? '') !== '') {
@@ -156,6 +161,9 @@ final class MemberController
 
         render('members/show', [
             'canEditOwn' => $canEditOwn,
+            'minorSelf' => $minorSelf,
+            'childAccountManage' => $childAccountManage,
+            'childAccount' => $childAccount,
             'showMedical' => Auth::can('members.medical') || $canEditOwn,
             'member' => $member,
             'isMinor' => Guardianship::isMinor($member['birth_date']),
@@ -166,7 +174,7 @@ final class MemberController
             'memberships' => $memberships,
             'availableGroups' => $availableGroups,
             'showContact' => Auth::can('members.contact'),
-            'showOwnContact' => Auth::can('members.contact') || $canEditOwn,
+            'showOwnContact' => Auth::can('members.contact') || $canEditOwn || $minorSelf,
         ], $member['first_name'] . ' ' . $member['last_name']);
     }
 
@@ -275,6 +283,12 @@ final class MemberController
                 ? 'Lid toegevoegd. Koppel hieronder een ouder of voogd, daarna kan het lid aan een groep gekoppeld worden.'
                 : 'Lid toegevoegd. Koppel het lid hieronder aan een groep.');
         }
+        // Meerderjarig lid met een e-mailadres en nog geen account: meteen een eigen account en uitnodiging (vinkje in het formulier).
+        if (input('create_account') === '1' && Auth::can('users.manage') && $data['status'] === 'ACTIVE' && !Guardianship::isMinor($nullable($data['birth_date']))
+            && filter_var($data['email'], FILTER_VALIDATE_EMAIL) && !Database::val('SELECT COUNT(*) FROM users WHERE member_id = ?', [$id])) {
+            $r = Invites::inviteMember($id);
+            flash($r['ok'] ? 'success' : 'warning', 'Eigen account: ' . $r['msg']);
+        }
         redirect(url('member', ['id' => $id]));
     }
 
@@ -282,16 +296,21 @@ final class MemberController
     public static function ownForm(): void
     {
         $member = self::loadOwn((int) ($_GET['id'] ?? 0));
-        render('members/own_form', ['member' => $member, 'errors' => []], 'Gegevens wijzigen');
+        render('members/own_form', ['member' => $member, 'errors' => [], 'contactOnly' => $member['_contact_only']], 'Gegevens wijzigen');
     }
+
+    /** Velden die een minderjarig lid zelf mag wijzigen; de rest (naam, geboortedatum, adres, noodgegevens) blijft bij de ouders. */
+    private const MINOR_SELF_FIELDS = ['email', 'phone'];
 
     public static function ownSave(): void
     {
         $member = self::loadOwn((int) input('id', '0'));
+        $contactOnly = $member['_contact_only'];
         $fields = ['first_name', 'last_name', 'birth_date', 'email', 'phone', 'street', 'postal_code', 'city', 'emergency_name', 'emergency_phone', 'medical_note'];
         $data = [];
         foreach ($fields as $f) {
-            $data[$f] = input($f);
+            // Minderjarig lid zelf: enkel e-mail en telefoon worden overgenomen, al de rest blijft ongewijzigd.
+            $data[$f] = $contactOnly && !in_array($f, self::MINOR_SELF_FIELDS, true) ? (string) ($member[$f] ?? '') : input($f);
         }
         $errors = [];
         if ($data['first_name'] === '' || $data['last_name'] === '') {
@@ -321,7 +340,7 @@ final class MemberController
         }
         if ($errors) {
             http_response_code(422);
-            render('members/own_form', ['member' => array_merge($member, $data), 'errors' => $errors], 'Gegevens wijzigen');
+            render('members/own_form', ['member' => array_merge($member, $data), 'errors' => $errors, 'contactOnly' => $contactOnly], 'Gegevens wijzigen');
             return;
         }
         $nullable = fn($v) => $v === '' ? null : $v;
@@ -336,18 +355,63 @@ final class MemberController
             [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']),
                 $nullable($data['postal_code']), $nullable($data['city']), $nullable($data['emergency_name']), $nullable($data['emergency_phone']), Crypto::encrypt($nullable($data['medical_note'])), $member['id']]
         );
-        audit('UPDATE_OWN', 'member', (int) $member['id'], $changed ? 'gewijzigd: ' . implode(', ', $changed) : 'geen wijzigingen');
+        audit('UPDATE_OWN', 'member', (int) $member['id'], ($contactOnly ? 'door het lid zelf, ' : '') . ($changed ? 'gewijzigd: ' . implode(', ', $changed) : 'geen wijzigingen'));
         flash('success', $changed ? 'Gegevens opgeslagen.' : 'Er was niets gewijzigd.');
         redirect(url('member', ['id' => $member['id']]));
+    }
+
+    /**
+     * Ouder vraagt een eigen account aan voor een minderjarig kind (om de eigen kalender te zien).
+     * Het kind krijgt de rol Zwemmer en een uitnodiging op zijn eigen e-mailadres; gegevens beheren blijft bij de ouders.
+     */
+    public static function childAccount(): void
+    {
+        $member = Database::one('SELECT * FROM members WHERE id = ?', [(int) input('member_id', '0')]);
+        if (!$member || !Guardianship::canManageChildAccount((int) Auth::user()['id'], $member)) {
+            abort(404, 'Dit lid bestaat niet of je kan hiervoor geen account aanvragen.');
+        }
+        $email = strtolower(trim(input('email')));
+        $r = Invites::inviteMember((int) $member['id'], $email, 'Je ouder heeft een eigen account voor je aangevraagd: je kunt er je eigen kalender en groep bekijken.');
+        if ($r['uid'] !== null) {
+            if (trim((string) $member['email']) === '') {
+                Database::exec('UPDATE members SET email = ? WHERE id = ?', [$email, $member['id']]);
+            }
+            audit('CHILD_ACCOUNT', 'member', (int) $member['id'], 'aangevraagd voor ' . $email);
+        }
+        flash($r['ok'] ? 'success' : 'error', $r['ok'] ? $member['first_name'] . ' krijgt een eigen account. ' . $r['msg'] : $r['msg']);
+        redirect(url('member', ['id' => $member['id']]) . '#eigen-account');
+    }
+
+    /** Ouder (of gebruikersbeheer) trekt het eigen account van een minderjarig kind in. */
+    public static function childAccountDelete(): void
+    {
+        $member = Database::one('SELECT * FROM members WHERE id = ?', [(int) input('member_id', '0')]);
+        if (!$member || !Guardianship::canManageChildAccount((int) Auth::user()['id'], $member)) {
+            abort(404, 'Dit lid bestaat niet of je kan dit account niet intrekken.');
+        }
+        $uid = (int) Database::val('SELECT id FROM users WHERE member_id = ?', [$member['id']]);
+        // Enkel een gewoon zwemmersaccount; een account met andere rollen (bv. ook trainer) beheert het bestuur.
+        $other = $uid ? (int) Database::val("SELECT COUNT(*) FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ? AND r.code <> 'SWIMMER'", [$uid]) : 0;
+        if ($uid && $other === 0) {
+            Database::tx(fn() => Purge::user($uid));
+            audit('CHILD_ACCOUNT_DELETE', 'member', (int) $member['id']);
+            flash('success', 'Het eigen account van ' . $member['first_name'] . ' is verwijderd.');
+        } elseif ($uid) {
+            flash('error', 'Dit account heeft nog andere rollen; vraag het bestuur om het aan te passen.');
+        }
+        redirect(url('member', ['id' => $member['id']]) . '#eigen-account');
     }
 
     /** Lid laden voor de ouder (of het volwassen lid zelf); anders 404. */
     private static function loadOwn(int $id): array
     {
         $member = $id ? Database::one('SELECT * FROM members WHERE id = ?', [$id]) : null;
-        if (!$member || !Guardianship::canEditOwn((int) Auth::user()['id'], $member)) {
+        $uid = (int) Auth::user()['id'];
+        $full = $member && Guardianship::canEditOwn($uid, $member);
+        if (!$member || (!$full && !Guardianship::isMinorSelf($uid, $member))) {
             abort(404, 'Dit lid bestaat niet of je kan de gegevens niet aanpassen.');
         }
+        $member['_contact_only'] = !$full;
         $member['medical_note'] = Crypto::decrypt($member['medical_note'] ?? null); // versleuteld bewaard
         return $member;
     }

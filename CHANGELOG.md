@@ -6,6 +6,12 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Eigen accounts voor leden en kinderen_
+
+- **Meerderjarige leden krijgen automatisch een account:** bij een nieuw of gewijzigd lid van 18+ met e-mailadres staat het vinkje *eigen account aanmaken en uitnodiging sturen* standaard aan. Het lid krijgt meteen een uitnodiging om een wachtwoord te kiezen en ziet daarna de eigen kalender en groep.
+- **Eigen account voor een kind:** op de pagina van een minderjarig kind kan de ouder (of de beheerder) een eigen account aanvragen met het e-mailadres van het kind zelf. Het kind ziet dan de eigen kalender en groep en kan **enkel het eigen e-mailadres en telefoonnummer** aanpassen. Naam, geboortedatum, adres, noodgegevens en afmelden blijven bij de ouders (het kind ziet *Vraag je ouder om je af te melden*). De ouder kan het account ook weer verwijderen; het lid blijft bestaan.
+- Tests: nieuwe suite `v28_accounts` (33 controles).
+
 _v0.28.0-dev – Versienummer in plaats van commitnummer_
 
 - Beheerders zien onderaan in de menubalk nu het **versienummer** (bv. *v0.28.0*) in plaats van branch en commitnummer. Het komt uit het nieuwe bestand `VERSION` en werkt dus ook op de hosting (daar staat geen `.git`-map, zodat er tot nu toe niets verscheen).

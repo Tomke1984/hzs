@@ -1,11 +1,17 @@
 <?php
   // Lege velden: wie mag aanpassen, krijgt een uitnodiging om aan te vullen in plaats van een streepje
   $fillHref = !empty($canEditOwn) ? url('child_form', ['id' => $member['id']]) : (Auth::can('members.write') ? url('member_form', ['id' => $member['id']]) : null);
+  if (!empty($minorSelf) && !$fillHref) {
+      $fillHref = null; // een minderjarige vult enkel e-mail en telefoon aan via de eigen knop
+  }
 ?>
 <div class="row-between">
   <h1><?= e($member['first_name']) ?> <?= e($member['last_name']) ?></h1>
   <?php if (!empty($canEditOwn)): ?>
     <a class="btn btn-ghost" href="<?= e(url('child_form', ['id' => $member['id']])) ?>">Gegevens wijzigen</a>
+  <?php endif; ?>
+  <?php if (!empty($minorSelf)): ?>
+    <a class="btn btn-ghost" href="<?= e(url('child_form', ['id' => $member['id']])) ?>">Mijn e-mail en telefoon wijzigen</a>
   <?php endif; ?>
   <?php if (Auth::can('members.write')): ?>
     <a class="btn btn-ghost" href="<?= e(url('member_form', ['id' => $member['id']])) ?>">Wijzigen</a>
@@ -205,7 +211,35 @@
 <?php endif; ?>
 <?php endif; ?>
 
-<?php if (Auth::can('users.manage') && !Guardianship::isMinor($member['birth_date'] ?? null) || (Auth::can('users.manage') && $account)): ?>
+<?php if (!empty($childAccountManage)): $ca = $childAccount; ?>
+<section class="card" id="eigen-account">
+  <h2>Eigen account voor <?= e($member['first_name']) ?></h2>
+  <?php if ($ca): ?>
+    <p><?= e($member['first_name']) ?> meldt aan met <strong><?= e($ca['email']) ?></strong>
+      <?php if (Invites::isPending($ca)): ?><span class="chip warn">Uitnodiging nog niet aanvaard</span><?php elseif ((int) $ca['is_active']): ?><span class="chip ok">Actief</span><?php else: ?><span class="chip off">Inactief</span><?php endif; ?></p>
+    <p class="muted small"><?= e($member['first_name']) ?> ziet de eigen kalender en groep en kan zelf het e-mailadres en telefoonnummer aanpassen. Alle andere gegevens beheer jij als ouder.</p>
+    <details class="danger-zone">
+      <summary>Account van <?= e($member['first_name']) ?> verwijderen…</summary>
+      <form method="post" action="<?= e(url('child_account_delete')) ?>" data-confirm="Het eigen account van <?= e($member['first_name']) ?> verwijderen? <?= e($member['first_name']) ?> kan dan niet meer aanmelden; de gegevens van het lid blijven bestaan.">
+        <?= csrf_field() ?><input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+        <button class="link-danger" type="submit">Account verwijderen</button>
+      </form>
+    </details>
+  <?php else: ?>
+    <p class="muted"><?= e($member['first_name']) ?> is jonger dan 18. Met een eigen account kan <?= e($member['first_name']) ?> zelf aanmelden om de eigen kalender te zien en het eigen e-mailadres en telefoonnummer aan te passen. Alle andere gegevens blijven bij jou als ouder.</p>
+    <form class="inline-form" method="post" action="<?= e(url('child_account')) ?>">
+      <?= csrf_field() ?><input type="hidden" name="member_id" value="<?= (int) $member['id'] ?>">
+      <label>E-mailadres van <?= e($member['first_name']) ?> zelf
+        <input type="email" name="email" value="<?= e((string) $member['email']) ?>" required maxlength="190" autocomplete="off">
+      </label>
+      <button class="btn" type="submit">Eigen account aanvragen</button>
+    </form>
+    <p class="muted small"><?= e($member['first_name']) ?> krijgt een mail om een wachtwoord te kiezen. Gebruik een eigen e-mailadres, niet dat van een ouder.</p>
+  <?php endif; ?>
+</section>
+<?php endif; ?>
+
+<?php if (Auth::can('users.manage') && !Guardianship::isMinor($member['birth_date'] ?? null)): ?>
 <section class="card">
   <h2>Eigen account</h2>
   <?php if ($account): ?>
@@ -226,8 +260,6 @@
     </div>
   <?php endif; ?>
 </section>
-<?php elseif (Auth::can('users.manage')): ?>
-<p class="muted small">Dit lid is jonger dan 18: de ouder of voogd meldt aan. Een eigen account kan later, via de ouder.</p>
 <?php endif; ?>
 
 <section class="card">

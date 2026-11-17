@@ -1,5 +1,11 @@
+<?php $contactOnly = !empty($contactOnly); ?>
+<?php if ($contactOnly): ?>
+<h1>Mijn e-mail en telefoon</h1>
+<p class="muted">Pas je eigen e-mailadres en telefoonnummer aan. Je andere gegevens (naam, adres, noodcontact, …) beheren je ouders.</p>
+<?php else: ?>
 <h1>Gegevens van <?= e($member['first_name']) ?> wijzigen</h1>
 <p class="muted">Pas aan wat niet (meer) klopt. De trainers en het bestuur zien meteen de nieuwe gegevens. Groep en status past het bestuur aan.</p>
+<?php endif; ?>
 
 <?php if ($errors): ?>
   <div class="alert alert-error"><ul><?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
@@ -9,6 +15,7 @@
   <?= csrf_field() ?>
   <input type="hidden" name="id" value="<?= (int) $member['id'] ?>">
 
+  <?php if (!$contactOnly): ?>
   <div class="grid2">
     <label>Voornaam *
       <input name="first_name" value="<?= e($member['first_name']) ?>" maxlength="80" required autocomplete="given-name">
@@ -20,6 +27,7 @@
   <label>Geboortedatum
     <input type="date" name="birth_date" value="<?= e((string) $member['birth_date']) ?>" max="<?= e(today()) ?>">
   </label>
+  <?php endif; ?>
   <div class="grid2">
     <label>E-mail
       <input type="email" name="email" value="<?= e((string) $member['email']) ?>" maxlength="190" autocomplete="email">
@@ -28,6 +36,7 @@
       <input type="tel" name="phone" value="<?= e((string) $member['phone']) ?>" maxlength="40" autocomplete="tel">
     </label>
   </div>
+  <?php if (!$contactOnly): ?>
   <label>Straat en nummer
     <input name="street" value="<?= e((string) ($member['street'] ?? '')) ?>" maxlength="120" autocomplete="street-address">
   </label>
@@ -48,6 +57,8 @@
     <label>Medische opmerking <span class="muted small">(enkel wat een trainer moet weten bij een incident, bv. astma of epilepsie)</span>
       <textarea name="medical_note" rows="2" maxlength="500"><?= e((string) ($member['medical_note'] ?? '')) ?></textarea>
     </label>
+
+  <?php endif; ?>
 
   <div class="actions">
     <button class="btn" type="submit">Opslaan</button>

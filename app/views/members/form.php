@@ -74,6 +74,11 @@
     </label>
   </fieldset>
   <?php endif; ?>
+  <?php if (Auth::can('users.manage') && (!$member['id'] || !Database::val('SELECT COUNT(*) FROM users WHERE member_id = ?', [$member['id']]))): ?>
+  <label class="check"><input type="checkbox" name="create_account" value="1" checked>
+    Meerderjarig met e-mailadres: meteen een eigen account aanmaken en een uitnodiging sturen
+    <span class="muted small">(om de eigen kalender te bekijken; voor leden jonger dan 18 vraagt de ouder dat aan)</span></label>
+  <?php endif; ?>
   <p class="muted small">Leden worden nooit verwijderd. Zet een lid op inactief om het uit nieuwe presentielijsten te halen; de historiek blijft bewaard.</p>
 
   <div class="actions">

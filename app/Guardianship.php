@@ -31,6 +31,23 @@ final class Guardianship
             && (bool) Database::val('SELECT 1 FROM users WHERE id = ? AND member_id = ?', [$userId, (int) $member['id']]);
     }
 
+    /** Minderjarig lid met een eigen account (op vraag van de ouder): ziet de eigen kalender, wijzigt enkel e-mail en telefoon. */
+    public static function isMinorSelf(int $userId, array $member): bool
+    {
+        return self::isMinor($member['birth_date'] ?? null)
+            && (bool) Database::val('SELECT 1 FROM users WHERE id = ? AND member_id = ?', [$userId, (int) $member['id']]);
+    }
+
+    /** Mag deze gebruiker voor dit minderjarige lid een eigen account aanvragen of intrekken? (ouder of gebruikersbeheer) */
+    public static function canManageChildAccount(int $userId, array $member): bool
+    {
+        if (!self::isMinor($member['birth_date'] ?? null)) {
+            return false;
+        }
+        return Auth::can('users.manage')
+            || (bool) Database::val('SELECT 1 FROM guardian_links WHERE user_id = ? AND member_id = ?', [$userId, (int) $member['id']]);
+    }
+
     public static function count(int $memberId): int
     {
         return (int) Database::val('SELECT COUNT(*) FROM guardian_links WHERE member_id = ?', [$memberId]);

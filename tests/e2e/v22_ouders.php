@@ -67,5 +67,5 @@ if ($swimmerId) {
     T::ok($sw->has('Gegevens wijzigen'), 'volwassen zwemmer kan de eigen gegevens wijzigen');
     T::exec("UPDATE members SET birth_date = ? WHERE id = ?", [date('Y-m-d', strtotime('-12 years')), $swimmerId]);
     $sw->get('/app/leden/' . $swimmerId . '/mijn-gegevens');
-    T::ok($sw->status === 404, 'minderjarige zwemmer niet: dat doet de ouder');
+    T::ok($sw->status === 200 && $sw->has('Mijn e-mail en telefoon') && !$sw->has('name="first_name"'), 'minderjarige zwemmer: enkel e-mail en telefoon (sinds v0.28), de rest doet de ouder');
 }
