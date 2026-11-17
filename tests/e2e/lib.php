@@ -269,7 +269,25 @@ final class Browser
         return $this->get(str_starts_with($loc, '/') ? $loc : '/' . $loc);
     }
 
-    private function request(string $method, string $path, string $body = ''): self
+    /** POST als multipart/form-data, met bestanden: $files = ['veld' => ['naam.ext', inhoud]]. */
+    public function postFiles(string $path, array $data, array $files): self
+    {
+        if (!isset($data['_csrf'])) {
+            $data['_csrf'] = $this->csrf();
+        }
+        $b = '----hzs' . bin2hex(random_bytes(8));
+        $body = '';
+        foreach ($data as $k => $v) {
+            $body .= "--$b\r\nContent-Disposition: form-data; name=\"$k\"\r\n\r\n$v\r\n";
+        }
+        foreach ($files as $k => [$name, $content]) {
+            $body .= "--$b\r\nContent-Disposition: form-data; name=\"$k\"; filename=\"$name\"\r\nContent-Type: application/octet-stream\r\n\r\n$content\r\n";
+        }
+        $body .= "--$b--\r\n";
+        return $this->request('POST', $path, $body, "multipart/form-data; boundary=$b");
+    }
+
+    private function request(string $method, string $path, string $body = '', string $contentType = 'application/x-www-form-urlencoded'): self
     {
         $headers = array_merge(['Host: ' . parse_url(T::$base, PHP_URL_HOST) . ':' . parse_url(T::$base, PHP_URL_PORT)], $this->headers);
         $this->setCookies = [];
@@ -277,7 +295,7 @@ final class Browser
             $headers[] = 'Cookie: ' . implode('; ', array_map(fn($k, $v) => "$k=$v", array_keys($this->cookies), $this->cookies));
         }
         if ($method === 'POST') {
-            $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+            $headers[] = 'Content-Type: ' . $contentType;
         }
         $ctx = stream_context_create(['http' => [
             'method' => $method, 'header' => implode("\r\n", $headers), 'content' => $body,

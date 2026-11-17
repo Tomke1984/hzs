@@ -71,14 +71,23 @@ final class Crypto
         if (!self::isEncrypted($stored)) {
             return $stored;
         }
-        $raw = base64_decode(substr((string) $stored, strlen(self::PREFIX)), true);
+        return self::decryptWith((string) $stored, self::key());
+    }
+
+    /** Ontsleutelen met een opgegeven sleutel (bv. om bij het terugzetten van een database de sleutel te controleren). */
+    public static function decryptWith(string $stored, string $key): ?string
+    {
+        if (!self::isEncrypted($stored) || strlen($key) !== SODIUM_CRYPTO_SECRETBOX_KEYBYTES) {
+            return null;
+        }
+        $raw = base64_decode(substr($stored, strlen(self::PREFIX)), true);
         if ($raw === false || strlen($raw) < SODIUM_CRYPTO_SECRETBOX_NONCEBYTES + SODIUM_CRYPTO_SECRETBOX_MACBYTES) {
             return null;
         }
         $plain = sodium_crypto_secretbox_open(
             substr($raw, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES),
             substr($raw, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES),
-            self::key()
+            $key
         );
         if ($plain === false) {
             error_log('Crypto: ontsleutelen mislukt (verkeerde sleutel?)');

@@ -26,6 +26,106 @@ function page(string $title, string $body): void
     exit;
 }
 
+/**
+ * Schrijft config.php (op de plek die config_file() aangeeft). @return array{0: bool, 1: string, 2: string} [gelukt, pad, inhoud]
+ */
+function write_config(array $dbCfg, string $defaultDbPath, string $appKey): array
+{
+    $dbExport = $dbCfg['driver'] === 'mysql'
+        ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($dbCfg['host'], true) . ",\n        'port' => " . (int) $dbCfg['port'] . ",\n        'name' => " . var_export($dbCfg['name'], true) . ",\n        'user' => " . var_export($dbCfg['user'], true) . ",\n        'pass' => " . var_export($dbCfg['pass'], true) . ",\n    ]"
+        : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbCfg['path'] === $defaultDbPath && config_file() === APP_ROOT . '/config.php' ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbCfg['path'], true)) . ",\n    ]";
+    $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . (is_local_request() ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n    // Sleutel voor versleutelde velden (medische opmerking). Bewaar een kopie veilig: zonder sleutel zijn die velden onleesbaar.\n    'app_key' => " . var_export($appKey, true) . ",\n];\n";
+    $cfgFile = config_file();
+    if (!is_dir(dirname($cfgFile))) {
+        @mkdir(dirname($cfgFile), 0750, true);
+    }
+    $written = @file_put_contents($cfgFile, $configPhp) !== false;
+    @chmod($cfgFile, 0640);
+    return [$written, $cfgFile, $configPhp];
+}
+
+/**
+ * Bestaande SQLite-database terugzetten (bv. van je eigen computer naar de server, zonder SSH).
+ * Aanvaardt een .sqlite-bestand of een back-up van de app (.sqlite.gz). @return array{0: string[], 1: ?string} [fouten, resultaattekst]
+ */
+function import_database(string $dbPath, string $appKeyInput): array
+{
+    $f = $_FILES['database'] ?? null;
+    if (!is_array($f) || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return [['Kies een databasebestand (.sqlite of een back-up .sqlite.gz).'], null];
+    }
+    if ($f['error'] !== UPLOAD_ERR_OK) {
+        return [['Opladen mislukt (code ' . (int) $f['error'] . ($f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE ? ': bestand te groot voor de server' : '') . ').'], null];
+    }
+    $data = (string) file_get_contents($f['tmp_name']);
+    if (str_starts_with($data, "\x1f\x8b")) {
+        $data = (string) @gzdecode($data);
+    }
+    if (!str_starts_with($data, "SQLite format 3\0")) {
+        return [['Dit is geen SQLite-database (of back-up daarvan) van de clubapp.'], null];
+    }
+    $appKey = '';
+    if ($appKeyInput !== '') {
+        $k = base64_decode($appKeyInput, true);
+        if ($k === false || strlen($k) !== SODIUM_CRYPTO_SECRETBOX_KEYBYTES) {
+            return [["De sleutel (app_key) is ongeldig: verwacht base64 van 32 bytes, zoals in config.php."], null];
+        }
+        $appKey = $appKeyInput;
+    }
+    $dir = dirname($dbPath);
+    if (!is_dir($dir) && !@mkdir($dir, 0750, true)) {
+        return [["Map $dir kan niet aangemaakt worden."], null];
+    }
+    if (is_file($dbPath) && filesize($dbPath) > 0) {
+        try {
+            $existing = new PDO('sqlite:' . $dbPath);
+            if ((int) $existing->query('SELECT COUNT(*) FROM users')->fetchColumn() > 0) {
+                return [['Op deze plek staat al een database met gebruikers; die wordt niet overschreven.'], null];
+            }
+        } catch (Throwable $e) {
+            // leeg of onvolledig bestand van een vorige poging: mag vervangen worden
+        }
+        $existing = null;
+    }
+    $tmp = $dbPath . '.import-' . bin2hex(random_bytes(4));
+    file_put_contents($tmp, $data);
+    try {
+        $pdo = new PDO('sqlite:' . $tmp);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        if ($pdo->query('PRAGMA integrity_check')->fetchColumn() !== 'ok') {
+            throw new RuntimeException('Het databasebestand is beschadigd.');
+        }
+        $users = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        $members = (int) $pdo->query('SELECT COUNT(*) FROM members')->fetchColumn();
+        if ($users === 0) {
+            throw new RuntimeException('Deze database heeft nog geen gebruikers; installeer dan gewoon opnieuw.');
+        }
+        $enc = $pdo->query("SELECT medical_note FROM members WHERE medical_note LIKE 'enc1:%' LIMIT 1")->fetchColumn();
+        if ($enc !== false) {
+            if ($appKey === '') {
+                throw new RuntimeException('Deze database bevat versleutelde medische gegevens. Vul de sleutel (app_key) van de oorspronkelijke installatie in (config.php of storage/app.key).');
+            }
+            if (Crypto::decryptWith((string) $enc, (string) base64_decode($appKey)) === null) {
+                throw new RuntimeException('Met deze sleutel kunnen de versleutelde gegevens niet gelezen worden. Controleer de app_key.');
+            }
+        }
+        $pdo = null;
+    } catch (Throwable $e) {
+        $pdo = null;
+        @unlink($tmp);
+        return [[$e instanceof RuntimeException ? $e->getMessage() : 'Het bestand kan niet als database geopend worden.'], null];
+    }
+    foreach (['', '-wal', '-shm'] as $suffix) {
+        @unlink($dbPath . $suffix);
+    }
+    if (!@rename($tmp, $dbPath)) {
+        @unlink($tmp);
+        return [["Kon de database niet in $dbPath zetten."], null];
+    }
+    @chmod($dbPath, 0640);
+    return [[], "$users gebruikers en $members leden teruggezet. Meld aan met je bestaande account."];
+}
+
 if (installer_blocked()) {
     http_response_code(403);
     page('Reeds geïnstalleerd', '<div class="card narrow"><h1>Reeds geïnstalleerd</h1><p>De installer is vergrendeld omdat er al een gebruiker bestaat. Verwijder <code>public/install.php</code> van de server.</p><p><a class="btn" href="index.php">Naar de app</a></p></div>');
@@ -38,7 +138,25 @@ $v = [
 ];
 $defaultDbPath = APP_ROOT . '/storage/data/clubapp.sqlite';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$importErrors = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'import') {
+    verify_csrf();
+    $importPath = trim((string) ($_POST['import_path'] ?? '')) ?: $defaultDbPath;
+    if (!str_ends_with($importPath, '.sqlite') || !preg_match('#^(/|[A-Za-z]:[\\\\/])#', $importPath)) {
+        $importErrors[] = 'Geef een volledig pad op dat eindigt op .sqlite, of laat het veld leeg.';
+    } else {
+        [$importErrors, $result] = import_database($importPath, trim((string) ($_POST['app_key'] ?? '')));
+        if (!$importErrors) {
+            [$written, $cfgFile, $configPhp] = write_config(['driver' => 'sqlite', 'path' => $importPath], $defaultDbPath, trim((string) ($_POST['app_key'] ?? '')) ?: Crypto::newKey());
+            $body = '<div class="card narrow"><h1>Database teruggezet</h1><p>' . e((string) $result) . '</p>';
+            if (!$written) {
+                $body .= '<div class="alert alert-error">Kon <code>' . e($cfgFile) . '</code> niet wegschrijven. Maak het bestand zelf aan met deze inhoud:</div><pre>' . e($configPhp) . '</pre>';
+            }
+            $body .= '<p class="muted small">De database wordt bij het eerste bezoek automatisch bijgewerkt naar deze versie van de app.</p><p><a class="btn" href="aanmelden">Aanmelden</a></p></div>';
+            page('Database teruggezet', $body);
+        }
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     foreach (array_keys($v) as $k) {
         $v[$k] = input($k, $v[$k]);
@@ -89,17 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Installer::seedDemo();
             }
 
-            $dbExport = $v['driver'] === 'mysql'
-                ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($v['host'], true) . ",\n        'port' => " . (int) $v['port'] . ",\n        'name' => " . var_export($v['name'], true) . ",\n        'user' => " . var_export($v['user'], true) . ",\n        'pass' => " . var_export($dbPass, true) . ",\n    ]"
-                : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbPath === $defaultDbPath && config_file() === APP_ROOT . '/config.php' ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbPath, true)) . ",\n    ]";
-            $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . ($v['driver'] === 'sqlite' ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n    // Sleutel voor versleutelde velden (medische opmerking, 2FA). Bewaar een kopie veilig: zonder sleutel zijn die velden onleesbaar.\n    'app_key' => " . var_export(Crypto::newKey(), true) . ",\n];\n";
-
-            $cfgFile = config_file();
-            if (!is_dir(dirname($cfgFile))) {
-                @mkdir(dirname($cfgFile), 0750, true);
-            }
-            $written = @file_put_contents($cfgFile, $configPhp) !== false;
-            @chmod($cfgFile, 0640);
+            [$written, $cfgFile, $configPhp] = write_config($dbCfg, $defaultDbPath, Crypto::newKey());
 
             $body = '<div class="card narrow"><h1>Installatie voltooid</h1>';
             $body .= '<p>Het beheeraccount <strong>' . e($v['admin_email']) . '</strong> is aangemaakt.</p>';
@@ -154,6 +262,24 @@ ob_start(); ?>
 
     <label class="check"><input type="checkbox" name="demo" value="1" <?= $v['demo'] === '1' ? 'checked' : '' ?>> Voorbeelddata toevoegen (groepen, leden, activiteiten en demo-accounts voor trainer, zwemmer en ouder)</label>
     <div class="actions"><button class="btn" type="submit">Installeren</button></div>
+  </form>
+</div>
+
+<div class="card narrow wide" id="terugzetten">
+  <h2>Of: bestaande database terugzetten</h2>
+  <p>Heb je de app al ergens anders gebruikt (bv. lokaal op je computer)? Laad die SQLite-database hier op in plaats van opnieuw te beginnen. Je meldt daarna aan met je bestaande accounts.</p>
+  <?php if ($importErrors): ?>
+    <div class="alert alert-error"><ul><?php foreach ($importErrors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
+  <?php endif; ?>
+  <form method="post" action="install.php#terugzetten" class="form" enctype="multipart/form-data">
+    <?= csrf_field() ?>
+    <input type="hidden" name="mode" value="import">
+    <label>Databasebestand * <input type="file" name="database" accept=".sqlite,.gz,application/gzip" required></label>
+    <p class="muted small"><code>storage/data/clubapp.sqlite</code> (eerst een kopie maken terwijl de app niet draait, bv. <code>sqlite3 storage/data/clubapp.sqlite "VACUUM INTO '/tmp/clubapp.sqlite'"</code>) of een back-up van de app (<code>hzs-….sqlite.gz</code>).</p>
+    <label>Sleutel (app_key) van de oorspronkelijke installatie <input name="app_key" autocomplete="off" spellcheck="false"></label>
+    <p class="muted small">Enkel nodig als er versleutelde medische gegevens in staan (te vinden in <code>config.php</code> of <code>storage/app.key</code>). Leeg = een nieuwe sleutel.</p>
+    <label>Plaats op de server <input name="import_path" placeholder="<?= e($defaultDbPath) ?>"></label>
+    <div class="actions"><button class="btn" type="submit">Database terugzetten</button></div>
   </form>
 </div>
 <?php page('Installatie', ob_get_clean());
