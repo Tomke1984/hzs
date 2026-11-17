@@ -28,8 +28,8 @@ final class T
             'app_name' => 'HZS Clubapp', 'timezone' => 'Europe/Brussels', 'debug' => false, 'cookie_secure' => false,
             'app_url' => self::$base, 'mail' => ['driver' => 'log', 'from_email' => 'noreply@example.be', 'from_name' => 'HZS Clubapp'],
             'db' => ['driver' => 'sqlite', 'path' => $db],
-            // tests versturen formulieren meteen; de minimumtijd van de controlevraag test v25_captcha apart
-            'captcha' => ['min_seconds' => 0],
+            // kleinere rekenopgave voor het vinkje "Ik ben geen robot": tests lossen het in PHP op
+            'captcha' => ['max_number' => 2000],
         ], true) . ';');
         $install = <<<'PHP'
             require $argv[1] . '/app/bootstrap.php';
@@ -201,15 +201,29 @@ final class Browser
     {
         $b = new self();
         $b->get('/aanmelden');
-        $b->post('/aanmelden', ['email' => $email, 'password' => 'Demo1234!', 'captcha' => $b->captcha()], '?r=login');
+        $b->post('/aanmelden', ['email' => $email, 'password' => 'Demo1234!', 'captcha_n' => $b->captcha()], '?r=login');
         if ($b->status !== 302) {
             throw new RuntimeException("Aanmelden mislukt voor $email (status {$b->status})");
         }
         return $b;
     }
 
-    /** Antwoord op de controlevraag van de laatst geladen pagina ("Hoeveel is drie plus 5?"). */
+    /** Oplossing van het vinkje "Ik ben geen robot" op de laatst geladen pagina (zoekt n met sha256(salt.n) = challenge). */
     public function captcha(): string
+    {
+        if (!preg_match('/data-salt="([a-f0-9]+)" data-challenge="([a-f0-9]{64})" data-max="(\d+)"/', $this->body, $m)) {
+            return '';
+        }
+        for ($n = 0; $n <= (int) $m[3]; $n++) {
+            if (hash('sha256', $m[1] . $n) === $m[2]) {
+                return (string) $n;
+            }
+        }
+        return '';
+    }
+
+    /** Antwoord op de reservevraag zonder JavaScript ("Hoeveel is drie plus 5?"). */
+    public function mathAnswer(): string
     {
         $w = ['een' => 1, 'twee' => 2, 'drie' => 3, 'vier' => 4, 'vijf' => 5, 'zes' => 6, 'zeven' => 7, 'acht' => 8, 'negen' => 9];
         if (!preg_match('/Hoeveel is (\w+) plus (\w+)\?/', $this->body, $m)) {

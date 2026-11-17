@@ -49,17 +49,17 @@ T::clearMails();
 $anon = new Browser();
 for ($i = 0; $i < 4; $i++) {
     $anon->get('/wachtwoord-vergeten');
-    $anon->post('/wachtwoord-vergeten', ['email' => 'zwemmer@demo.local', 'captcha' => $anon->captcha()]);
+    $anon->post('/wachtwoord-vergeten', ['email' => 'zwemmer@demo.local', 'captcha_n' => $anon->captcha()]);
 }
 $uid = (int) T::val("SELECT id FROM users WHERE email = 'zwemmer@demo.local'");
 T::ok((int) T::val("SELECT COUNT(*) FROM user_tokens WHERE user_id = ? AND purpose = 'RESET'", [$uid]) === 3, 'hooguit 3 resetmails per uur per account');
 T::ok(substr_count(T::outbox(), 'token=') === 3, 'de mails vertrekken (na het antwoord)');
 $anon->get('/wachtwoord-vergeten');
-$anon->post('/wachtwoord-vergeten', ['email' => 'bestaat-niet@demo.local', 'captcha' => $anon->captcha()]);
+$anon->post('/wachtwoord-vergeten', ['email' => 'bestaat-niet@demo.local', 'captcha_n' => $anon->captcha()]);
 T::ok($anon->status === 200 && $anon->has('Bestaat er een account'), 'onbekend adres: zelfde melding');
 for ($i = 0; $i < 6; $i++) {
     $anon->get('/wachtwoord-vergeten');
-    $anon->post('/wachtwoord-vergeten', ['email' => "x$i@demo.local", 'captcha' => $anon->captcha()]);
+    $anon->post('/wachtwoord-vergeten', ['email' => "x$i@demo.local", 'captcha_n' => $anon->captcha()]);
 }
 T::ok($anon->status === 429, 'na 10 aanvragen per uur vanaf hetzelfde IP-adres: geblokkeerd (' . $anon->status . ')');
 $ok = Browser::login('bestuur@demo.local');

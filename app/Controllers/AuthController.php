@@ -22,7 +22,7 @@ final class AuthController
         }
         if (!Captcha::check('login')) {
             http_response_code(422);
-            flash('error', 'Het antwoord op de controlevraag klopt niet. Probeer het opnieuw met de nieuwe vraag.');
+            flash('error', 'Vink “Ik ben geen robot” aan en probeer opnieuw.');
             render('login', ['email' => $email], 'Aanmelden');
             return;
         }
@@ -49,7 +49,7 @@ final class AuthController
         $email = strtolower(input('email'));
         if (!Captcha::check('forgot')) {
             http_response_code(422);
-            flash('error', 'Het antwoord op de controlevraag klopt niet. Probeer het opnieuw met de nieuwe vraag.');
+            flash('error', 'Vink “Ik ben geen robot” aan en probeer opnieuw.');
             render('auth/forgot', ['sent' => false, 'email' => $email], 'Wachtwoord vergeten');
             return;
         }

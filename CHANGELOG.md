@@ -5,6 +5,12 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
+_Vinkje "Ik ben geen robot" in plaats van de rekenvraag – commit `HASH`_
+
+- Bij *Aanmelden* en *Wachtwoord vergeten* staat nu een vinkje **Ik ben geen robot** in plaats van de rekenvraag. Een klik en de browser controleert (meestal minder dan een seconde, met een draaiend icoontje en daarna een groen vinkje). Vergeet je het vinkje, dan gebeurt de controle vanzelf bij *Aanmelden*.
+- Achter de schermen lost de browser een kleine rekenopgave op die per poging verandert (proof of work, zoals ALTCHA): voor een mens onzichtbaar, voor een bot die duizenden pogingen wil doen duur. Nog altijd zonder externe dienst, cookies van derden of sleutels, en werkt ook zonder HTTPS. Zonder JavaScript verschijnt de rekenvraag als reserve.
+- Tests: `v25_captcha` herschreven (25 controles); in een echte browser nagekeken (vinkje 0,4 s, aanmelden zonder eerst aan te vinken werkt ook).
+
 _v0.25 – Controlevraag in plaats van tweestapsverificatie – commit `601a62c`_
 
 - **Tweestapsverificatie is weg:** niemand moet nog een code uit een authenticator-app invullen, ook beheerders en bestuur niet. Het scherm in *Mijn account*, de knop op de gebruikersfiche en de melding op het overzicht zijn verdwenen. De bewaarde 2FA-geheimen worden bij de update uit de database gewist (migratie 017).

@@ -81,7 +81,7 @@ $parent = Browser::login('ouder@demo.local');
 T::clearMails();
 $anon = new Browser();
 $anon->get('/wachtwoord-vergeten');
-$anon->post('/wachtwoord-vergeten', ['email' => 'ouder@demo.local', 'captcha' => $anon->captcha()]);
+$anon->post('/wachtwoord-vergeten', ['email' => 'ouder@demo.local', 'captcha_n' => $anon->captcha()]);
 preg_match('/token=([a-f0-9]{64})/', T::outbox(), $m);
 T::ok(isset($m[1]), 'resetlink verstuurd');
 $anon->get('/activeren?token=' . ($m[1] ?? ''));

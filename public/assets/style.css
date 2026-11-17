@@ -787,3 +787,16 @@ form[data-autosubmit] select { max-width: 360px; }
 
 /* Controlevraag: verborgen veld voor bots (niet display:none, sommige bots slaan dat over) */
 .hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+/* "Ik ben geen robot" */
+.robot-check { margin: 4px 0 14px; }
+.robot-box { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #f7f9fb; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+.robot-box:hover { background: var(--aqua); }
+.robot-tick { flex: 0 0 26px; height: 26px; border: 2px solid #8a97a3; border-radius: 5px; background: #fff; position: relative; }
+.is-busy .robot-tick { border-color: var(--blue); border-right-color: transparent; border-radius: 50%; animation: robot-spin .8s linear infinite; }
+.is-done .robot-tick { background: #15803d; border-color: #15803d; }
+.is-done .robot-tick::after { content: ""; position: absolute; left: 7px; top: 2px; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+.is-done .robot-box { border-color: #15803d; background: #ecf8f1; cursor: default; }
+.is-fail .robot-box { border-color: var(--bad); }
+@keyframes robot-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .is-busy .robot-tick { animation: none; } }
