@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Menubalk: zoekveld even breed als de geselecteerde pagina – commit `HASH`_
+_Menubalk: zoekveld even breed als de geselecteerde pagina – commit `a328518`_
 
 - Het zoekveld in de menubalk links heeft nu dezelfde breedte, inspringing en afronding als de witte markering van de geselecteerde pagina.
 
