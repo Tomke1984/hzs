@@ -3,6 +3,8 @@
 Ledenapp voor Hasseltse Zwemvereniging Spartacus: kalender voor leden en ouders, groepen, trainingsreeksen, trainersplanning, aanwezigheden en berichten. Enkel met login; de publieke website staat apart (hzs-basic).
 PHP 8.1+ (zonder externe pakketten), server-rendered, responsive.
 
+**Versie:** zie het bestand `VERSION` (beheerders zien het ook onderaan in de menubalk) en de [CHANGELOG](CHANGELOG.md).
+
 ## Lokaal starten (2 minuten)
 
 Vereist: PHP 8.1 of hoger met `pdo_sqlite` (standaard aanwezig in de meeste PHP-installaties).

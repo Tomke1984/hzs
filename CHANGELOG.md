@@ -1,11 +1,16 @@
 # Changelog – HZS Clubapp
 
 Alle wijzigingen aan de app, nieuwste bovenaan. Elke push naar `dev` krijgt hier een regel onder **Op dev**.
-Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar een **Op main**-sectie met versienummer, datum en commit (`v0.x.0`, telkens +1 per merge).
+Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar een **Op main**-sectie met versienummer en datum (`v0.x.0`, telkens +1 per merge).
+Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het bestand `VERSION` (op `dev` met `-dev`, bv. `0.28.0-dev`; bij de overgang naar `main` zonder, bv. `0.28.0`) en beheerders zien het onderaan in de menubalk.
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+_v0.28.0-dev – Versienummer in plaats van commitnummer_
+
+- Beheerders zien onderaan in de menubalk nu het **versienummer** (bv. *v0.28.0*) in plaats van branch en commitnummer. Het komt uit het nieuwe bestand `VERSION` en werkt dus ook op de hosting (daar staat geen `.git`-map, zodat er tot nu toe niets verscheen).
+- De CHANGELOG vermeldt vanaf nu enkel nog versienummers, geen commitnummers.
+- Tests: 4 extra controles in `v25_captcha`.
 
 ## Op main
 

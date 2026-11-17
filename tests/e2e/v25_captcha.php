@@ -73,3 +73,13 @@ foreach (['/app/login-2fa', '/app/account-2fa-start'] as $path) {
 }
 T::ok((int) T::val("SELECT COUNT(*) FROM pragma_table_info('users') WHERE name LIKE 'totp%'") === 0, 'geen 2FA-kolommen in de database');
 T::ok(!is_file(T::$dir . '/app/Totp.php'), 'Totp-code verwijderd');
+
+echo "Versienummer\n";
+$v = trim((string) file_get_contents(T::$dir . '/VERSION'));
+T::ok(preg_match('/^\d+\.\d+\.\d+(-dev)?$/', $v) === 1, 'bestand VERSION met een versienummer');
+$admin->get('/app');
+T::ok($admin->has('<p class="side-build" title="Welke versie draait er?">v' . $v . '</p>'), 'beheerder ziet het versienummer in de menubalk');
+T::ok(!preg_match('/class="side-build"[^>]*>[^<]*\b[0-9a-f]{7}\b/', $admin->body), 'geen commitnummer meer');
+$ouder = Browser::login('ouder@demo.local');
+$ouder->get('/app');
+T::ok(!$ouder->has('class="side-build"'), 'andere gebruikers zien geen versienummer');
