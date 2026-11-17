@@ -277,6 +277,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'import'
                 $body .= '<div class="alert alert-success"><strong>Demo-accounts</strong> (wachtwoord voor allemaal: <code>Demo1234!</code>)<br>'
                     . 'trainer@demo.local · zwemmer@demo.local · ouder@demo.local<br>Enkel voor lokaal testen.</div>';
             }
+            if (storage_not_persistent()) {
+                $body .= '<div class="alert alert-error"><strong>Let op:</strong> <code>/app/storage</code> is geen blijvend volume; deze installatie is weg na de volgende deploy.</div>';
+            }
             $body .= '<p>Verwijder nu <code>public/install.php</code> van de server.</p><p><a class="btn" href="index.php">Naar de app</a></p></div>';
             page('Installatie voltooid', $body);
         } catch (Throwable $e) {
@@ -288,6 +291,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['mode'] ?? '') === 'import'
 ob_start(); ?>
 <div class="card narrow wide">
   <h1>Installatie</h1>
+  <?php if (storage_not_persistent()): ?>
+    <div class="alert alert-error"><strong>Geen blijvende opslag:</strong> de map <code>/app/storage</code> is geen volume. De database en de instellingen die je hier aanmaakt, zijn bij de volgende deploy weer weg (en dan kom je opnieuw op deze pagina).
+      Voeg in Coolify bij deze app onder <em>Persistent Storage</em> een volume toe met <em>Destination path</em> <code>/app/storage</code>, deploy opnieuw en installeer dan pas.</div>
+  <?php endif; ?>
   <p class="muted small">De instellingen komen in <code><?= e(config_write_file()) ?></code><?= getenv('HZS_CONFIG') ? ' (HZS_CONFIG)' : '' ?>.
     Op Coolify moet dat op het blijvende volume (<code>/app/storage</code>) staan, anders vraagt de app na elke deploy opnieuw om te installeren.</p>
   <?php if ($errors): ?>

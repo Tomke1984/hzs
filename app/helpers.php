@@ -17,6 +17,30 @@ function config_file(): string
 }
 
 /**
+ * Staat storage/ (database, config.php, sleutel, back-ups) in een container zonder blijvend volume? Dan is alles weg na
+ * de volgende deploy. true = zeker in een container (Coolify/Railpack: app in /app) en storage/ is geen aparte mount.
+ * false = in orde of niet te bepalen (gewone hosting, lokaal).
+ */
+function storage_not_persistent(?array $mountinfo = null, ?string $root = null): bool
+{
+    $root ??= APP_ROOT;
+    if ($mountinfo === null) {
+        if ($root !== '/app' || !is_readable('/proc/self/mountinfo')) {
+            return false;
+        }
+        $mountinfo = @file('/proc/self/mountinfo', FILE_IGNORE_NEW_LINES) ?: [];
+    }
+    $target = $root . '/storage';
+    foreach ($mountinfo as $line) {
+        $point = explode(' ', (string) $line)[4] ?? '';
+        if ($point === $target) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * Waar schrijft de installer een nieuwe config.php? HZS_CONFIG als die gezet is; anders een bestaande config.php in de
  * projectmap; anders storage/config.php. storage/ is in Coolify het blijvende volume (de projectmap is na elke deploy
  * weer leeg) en is op Apache-hosting afgeschermd met .htaccess.

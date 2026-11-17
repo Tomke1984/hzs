@@ -6,6 +6,9 @@
 <?php if (!empty($backupOverdue)): ?>
 <div class="alert alert-error"><strong>Back-up:</strong> de laatste geslaagde back-up van de database is ouder dan 2 dagen (of er is er nog geen). Controleer of de map <code><?= e(Backup::dir()) ?></code> schrijfbaar is, of draai <code>php tools/backup.php</code>.</div>
 <?php endif; ?>
+<?php if (!empty($storageVolatile)): ?>
+<div class="alert alert-error"><strong>Geen blijvende opslag:</strong> <code>/app/storage</code> (database, instellingen, back-ups) is geen volume. Bij de volgende deploy is alles weg. Voeg in Coolify onder <em>Persistent Storage</em> een volume toe op <code>/app/storage</code> en zet daarna je database terug.</div>
+<?php endif; ?>
 <?php if (!empty($mailOff)): ?>
 <div class="alert alert-error"><strong>Mail staat in testmodus:</strong> uitnodigingen, wachtwoordlinks en herinneringen worden niet verstuurd. <a href="<?= e(url('mail_settings')) ?>">Mail instellen →</a></div>
 <?php endif; ?>

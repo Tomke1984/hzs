@@ -6,6 +6,11 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Waarschuwing als er geen blijvende opslag is (Coolify)_
+
+- Draait de app in een container (Coolify/Railpack) zonder volume op `/app/storage`, dan toont de installer een rode waarschuwing *Geen blijvende opslag*: de database en instellingen zouden bij de volgende deploy verdwijnen (en dan kom je telkens opnieuw op de installatiepagina). Ook de beheerder ziet die melding op het overzicht.
+- Tests: 3 extra controles in `v26_deploy`.
+
 _v0.28.0-dev – Mailinstellingen in de app; duidelijk als er geen mail vertrekt_
 
 - **Waarom kwam de uitnodiging niet aan?** Een installatie via de installer staat standaard in **testmodus** voor mail: er wordt niets verstuurd (zoals op hzs-dev). Dat stond enkel in `config.php`, wat op Coolify lastig aan te passen is.

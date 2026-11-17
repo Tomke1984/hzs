@@ -68,3 +68,13 @@ T::ok($back->status !== 302 || !str_contains($back->location, 'install.php'), 'g
 // terugzetten voor de rest van de suite
 unlink(T::$dir . '/storage/config.php');
 rename(T::$dir . '/config.php.weg', T::$dir . '/config.php');
+
+echo "Waarschuwing zonder blijvend volume (Coolify)\n";
+$probe2 = function (array $lines): string {
+    $code = 'define("APP_ROOT", "/app"); require ' . var_export(T::$dir . '/app/helpers.php', true) . '; echo storage_not_persistent(' . var_export($lines, true) . ', "/app") ? "ja" : "nee";';
+    return (string) shell_exec(PHP_BINARY . ' -r ' . escapeshellarg($code));
+};
+$base = ['22 1 0:21 / / rw,relatime - overlay overlay rw', '23 22 0:22 / /proc rw - proc proc rw'];
+T::ok($probe2($base) === 'ja', 'container zonder volume op /app/storage: waarschuwing');
+T::ok($probe2(array_merge($base, ['40 22 8:1 /var/lib/docker/volumes/x/_data /app/storage rw,relatime - ext4 /dev/sda1 rw'])) === 'nee', 'met volume op /app/storage: geen waarschuwing');
+T::ok(str_contains((string) file_get_contents(T::$dir . '/public/install.php'), 'storage_not_persistent()'), 'installer controleert de opslag');

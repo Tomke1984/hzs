@@ -228,6 +228,7 @@ final class DashboardController
             'backupOverdue' => Auth::hasRole('ADMIN') && Backup::isOverdue(),
             'keyInFile' => Auth::hasRole('ADMIN') && (string) config('app_key', '') === '' && is_file(APP_ROOT . '/storage/app.key'),
             // Op de server (niet lokaal) in testmodus: uitnodigingen en herinneringen komen niet aan
+            'storageVolatile' => Auth::hasRole('ADMIN') && storage_not_persistent(),
             'mailOff' => Auth::can('users.manage') && Mailer::driver() === 'log' && !is_local_request()];
         return $o;
     }
