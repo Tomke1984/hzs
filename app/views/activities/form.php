@@ -57,7 +57,7 @@
 
 
   <?php $typeCode = ''; foreach ($types as $t) { if ((int) $t['id'] === (int) $activity['type_id']) { $typeCode = $t['code']; } } ?>
-  <fieldset data-for-type="TRAINING COMPETITION"<?= in_array($typeCode, ['TRAINING', 'COMPETITION'], true) ? '' : ' hidden' ?> data-trainer-picks>
+  <fieldset data-show-for="TRAINING COMPETITION"<?= in_array($typeCode, ['TRAINING', 'COMPETITION'], true) ? '' : ' hidden' ?> data-trainer-picks>
     <legend>Trainers</legend>
     <?php if ($activity['id']): ?><input type="hidden" name="trainers_sync" value="1"><?php endif; ?>
     <?php if (!$pool): ?><p class="muted small">Er zijn nog geen trainers van de competitie.</p><?php endif; ?>

@@ -87,7 +87,7 @@
       });
     };
     var sync = function () {
-      document.querySelectorAll('[data-for-type]').forEach(function (el) { el.hidden = el.getAttribute('data-for-type').split(' ').indexOf(code()) === -1; });
+      document.querySelectorAll('[data-show-for]').forEach(function (el) { el.hidden = el.getAttribute('data-show-for').split(' ').indexOf(code()) === -1; });
       prefill();
     };
     if (isNew) {

@@ -9,7 +9,7 @@ echo "Caddyfile en composer.json (Railpack)\n";
 $caddy = (string) @file_get_contents(T::$root . '/Caddyfile');
 T::ok((bool) preg_match('#root \* \{\$HZS_PUBLIC_DIR:/app/public\}#', $caddy), 'Caddyfile: enkel public/ is de webmap (niet de hele projectmap)');
 T::ok(str_contains($caddy, 'php_server') && str_contains($caddy, ':{$PORT:80}'), 'Caddyfile: PHP via FrankenPHP op poort 80');
-T::ok(str_contains($caddy, '@hidden path */.*') && str_contains($caddy, 'immutable'), 'Caddyfile: verborgen bestanden geweigerd, assets lang in de cache');
+T::ok(str_contains($caddy, '@hidden path */.*') && str_contains($caddy, 'header @code Cache-Control "no-cache"'), 'Caddyfile: verborgen bestanden geweigerd, CSS en JS altijd navragen');
 T::ok(!str_contains($caddy, '{{'), 'Caddyfile zonder Go-templatecode (Railpack verwerkt het als template)');
 $composer = json_decode((string) @file_get_contents(T::$root . '/composer.json'), true);
 T::ok(is_array($composer) && str_starts_with((string) ($composer['require']['php'] ?? ''), '^8.'), 'composer.json legt de PHP-versie vast');

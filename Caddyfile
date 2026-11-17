@@ -29,9 +29,13 @@
 	@hidden path */.*
 	respond @hidden 404
 
-	# CSS/JS/logo: de app zet ?v=<wijzigingsdatum> in elk adres, dus een jaar cache is veilig
-	@assets path /assets/*
-	header @assets Cache-Control "public, max-age=31536000, immutable"
+	# CSS en JS: altijd even navragen (304 als er niets veranderde), zodat na een deploy nooit oude JavaScript
+	# met nieuwe pagina's samenloopt, ook niet achter een proxy of cache die de ?v= in het adres negeert.
+	# Het logo mag een jaar in de cache.
+	@code path /assets/*.css /assets/*.js
+	header @code Cache-Control "no-cache"
+	@img path /assets/*.png
+	header @img Cache-Control "public, max-age=31536000, immutable"
 
 	header {
 		-Server

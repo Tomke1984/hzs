@@ -111,7 +111,7 @@ T::ok($anon->status === 404 && !T::val("SELECT ical_token FROM users WHERE email
 echo "Cache-busting en compressie\n";
 $admin->get('/app');
 T::ok((bool) preg_match('#assets/style\.css\?v=([a-f0-9]{10})"#', $admin->body, $cssv) && $cssv[1] === substr(md5_file(dirname(__DIR__, 2) . '/public/assets/style.css'), 0, 10) && (bool) preg_match('#assets/app\.js\?v=[a-f0-9]{10}"#', $admin->body), 'CSS en JS met versie volgens de inhoud (ook als alle bestanden dezelfde datum hebben, zoals in Coolify)');
-T::ok(str_contains((string) file_get_contents(T::$dir . '/public/assets/.htaccess'), 'immutable'), 'assets mogen een jaar in de cache');
+T::ok(str_contains((string) file_get_contents(T::$dir . '/public/assets/.htaccess'), 'no-cache'), 'CSS en JS: altijd navragen (geen oude JavaScript na een update)');
 T::ok(str_contains((string) file_get_contents(T::$dir . '/public/.htaccess'), 'DEFLATE'), 'compressie aan in .htaccess');
 
 echo "Versleuteling\n";

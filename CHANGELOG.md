@@ -6,6 +6,11 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Fix: trainers kiezen was onzichtbaar_
+
+- Na de vorige update gebruikte de browser op hzs-dev nog de oude JavaScript bij de nieuwe pagina, die daardoor het blok *Trainers* verborg (ook bij wedstrijden). Het blok gebruikt nu een ander kenmerk, zodat oude JavaScript er niet meer aan kan komen.
+- CSS en JavaScript worden niet meer een jaar bewaard: de browser vraagt telkens even na of er een nieuwe versie is (antwoord 304 als er niets veranderde). Zo lopen oude scripts en nieuwe pagina's nooit meer door elkaar, ook niet achter een proxy of cache. Het logo mag wel een jaar in de cache (Caddyfile en `public/assets/.htaccess`).
+
 _v0.28.0-dev – Training aanmaken: ook trainers kiezen in plaats van aantal_
 
 - Ook bij een **training** vraagt het formulier niet meer hoeveel trainers er nodig zijn. Je vinkt aan **welke trainers** er zijn, net als bij een wedstrijd. Bij een nieuwe training staan de trainers van de gekozen groep(en) al aangevinkt; vink extra trainers aan of vink een groepstrainer uit (die staat dan als *afgemeld – niet ingepland*). Bij wijzigen zie je wie er nu op staat.
