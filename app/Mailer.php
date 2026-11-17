@@ -1,13 +1,40 @@
 <?php
 /**
  * E-mail versturen zonder externe bibliotheken.
- * Drivers (config mail.driver): 'log' (bewaart mails in storage/mail), 'smtp', 'mail' (PHP mail()).
+ * Drivers: 'log' (bewaart mails in storage/mail), 'smtp', 'mail' (PHP mail()).
+ * Instellingen: wat de beheerder in de app instelt (Mailinstellingen, tabel settings) gaat voor; anders 'mail' in config.php.
  */
 final class Mailer
 {
+    private static ?array $cfg = null;
+    /** Laatste foutmelding (bv. van de SMTP-server), om bij een testmail te tonen. */
+    public static ?string $lastError = null;
+
+    /** Huidige mailinstellingen: uit de app (indien ingesteld), anders uit config.php. Het SMTP-wachtwoord ontsleuteld. */
+    public static function settings(): array
+    {
+        if (self::$cfg === null) {
+            $app = Settings::get('mail');
+            if (is_array($app)) {
+                $app['smtp']['pass'] = (string) (Crypto::decrypt($app['smtp']['pass'] ?? null) ?? '');
+                $app['source'] = 'app';
+                self::$cfg = $app;
+            } else {
+                self::$cfg = (array) config('mail', []) + ['source' => 'config'];
+            }
+        }
+        return self::$cfg;
+    }
+
+    /** Na het wijzigen van de instellingen opnieuw inlezen. */
+    public static function reset(): void
+    {
+        self::$cfg = null;
+    }
+
     public static function driver(): string
     {
-        $d = (string) config('mail.driver', 'log');
+        $d = (string) (self::settings()['driver'] ?? 'log');
         return in_array($d, ['log', 'smtp', 'mail'], true) ? $d : 'log';
     }
 
@@ -19,6 +46,7 @@ final class Mailer
     /** @param array<int,array{0:string,1:string,2:string}> $messages [aan, onderwerp, tekst] @return bool[] */
     public static function sendMany(array $messages): array
     {
+        self::$lastError = null;
         $result = [];
         $valid = [];
         foreach ($messages as $i => [$to, $subject, $body]) {
@@ -37,6 +65,9 @@ final class Mailer
                     foreach ($valid as $i => [$to, $subject, $body]) {
                         [$headers, $encoded] = self::build($to, $subject, $body, false);
                         $result[$i] = @mail($to, self::encodeHeader($subject), $encoded, $headers);
+                        if (!$result[$i]) {
+                            self::$lastError = 'PHP mail() weigerde het bericht (is mail op deze server ingesteld?).';
+                        }
                     }
                     break;
                 default:
@@ -46,6 +77,7 @@ final class Mailer
             }
         } catch (Throwable $e) {
             error_log('Mailer: ' . $e->getMessage());
+            self::$lastError = $e->getMessage();
             foreach ($valid as $i => $_) {
                 $result[$i] = $result[$i] ?? false;
             }
@@ -56,13 +88,13 @@ final class Mailer
 
     private static function fromEmail(): string
     {
-        $f = (string) config('mail.from_email', 'noreply@localhost');
+        $f = (string) (self::settings()['from_email'] ?? 'noreply@localhost');
         return filter_var($f, FILTER_VALIDATE_EMAIL) ? $f : 'noreply@localhost';
     }
 
     private static function fromName(): string
     {
-        return self::clean((string) config('mail.from_name', config('app_name', 'HZS Clubapp')));
+        return self::clean((string) (self::settings()['from_name'] ?? config('app_name', 'HZS Clubapp')));
     }
 
     /** Verwijdert regeleindes zodat er nooit extra headers ingespoten kunnen worden. */
@@ -117,7 +149,7 @@ final class Mailer
         if (!$valid) {
             return $out;
         }
-        $c = (array) config('mail.smtp', []);
+        $c = (array) (self::settings()['smtp'] ?? []);
         $enc = (string) ($c['encryption'] ?? 'tls');
         $host = (string) ($c['host'] ?? '');
         $port = (int) ($c['port'] ?? 587);
@@ -172,6 +204,7 @@ final class Mailer
                     $out[$i] = true;
                 } catch (RuntimeException $e) {
                     error_log('Mailer: ' . $e->getMessage());
+                    self::$lastError = $e->getMessage();
                     $out[$i] = false;
                     @fwrite($fp, "RSET\r\n");
                     @fgets($fp, 1024);

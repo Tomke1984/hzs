@@ -6,6 +6,9 @@
 <?php if (!empty($backupOverdue)): ?>
 <div class="alert alert-error"><strong>Back-up:</strong> de laatste geslaagde back-up van de database is ouder dan 2 dagen (of er is er nog geen). Controleer of de map <code><?= e(Backup::dir()) ?></code> schrijfbaar is, of draai <code>php tools/backup.php</code>.</div>
 <?php endif; ?>
+<?php if (!empty($mailOff)): ?>
+<div class="alert alert-error"><strong>Mail staat in testmodus:</strong> uitnodigingen, wachtwoordlinks en herinneringen worden niet verstuurd. <a href="<?= e(url('mail_settings')) ?>">Mail instellen →</a></div>
+<?php endif; ?>
 <?php if (!empty($keyInFile)): ?>
 <div class="alert alert-info"><strong>Sleutel:</strong> medische opmerkingen worden versleuteld met de sleutel in <code>storage/app.key</code>. Zet die sleutel als <code>'app_key'</code> in <code>config.php</code> en bewaar een kopie veilig, apart van de back-ups: zonder sleutel zijn die gegevens onleesbaar (zie README, “Versleuteling”).</div>
 <?php endif; ?>

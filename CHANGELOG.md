@@ -6,6 +6,13 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Mailinstellingen in de app; duidelijk als er geen mail vertrekt_
+
+- **Waarom kwam de uitnodiging niet aan?** Een installatie via de installer staat standaard in **testmodus** voor mail: er wordt niets verstuurd (zoals op hzs-dev). Dat stond enkel in `config.php`, wat op Coolify lastig aan te passen is.
+- **Nieuw: *Mailinstellingen*** in het menu (beheerder): kies SMTP (aanbevolen), PHP mail() of testmodus, vul afzender en SMTP-gegevens in (wachtwoord versleuteld bewaard) en stuur een **testmail** – lukt het niet, dan zie je de foutmelding van de mailserver. Gaat voor op `config.php`.
+- Staat de app op een server in testmodus, dan krijgt de beheerder op het overzicht een rode melding *Mail staat in testmodus*. Elke uitnodiging zegt in testmodus duidelijk dat er **geen** mail vertrok, met de link om zelf door te geven.
+- Migratie `018`: tabel `settings`. Tests: 10 extra controles in `v28_accounts`.
+
 _v0.28.0-dev – Fix: hzs-dev vroeg telkens opnieuw om te installeren_
 
 - **Oorzaak:** zonder de omgevingsvariabele `HZS_CONFIG` schreef de installer `config.php` in de app-map. In Coolify is die map na elke nieuwe deploy (bij elke push naar `dev`) weer leeg, terwijl de database op het blijvende volume (`/app/storage`) bleef staan. Gevolg: na elke deploy weer de installatiepagina.

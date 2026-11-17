@@ -83,7 +83,7 @@ const APP_PATHS = [
     'dashboard' => ['app'],
     'members' => ['app/leden'], 'member' => ['app/leden/{id}'], 'member_form' => ['app/leden/{id}/wijzigen', 'app/leden/nieuw'], 'child_form' => ['app/leden/{id}/mijn-gegevens'],
     'groups' => ['app/groepen'], 'group' => ['app/groepen/{id}'], 'group_form' => ['app/groepen/{id}/wijzigen', 'app/groepen/nieuw'],
-    'users' => ['app/gebruikers'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
+    'users' => ['app/gebruikers'], 'mail_settings' => ['app/instellingen/mail'], 'user_form' => ['app/gebruikers/{id}/wijzigen', 'app/gebruikers/nieuw'],
     'calendar' => ['app/kalender'], 'activity' => ['app/kalender/{id}'], 'activity_form' => ['app/kalender/{id}/wijzigen', 'app/kalender/nieuw'],
     'series' => ['app/reeksen'], 'series_show' => ['app/reeksen/{id}'], 'series_form' => ['app/reeksen/{id}/wijzigen', 'app/reeksen/nieuw'], 'series_bulk' => ['app/reeksen/schrappen'],
     'coverage' => ['app/trainersplanning'], 'coverage_settings' => ['app/trainersplanning/instellingen'], 'coverage_bulk_form' => ['app/trainersplanning/meerdere'],

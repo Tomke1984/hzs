@@ -39,6 +39,9 @@ $routes = [
     'membership_end'   => ['POST' => ['GroupController', 'removeMember', 'groups.write']],
 
     'users'            => ['GET' => ['UserController', 'index', 'users.manage']],
+    'mail_settings'    => ['GET' => ['MailSettingsController', 'form', 'users.manage']],
+    'mail_settings_save' => ['POST' => ['MailSettingsController', 'save', 'users.manage']],
+    'mail_test'        => ['POST' => ['MailSettingsController', 'test', 'users.manage']],
     'user_form'        => ['GET' => ['UserController', 'form', 'users.manage']],
     'user_save'        => ['POST' => ['UserController', 'save', 'users.manage']],
     'user_delete'      => ['POST' => ['UserController', 'delete', 'users.manage']],

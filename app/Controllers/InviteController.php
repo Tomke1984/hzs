@@ -61,7 +61,7 @@ final class InviteController
             audit('INVITE', 'user', $uid);
             $msg = $sent ? "Uitnodiging verstuurd naar $email." : "Uitnodiging kon niet verstuurd worden naar $email. Controleer de mailinstellingen.";
             if (Mailer::driver() === 'log') {
-                $msg .= " (Testmodus: geen echte mail; zie storage/mail. Link: $link)";
+                $msg .= " (Testmodus: er is GEEN mail verstuurd. Stel de mail in via Mailinstellingen, of geef deze link zelf door: $link)";
             }
             flash($sent ? 'success' : 'error', $msg);
         } else {
@@ -99,7 +99,7 @@ final class InviteController
         audit('INVITE', 'user', $uid);
         $msg = $sent ? 'Uitnodiging opnieuw verstuurd.' : 'Uitnodiging kon niet verstuurd worden. Controleer de mailinstellingen.';
         if (Mailer::driver() === 'log') {
-            $msg .= " (Testmodus: geen echte mail; zie storage/mail. Link: $link)";
+            $msg .= " (Testmodus: er is GEEN mail verstuurd. Stel de mail in via Mailinstellingen, of geef deze link zelf door: $link)";
         }
         flash($sent ? 'success' : 'error', $msg);
         redirect($back);

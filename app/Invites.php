@@ -139,7 +139,7 @@ final class Invites
         audit('INVITE', 'user', $uid);
         $msg = $sent ? "Uitnodiging verstuurd naar $email." : "Account aangemaakt, maar de uitnodiging kon niet verstuurd worden naar $email. Controleer de mailinstellingen.";
         if (Mailer::driver() === 'log') {
-            $msg .= " (Testmodus: geen echte mail; zie storage/mail. Link: $link)";
+            $msg .= " (Testmodus: er is GEEN mail verstuurd. Stel de mail in via Mailinstellingen, of geef deze link zelf door: $link)";
         }
         return ['ok' => $sent, 'msg' => $msg, 'uid' => $uid];
     }
