@@ -7,6 +7,7 @@
 <?php if (!empty($pending)): ?>
   <div class="alert alert-warning">
     <strong>Nog niet geactiveerd.</strong> Deze gebruiker heeft de uitnodiging nog niet gebruikt en kan nog niet aanmelden.
+    Geen mail nodig? Vul hieronder zelf een wachtwoord in en sla op: dan kan de gebruiker meteen aanmelden.
     <form class="mt-s" method="post" action="<?= e(url('invite_resend')) ?>">
       <?= csrf_field() ?>
       <input type="hidden" name="user_id" value="<?= (int) $user['id'] ?>">

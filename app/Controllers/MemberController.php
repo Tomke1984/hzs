@@ -286,7 +286,7 @@ final class MemberController
         // Meerderjarig lid met een e-mailadres en nog geen account: meteen een eigen account en uitnodiging (vinkje in het formulier).
         if (input('create_account') === '1' && Auth::can('users.manage') && $data['status'] === 'ACTIVE' && !Guardianship::isMinor($nullable($data['birth_date']))
             && filter_var($data['email'], FILTER_VALIDATE_EMAIL) && !Database::val('SELECT COUNT(*) FROM users WHERE member_id = ?', [$id])) {
-            $r = Invites::inviteMember($id);
+            $r = Invites::inviteMember($id, '', 'Je kunt er je eigen kalender en groepen bekijken.', (string) ($_POST['account_password'] ?? ''));
             flash($r['ok'] ? 'success' : 'warning', 'Eigen account: ' . $r['msg']);
         }
         redirect(url('member', ['id' => $id]));
@@ -371,14 +371,16 @@ final class MemberController
             abort(404, 'Dit lid bestaat niet of je kan hiervoor geen account aanvragen.');
         }
         $email = strtolower(trim(input('email')));
-        $r = Invites::inviteMember((int) $member['id'], $email, 'Je ouder heeft een eigen account voor je aangevraagd: je kunt er je eigen kalender en groep bekijken.');
+        // Beheerder mag meteen een wachtwoord instellen (geen uitnodiging); een ouder stuurt altijd een uitnodiging.
+        $password = Auth::can('users.manage') ? (string) ($_POST['password'] ?? '') : '';
+        $r = Invites::inviteMember((int) $member['id'], $email, 'Je ouder heeft een eigen account voor je aangevraagd: je kunt er je eigen kalender en groep bekijken.', $password);
         if ($r['uid'] !== null) {
             if (trim((string) $member['email']) === '') {
                 Database::exec('UPDATE members SET email = ? WHERE id = ?', [$email, $member['id']]);
             }
             audit('CHILD_ACCOUNT', 'member', (int) $member['id'], 'aangevraagd voor ' . $email);
         }
-        flash($r['ok'] ? 'success' : 'error', $r['ok'] ? $member['first_name'] . ' krijgt een eigen account. ' . $r['msg'] : $r['msg']);
+        flash($r['ok'] ? 'success' : 'error', $r['ok'] && $password === '' ? $member['first_name'] . ' krijgt een eigen account. ' . $r['msg'] : $r['msg']);
         redirect(url('member', ['id' => $member['id']]) . '#eigen-account');
     }
 

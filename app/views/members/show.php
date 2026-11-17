@@ -123,9 +123,12 @@
       <label>Relatie (optioneel)
         <input name="relationship" maxlength="40" placeholder="bv. moeder, vader, voogd">
       </label>
-      <button class="btn" type="submit">Uitnodigen</button>
+      <label>Wachtwoord (optioneel)
+        <input type="password" name="password" minlength="10" autocomplete="new-password" placeholder="leeg = uitnodiging per mail">
+      </label>
+      <button class="btn" type="submit">Uitnodigen of aanmaken</button>
     </form>
-    <p class="muted small">De ouder krijgt een mail met een persoonlijke link om zelf een wachtwoord te kiezen en is meteen gekoppeld aan dit lid.</p>
+    <p class="muted small">Zonder wachtwoord krijgt de ouder een mail met een persoonlijke link om zelf een wachtwoord te kiezen. Vul je zelf een wachtwoord in (min. 10 tekens), dan wordt er <strong>geen</strong> mail verstuurd en kan de ouder meteen aanmelden: geef het wachtwoord dan zelf door. In beide gevallen is de ouder meteen gekoppeld aan dit lid.</p>
   <?php endif; ?>
 </details>
 <?php else: ?>
@@ -203,9 +206,12 @@
       <label>Relatie (optioneel)
         <input name="relationship" maxlength="40" placeholder="bv. moeder, vader, voogd">
       </label>
-      <button class="btn" type="submit">Uitnodigen</button>
+      <label>Wachtwoord (optioneel)
+        <input type="password" name="password" minlength="10" autocomplete="new-password" placeholder="leeg = uitnodiging per mail">
+      </label>
+      <button class="btn" type="submit">Uitnodigen of aanmaken</button>
     </form>
-    <p class="muted small">De ouder krijgt een mail met een persoonlijke link om zelf een wachtwoord te kiezen en is meteen gekoppeld aan dit lid.</p>
+    <p class="muted small">Zonder wachtwoord krijgt de ouder een mail met een persoonlijke link om zelf een wachtwoord te kiezen. Vul je zelf een wachtwoord in (min. 10 tekens), dan wordt er <strong>geen</strong> mail verstuurd en kan de ouder meteen aanmelden: geef het wachtwoord dan zelf door. In beide gevallen is de ouder meteen gekoppeld aan dit lid.</p>
   <?php endif; ?>
 </section>
 <?php endif; ?>
@@ -232,7 +238,12 @@
       <label>E-mailadres van <?= e($member['first_name']) ?> zelf
         <input type="email" name="email" value="<?= e((string) $member['email']) ?>" required maxlength="190" autocomplete="off">
       </label>
-      <button class="btn" type="submit">Eigen account aanvragen</button>
+      <?php if (Auth::can('users.manage')): ?>
+      <label>Wachtwoord (optioneel)
+        <input type="password" name="password" minlength="10" autocomplete="new-password" placeholder="leeg = uitnodiging per mail">
+      </label>
+      <?php endif; ?>
+      <button class="btn" type="submit"><?= Auth::can('users.manage') ? 'Account aanmaken' : 'Eigen account aanvragen' ?></button>
     </form>
     <p class="muted small"><?= e($member['first_name']) ?> krijgt een mail om een wachtwoord te kiezen. Gebruik een eigen e-mailadres, niet dat van een ouder.</p>
   <?php endif; ?>
@@ -256,7 +267,7 @@
         <button class="btn btn-small" type="submit">Uitnodigen per e-mail (<?= e($member['email']) ?>)</button>
       </form>
       <?php endif; ?>
-      <a class="btn btn-small btn-ghost" href="<?= e(url('user_form', ['member_id' => $member['id']])) ?>">Account zelf aanmaken</a>
+      <a class="btn btn-small btn-ghost" href="<?= e(url('user_form', ['member_id' => $member['id']])) ?>">Account aanmaken met wachtwoord (geen mail)</a>
     </div>
   <?php endif; ?>
 </section>

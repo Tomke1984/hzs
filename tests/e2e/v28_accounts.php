@@ -126,3 +126,53 @@ T::clearMails();
 $admin->post('/app/invite-resend', ['user_id' => (int) T::val("SELECT id FROM users WHERE email = 'kai.zelf@voorbeeld.be'")]);
 $admin->follow();
 T::ok($admin->has('er is GEEN mail verstuurd') && $admin->has('Mailinstellingen'), 'testmodus: melding zegt duidelijk dat er geen mail vertrok');
+
+echo "Beheerder maakt accounts zonder uitnodiging (zelf een wachtwoord)\n";
+T::clearMails();
+// Ouder van een kind
+$kid3 = (int) T::val("SELECT id FROM members WHERE first_name = 'Kai'");
+$admin->get('/app/leden/' . $kid3);
+T::ok($admin->has('name="password"') && $admin->has('leeg = uitnodiging per mail'), 'ouder uitnodigen: optioneel wachtwoord');
+$admin->post('/app/invite-parent', ['member_id' => $kid3, 'email' => 'papa.kai@voorbeeld.be', 'display_name' => 'Papa Kai', 'password' => 'kort']);
+$admin->follow();
+T::ok(!T::val("SELECT 1 FROM users WHERE email = 'papa.kai@voorbeeld.be'") && $admin->has('10 tekens'), 'te kort wachtwoord: geweigerd');
+$admin->post('/app/invite-parent', ['member_id' => $kid3, 'email' => 'papa.kai@voorbeeld.be', 'display_name' => 'Papa Kai', 'password' => 'ZwembadKai2026!']);
+$admin->follow();
+T::ok($admin->has('kan meteen aanmelden') && $admin->has('geen mail verstuurd'), 'ouder aangemaakt met wachtwoord');
+T::ok(!str_contains(T::outbox(), 'papa.kai@voorbeeld.be'), 'geen uitnodiging verstuurd');
+$pk = new Browser();
+$pk->get('/aanmelden');
+$pk->post('/aanmelden', ['email' => 'papa.kai@voorbeeld.be', 'password' => 'ZwembadKai2026!', 'captcha_n' => $pk->captcha()]);
+T::ok($pk->status === 302, 'ouder kan meteen aanmelden');
+T::ok((bool) T::val("SELECT 1 FROM guardian_links gl JOIN users u ON u.id = gl.user_id WHERE u.email = 'papa.kai@voorbeeld.be' AND gl.member_id = ?", [$kid3]), 'en is gekoppeld aan het kind');
+
+// Eigen account voor een kind
+$kidUser3 = (int) T::val('SELECT id FROM users WHERE member_id = ?', [$kid3]);
+if ($kidUser3) {
+    T::exec('DELETE FROM user_roles WHERE user_id = ?', [$kidUser3]);
+    T::exec('DELETE FROM users WHERE id = ?', [$kidUser3]);
+}
+$admin->get('/app/leden/' . $kid3);
+$admin->post('/app/child-account', ['member_id' => $kid3, 'email' => 'kai.eigen@voorbeeld.be', 'password' => 'KaiZwemt2026!']);
+$admin->follow();
+T::ok($admin->has('geen mail verstuurd') && !str_contains(T::outbox(), 'kai.eigen@voorbeeld.be'), 'beheerder: account voor een kind met wachtwoord, geen mail');
+$kk = new Browser();
+$kk->get('/aanmelden');
+$kk->post('/aanmelden', ['email' => 'kai.eigen@voorbeeld.be', 'password' => 'KaiZwemt2026!', 'captcha_n' => $kk->captcha()]);
+T::ok($kk->status === 302, 'kind kan meteen aanmelden');
+$parent->post('/app/child-account', ['member_id' => $kid3, 'email' => 'x@voorbeeld.be', 'password' => 'GeenEffect2026!']);
+T::ok(!T::val("SELECT 1 FROM users WHERE email = 'x@voorbeeld.be'"), 'een ouder kan geen wachtwoord instellen (kind heeft al een account)');
+
+// Meerderjarig lid
+$admin->post('/app/member-save', ['first_name' => 'Tim', 'last_name' => 'Direct', 'birth_date' => '1992-02-02', 'email' => 'tim@voorbeeld.be', 'status' => 'ACTIVE', 'create_account' => '1', 'account_password' => 'TimZwemt2026!']);
+$admin->follow();
+T::ok($admin->has('geen mail verstuurd') && !str_contains(T::outbox(), 'tim@voorbeeld.be'), 'nieuw meerderjarig lid met wachtwoord: account zonder mail');
+$tt = new Browser();
+$tt->get('/aanmelden');
+$tt->post('/aanmelden', ['email' => 'tim@voorbeeld.be', 'password' => 'TimZwemt2026!', 'captcha_n' => $tt->captcha()]);
+T::ok($tt->status === 302, 'lid kan meteen aanmelden');
+
+// Wachtende uitnodiging: zelf een wachtwoord instellen
+$pend = (int) T::val("SELECT id FROM users WHERE email = 'sofie@voorbeeld.be'");
+$admin->get('/app/gebruikers/' . $pend . '/wijzigen');
+T::ok($admin->has('Vul hieronder zelf een wachtwoord in'), 'nog niet geactiveerd: uitleg om zelf een wachtwoord te zetten');

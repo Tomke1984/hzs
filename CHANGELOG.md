@@ -6,6 +6,13 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Beheerder maakt accounts zonder uitnodiging_
+
+- Overal waar de app een account maakt, kan de **beheerder** nu zelf een wachtwoord invullen in plaats van een uitnodiging te sturen: ouder uitnodigen (op de pagina van een kind), eigen account voor een kind, het vinkje *eigen account* bij een meerderjarig lid, en *Account aanmaken met wachtwoord (geen mail)*. Dan vertrekt er geen mail en kan de gebruiker meteen aanmelden; geef het wachtwoord zelf door. Leeg laten = uitnodiging per mail zoals voorheen.
+- Bij een account dat de uitnodiging nog niet gebruikte, staat in de gebruikersfiche dat je ook zelf een wachtwoord kan instellen.
+- Ouders kunnen voor hun kind enkel een uitnodiging sturen, geen wachtwoord instellen.
+- Tests: 12 extra controles in `v28_accounts`.
+
 _v0.28.0-dev – Mailinstellingen: duidelijker bij PHP mail() in Coolify_
 
 - PHP mail() werkt niet in een container (Coolify/Docker heeft geen mailprogramma). De optie zegt dat nu in Coolify, en een mislukte testmail met PHP mail() raadt SMTP aan in plaats van te vragen server en poort te controleren.

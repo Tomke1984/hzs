@@ -25,11 +25,16 @@ final class InviteController
             flash('error', 'Naam of relatie is te lang.');
             redirect($back);
         }
-        redirect(self::inviteParentTo($member, $email, $name, $rel, $back));
+        $password = (string) ($_POST['password'] ?? '');
+        if ($password !== '' && ($problem = PasswordPolicy::problem($password, [$email, $name]))) {
+            flash('error', $problem);
+            redirect($back);
+        }
+        redirect(self::inviteParentTo($member, $email, $name, $rel, $back, $password));
     }
 
     /** @return string url waarnaar teruggekeerd wordt (flash is gezet) */
-    private static function inviteParentTo(array $member, string $email, string $name, string $rel, string $back): string
+    private static function inviteParentTo(array $member, string $email, string $name, string $rel, string $back, string $password = ''): string
     {
         $user = Database::one('SELECT id, email, display_name, password_hash, is_active FROM users WHERE email = ?', [$email]);
         $created = false;
@@ -56,7 +61,12 @@ final class InviteController
         }
         $row = Database::one('SELECT id, password_hash FROM users WHERE id = ?', [$uid]);
         $msg = '';
-        if ($created || Invites::isPending($row)) {
+        if ($password !== '' && ($created || Invites::isPending($row))) {
+            // Beheerder stelt zelf een wachtwoord in: geen uitnodiging, het account is meteen actief.
+            Database::exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $uid]);
+            audit('PASSWORD_SET', 'user', $uid, 'door beheerder, geen uitnodiging');
+            flash('success', "$email is gekoppeld als ouder of voogd van " . $member['first_name'] . ' ' . $member['last_name'] . ' en kan meteen aanmelden met het wachtwoord dat je koos. Er is geen mail verstuurd: geef het wachtwoord zelf door.');
+        } elseif ($created || Invites::isPending($row)) {
             [$sent, $link] = Invites::sendInvite($uid, 'Je wordt gekoppeld als ouder of voogd van ' . $member['first_name'] . ' ' . $member['last_name'] . '.');
             audit('INVITE', 'user', $uid);
             $msg = $sent ? "Uitnodiging verstuurd naar $email." : "Uitnodiging kon niet verstuurd worden naar $email. Controleer de mailinstellingen.";

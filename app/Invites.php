@@ -118,7 +118,7 @@ final class Invites
      * $email leeg = het e-mailadres van het lid. Weigert als het lid al een account heeft of het adres al gebruikt wordt.
      * @return array{ok:bool,msg:string,uid:?int}
      */
-    public static function inviteMember(int $memberId, string $email = '', string $context = 'Je kunt er je eigen kalender en groepen bekijken.'): array
+    public static function inviteMember(int $memberId, string $email = '', string $context = 'Je kunt er je eigen kalender en groepen bekijken.', string $password = ''): array
     {
         $member = Database::one('SELECT id, first_name, last_name, email FROM members WHERE id = ?', [$memberId]);
         if (!$member) {
@@ -134,7 +134,21 @@ final class Invites
         if (Database::val('SELECT COUNT(*) FROM users WHERE email = ?', [$email])) {
             return ['ok' => false, 'msg' => "Het e-mailadres $email wordt al gebruikt door een ander account (bv. dat van een ouder). Gebruik een eigen e-mailadres.", 'uid' => null];
         }
-        $uid = Database::tx(fn() => self::createPendingUser($email, $member['first_name'] . ' ' . $member['last_name'], 'SWIMMER', $memberId));
+        $name = $member['first_name'] . ' ' . $member['last_name'];
+        if ($password !== '') {
+            // Beheerder stelt zelf een wachtwoord in: geen uitnodiging, het account is meteen actief.
+            if ($problem = PasswordPolicy::problem($password, [$email, $name])) {
+                return ['ok' => false, 'msg' => $problem, 'uid' => null];
+            }
+            $uid = Database::tx(function () use ($email, $name, $memberId, $password): int {
+                $id = self::createPendingUser($email, $name, 'SWIMMER', $memberId);
+                Database::exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $id]);
+                return $id;
+            });
+            audit('CREATE', 'user', $uid, 'SWIMMER, wachtwoord door beheerder, geen uitnodiging');
+            return ['ok' => true, 'msg' => "Account aangemaakt voor $email met het wachtwoord dat je koos. Er is geen mail verstuurd: geef het wachtwoord zelf door.", 'uid' => $uid];
+        }
+        $uid = Database::tx(fn() => self::createPendingUser($email, $name, 'SWIMMER', $memberId));
         [$sent, $link] = self::sendInvite($uid, $context);
         audit('INVITE', 'user', $uid);
         $msg = $sent ? "Uitnodiging verstuurd naar $email." : "Account aangemaakt, maar de uitnodiging kon niet verstuurd worden naar $email. Controleer de mailinstellingen.";

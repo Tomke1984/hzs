@@ -76,8 +76,12 @@
   <?php endif; ?>
   <?php if (Auth::can('users.manage') && (!$member['id'] || !Database::val('SELECT COUNT(*) FROM users WHERE member_id = ?', [$member['id']]))): ?>
   <label class="check"><input type="checkbox" name="create_account" value="1" checked>
-    Meerderjarig met e-mailadres: meteen een eigen account aanmaken en een uitnodiging sturen
+    Meerderjarig met e-mailadres: meteen een eigen account aanmaken
     <span class="muted small">(om de eigen kalender te bekijken; voor leden jonger dan 18 vraagt de ouder dat aan)</span></label>
+  <label>Wachtwoord voor dat account (optioneel)
+    <input type="password" name="account_password" minlength="10" autocomplete="new-password" placeholder="leeg = uitnodiging per mail">
+  </label>
+  <p class="muted small">Leeg: het lid krijgt een uitnodiging per mail om zelf een wachtwoord te kiezen. Met een wachtwoord: geen mail, het lid kan meteen aanmelden (geef het wachtwoord zelf door).</p>
   <?php endif; ?>
   <p class="muted small">Leden worden nooit verwijderd. Zet een lid op inactief om het uit nieuwe presentielijsten te halen; de historiek blijft bewaard.</p>
 
