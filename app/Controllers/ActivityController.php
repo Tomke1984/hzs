@@ -236,6 +236,13 @@ final class ActivityController
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
             'min_trainers' => input('min_trainers'),
         ];
+        $isMeet = Database::val('SELECT code FROM activity_types WHERE id = ?', [$activity['type_id']]) === 'COMPETITION';
+        // Wedstrijd: geen aantal trainers vragen, wel meteen kiezen wie meegaat (trainersplanning).
+        $pool = Coverage::pool();
+        $trainerIds = $isMeet ? array_values(array_intersect(array_unique(array_map('intval', (array) ($_POST['trainer_ids'] ?? []))), array_keys($pool))) : [];
+        if ($isMeet) {
+            $activity['min_trainers'] = '';
+        }
         $rawGroups = $_POST['group_ids'] ?? [];
         $selected = is_array($rawGroups) ? array_values(array_unique(array_map('intval', $rawGroups))) : [];
 
@@ -280,7 +287,7 @@ final class ActivityController
 
         if ($errors) {
             http_response_code(422);
-            self::renderForm($activity, $selected, $errors, $id ? 'Activiteit wijzigen' : 'Nieuwe activiteit');
+            self::renderForm($activity, $selected, $errors, $id ? 'Activiteit wijzigen' : 'Nieuwe activiteit', $isMeet ? $trainerIds : null);
             return;
         }
 
@@ -316,7 +323,8 @@ final class ActivityController
         });
 
         audit($activity['id'] ? 'UPDATE' : 'CREATE', 'activity', $id);
-        flash('success', $activity['id'] ? 'Activiteit bijgewerkt.' : 'Activiteit aangemaakt.');
+        $note = $isMeet ? self::syncMeetTrainers((int) $id, $trainerIds, $pool) : '';
+        flash('success', ($activity['id'] ? 'Activiteit bijgewerkt.' : 'Activiteit aangemaakt.') . $note);
         redirect(url('activity', ['id' => $id]));
     }
 
@@ -375,13 +383,60 @@ final class ActivityController
         return $activity;
     }
 
-    private static function renderForm(array $activity, array $selected, array $errors, string $title): void
+    /**
+     * Trainers die meegaan naar een wedstrijd, gekozen in het formulier: aangevinkt = ingepland, uitgevinkt = weg.
+     * Wie op dat moment al op een andere wedstrijd staat, wordt overgeslagen. Geeft een extra zin voor de melding.
+     */
+    private static function syncMeetTrainers(int $id, array $want, array $pool): string
+    {
+        $a = Coverage::one($id);
+        if (!$a) {
+            return ''; // geen wedstrijd van de competitie (bv. geschrapt)
+        }
+        $have = [];
+        foreach ($a['trainers'] as $t) {
+            if (!$t['absent']) {
+                $have[] = $t['id'];
+            }
+        }
+        $skipped = [];
+        $added = [];
+        foreach (array_diff($want, $have) as $uid) {
+            if ($c = Coverage::conflict($a, $uid)) {
+                $skipped[] = $c;
+                continue;
+            }
+            Coverage::set($id, $uid, 'ASSIGNED');
+            $added[] = $pool[$uid];
+        }
+        $removed = [];
+        foreach (array_diff($have, $want) as $uid) {
+            Coverage::set($id, $uid, null);
+            $removed[] = $pool[$uid] ?? '';
+        }
+        if ($added || $removed) {
+            audit('COVERAGE_ASSIGN', 'activity', $id, trim(($added ? 'mee: ' . implode(', ', $added) : '') . ($removed ? ' weg: ' . implode(', ', array_filter($removed)) : '')));
+        }
+        $msg = $added ? ' ' . nl_list($added) . (count($added) === 1 ? ' gaat' : ' gaan') . ' mee.' : '';
+        if ($skipped) {
+            $msg .= ' Niet ingepland: ' . implode(' ', $skipped);
+        }
+        if (!$want && !$skipped) {
+            $msg .= ' Er gaat nog geen trainer mee: dat kan later in de trainersplanning.';
+        }
+        return $msg;
+    }
+
+    private static function renderForm(array $activity, array $selected, array $errors, string $title, ?array $trainerIds = null): void
     {
         render('activities/form', [
             'activity' => $activity,
             'selected' => $selected,
             'errors' => $errors,
-            'types' => Database::all('SELECT id, name FROM activity_types ORDER BY id'),
+            'types' => Database::all('SELECT id, code, name FROM activity_types ORDER BY id'),
+            'pool' => Coverage::pool(),
+            'trainerIds' => $trainerIds ?? ($activity['id'] ? array_map('intval', array_column(Database::all(
+                "SELECT user_id FROM activity_trainers WHERE activity_id = ? AND status = 'ASSIGNED'", [(int) $activity['id']]), 'user_id')) : []),
             'groups' => Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 ORDER BY category, name'),
         ], $title);
     }

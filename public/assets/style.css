@@ -901,3 +901,5 @@ dialog.sheet::backdrop { background: rgba(5,38,77,.45); }
 .take-card { text-align: center; }
 .take-what { display: flex; flex-direction: column; gap: 2px; background: #f4f7fb; border-radius: 12px; padding: 14px; margin: 0 0 14px; }
 .take-btn { width: 100%; min-height: 54px; font-size: 1.1rem; }
+/* Activiteit: trainers kiezen voor een wedstrijd */
+.check-cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 16px; }

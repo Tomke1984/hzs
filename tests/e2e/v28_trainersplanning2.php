@@ -116,6 +116,24 @@ T::ok(T::val('SELECT note FROM activity_trainers WHERE activity_id = ? AND user_
     && T::val('SELECT status FROM activity_trainers WHERE activity_id = ? AND user_id = ?', [$t2, $coordId]) === 'ASSIGNED', 'afwezig + vervanger opgeslagen');
 T::ok((bool) T::val('SELECT 1 FROM coverage_offers WHERE activity_id = ? AND user_id = ?', [$t4, $coordId]), 'Vraag de groep: Lander kreeg een vraag voor de andere training');
 
+echo "Wedstrijd aanmaken: meteen trainers kiezen\n";
+$typeMeet = (int) T::val("SELECT id FROM activity_types WHERE code = 'COMPETITION'");
+$board->get('/app/kalender/nieuw');
+T::ok($board->has('data-for-type="COMPETITION" hidden') && $board->has('name="trainer_ids[]" value="' . $coordId . '"') && $board->has('data-for-type="TRAINING">Aantal trainers nodig'), 'formulier: trainers kiezen bij wedstrijd, aantal enkel bij training');
+$d = date('Y-m-d', strtotime('+9 days'));
+$board->post('/app/activity-save', ['type_id' => $typeMeet, 'title' => 'Testmeet', 'starts_at' => "{$d}T09:00", 'ends_at' => "{$d}T12:00", 'audience' => 'CLUB', 'min_trainers' => '3', 'trainer_ids' => [$coordId, $kobeId]]);
+$meet = (int) T::val("SELECT id FROM activities WHERE title = 'Testmeet'");
+$board->follow();
+T::ok($board->has('Activiteit aangemaakt.') && $board->has('gaan mee.'), 'melding: wie meegaat');
+T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE activity_id = ? AND status = 'ASSIGNED'", [$meet]) === 2 && T::val('SELECT min_trainers FROM activities WHERE id = ?', [$meet]) === null, 'twee trainers ingepland, geen aantal bewaard');
+$board->get('/app/kalender/' . $meet . '/wijzigen');
+T::ok($board->has('data-for-type="COMPETITION">') && preg_match('/value="' . $kobeId . '" checked/', $board->body) === 1, 'wijzigen: aangevinkt wie meegaat');
+$board->post('/app/activity-save', ['id' => $meet, 'type_id' => $typeMeet, 'title' => 'Testmeet', 'starts_at' => "{$d}T09:00", 'ends_at' => "{$d}T12:00", 'audience' => 'CLUB', 'status' => 'PLANNED', 'trainer_ids' => [$kobeId]]);
+T::ok((int) T::val("SELECT COUNT(*) FROM activity_trainers WHERE activity_id = ? AND status = 'ASSIGNED'", [$meet]) === 1, 'uitvinken haalt de trainer weg');
+$board->post('/app/activity-save', ['id' => $meet, 'type_id' => $typeMeet, 'title' => 'Testmeet', 'starts_at' => "{$d}T09:00", 'ends_at' => "{$d}T12:00", 'audience' => 'CLUB', 'status' => 'PLANNED']);
+$board->follow();
+T::ok($board->has('Er gaat nog geen trainer mee') && preg_match('/Geen trainer · 0\/1/', $board->body) === 1, 'niemand mee: trainer gezocht (0/1)');
+
 echo "Opruimen\n";
 $board->post('/app/series-delete', ['id' => $sid]);
 T::ok(!T::val('SELECT 1 FROM coverage_offers WHERE activity_id IN (?,?,?,?)', [$t1, $t2, $t3, $t4]) || (bool) T::val('SELECT 1 FROM activities WHERE id = ?', [$t1]), 'vragen verdwijnen met de activiteit');

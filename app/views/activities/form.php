@@ -10,9 +10,9 @@
 
   <div class="grid2">
     <label>Type *
-      <select name="type_id" required>
+      <select name="type_id" required data-type-select>
         <?php foreach ($types as $t): ?>
-          <option value="<?= (int) $t['id'] ?>" <?= (int) $activity['type_id'] === (int) $t['id'] ? 'selected' : '' ?>><?= e($t['name']) ?></option>
+          <option value="<?= (int) $t['id'] ?>" data-code="<?= e($t['code']) ?>" <?= (int) $activity['type_id'] === (int) $t['id'] ? 'selected' : '' ?>><?= e($t['name']) ?></option>
         <?php endforeach; ?>
       </select>
     </label>
@@ -56,9 +56,21 @@
   </fieldset>
 
 
-  <label>Aantal trainers nodig (trainersplanning competitie)
+  <?php $typeCode = ''; foreach ($types as $t) { if ((int) $t['id'] === (int) $activity['type_id']) { $typeCode = $t['code']; } } ?>
+  <fieldset data-for-type="COMPETITION"<?= $typeCode === 'COMPETITION' ? '' : ' hidden' ?>>
+    <legend>Trainers die meegaan <span class="muted small">(wedstrijd)</span></legend>
+    <?php if (!$pool): ?><p class="muted small">Er zijn nog geen trainers van de competitie.</p><?php endif; ?>
+    <div class="check-cols">
+      <?php foreach ($pool as $pid => $pname): ?>
+        <label class="check"><input type="checkbox" name="trainer_ids[]" value="<?= (int) $pid ?>"<?= in_array((int) $pid, $trainerIds, true) ? ' checked' : '' ?>> <?= e($pname) ?></label>
+      <?php endforeach; ?>
+    </div>
+    <p class="muted small">Niemand aangevinkt? Dan staat de wedstrijd als <em>trainer gezocht</em> in de trainersplanning.</p>
+  </fieldset>
+
+  <label data-for-type="TRAINING"<?= $typeCode === 'TRAINING' ? '' : ' hidden' ?>>Aantal trainers nodig (trainersplanning competitie)
     <input name="min_trainers" inputmode="numeric" maxlength="1" value="<?= e((string) ($activity['min_trainers'] ?? '')) ?>" placeholder="volgens de groep">
-    <span class="muted small">Enkel voor trainingen en wedstrijden van de competitie. Leeg = het minimum van de groep (standaard 1).</span>
+    <span class="muted small">Leeg = het minimum van de groep (standaard 1).</span>
   </label>
 
   <?php if ($activity['id']): ?>

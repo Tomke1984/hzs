@@ -67,6 +67,19 @@
     });
   })();
 
+  // Activiteit: velden enkel voor het gekozen type (wedstrijd: trainers kiezen; training: aantal trainers nodig)
+  (function () {
+    var sel = document.querySelector('[data-type-select]');
+    if (!sel) { return; }
+    var sync = function () {
+      var opt = sel.options[sel.selectedIndex];
+      var code = opt ? opt.getAttribute('data-code') : '';
+      document.querySelectorAll('[data-for-type]').forEach(function (el) { el.hidden = el.getAttribute('data-for-type') !== code; });
+    };
+    sel.addEventListener('change', sync);
+    sync();
+  })();
+
   // Trainersplanning: paneel "Ik kan niet" als bottom sheet (zonder JavaScript opent de link de pagina met het paneel open)
   (function () {
     var sheets = document.querySelectorAll('dialog.sheet');

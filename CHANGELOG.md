@@ -6,6 +6,12 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Wedstrijd aanmaken: meteen trainers kiezen_
+
+- Bij een nieuwe of gewijzigde **wedstrijd** vraagt het formulier niet meer hoeveel trainers er nodig zijn, maar kies je meteen **welke trainers meegaan** (vinkjes). Uitvinken haalt een trainer weg; wie op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. Niemand aangevinkt = *trainer gezocht* in de trainersplanning.
+- Het veld *Aantal trainers nodig* staat enkel nog bij een **training**; bij een clubactiviteit staat geen van beide. Een wedstrijd heeft minstens één trainer nodig.
+- Tests: 6 extra controles in `v28_trainersplanning2`.
+
 _v0.28.0-dev – Fix: nieuwe opmaak verscheen niet na een deploy_
 
 - Het raster van de trainersplanning stond op hzs-dev zonder opmaak: de browser gebruikte nog de oude CSS. De versie in het adres van CSS en JavaScript kwam van de wijzigingsdatum van het bestand, en die is in een container-build (Coolify/Railpack) bij elke deploy dezelfde. Nu komt de versie uit de inhoud van het bestand: na elke wijziging laadt de browser meteen de nieuwe versie.

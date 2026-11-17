@@ -200,6 +200,9 @@ final class Coverage
         if (isset($activity['min_trainers']) && $activity['min_trainers'] !== '') {
             return max(0, (int) $activity['min_trainers']);
         }
+        if (($activity['type_code'] ?? '') === 'COMPETITION') {
+            return 1; // wedstrijd: minstens één trainer mee; wie meegaat kies je bij de wedstrijd zelf
+        }
         $n = 1;
         foreach ($groups as $g) {
             if ($g['category'] === 'COMPETITION' && $g['min_trainers'] !== null) {
