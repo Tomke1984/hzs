@@ -5,7 +5,13 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.24 – Onderhoud, back-up en beveiliging (review senior developer, ronde 2) – commit `ed50524`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.24.0 – 2026-11-17 – `bf8a873` – back-up, versleuteling, sessies, wachtwoordregels, migraties en CI
+
+#### v0.24 – Onderhoud, back-up en beveiliging (review senior developer, ronde 2) – commit `ed50524`
 
 - **Niet meer "willekeurig" afgemeld:** sessies staan in een eigen map (`storage/sessions`) in plaats van de gedeelde `/tmp` van de hosting, waar PHP ze al na 24 minuten kon opruimen.
 - **Dagelijkse back-up:** de app maakt zelf elke dag een back-up (na een bezoek, geen cron nodig), bewaart ze 14 dagen naast het databasebestand en toont beheerders een rode melding als de laatste ouder is dan 2 dagen. Ook via `php tools/backup.php`. Terugzetten: zie README.
@@ -17,8 +23,6 @@ _v0.24 – Onderhoud, back-up en beveiliging (review senior developer, ronde 2) 
 - **Onderhoud:** genummerde migraties (`db/migrations/`), oude kolommen van verwijderde onderdelen opgeruimd, een test die bewaakt dat bij definitief verwijderen geen enkele tabel vergeten wordt, en `tools/legacy-data.php` om oude tabellen van verwijderde onderdelen te exporteren en te wissen (beslissing van het bestuur).
 - **CI:** GitHub controleert bij elke push naar `dev` en `main` de syntax, voert PHPStan (level 5) uit en draait alle e2e-tests.
 - Tests: nieuwe suite `v24_onderhoud` (57 controles), 583 in totaal.
-
-## Op main
 
 ### v0.22.0 – 2026-11-17 – `d9ae867` – ouders passen gegevens aan, fix voor Apache-hosting en UX-analyse ronde 2
 
