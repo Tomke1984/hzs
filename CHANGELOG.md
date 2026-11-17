@@ -6,6 +6,10 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Deploytest_
+
+- Geen wijziging aan de app: deze push dient enkel om te controleren dat de database en instellingen op hzs-dev een nieuwe deploy overleven (volume op `/app/storage`).
+
 _v0.28.0-dev – Waarschuwing als er geen blijvende opslag is (Coolify)_
 
 - Draait de app in een container (Coolify/Railpack) zonder volume op `/app/storage`, dan toont de installer een rode waarschuwing *Geen blijvende opslag*: de database en instellingen zouden bij de volgende deploy verdwijnen (en dan kom je telkens opnieuw op de installatiepagina). Ook de beheerder ziet die melding op het overzicht.
