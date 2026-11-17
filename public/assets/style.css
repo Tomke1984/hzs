@@ -445,7 +445,7 @@ progress.share-track::-moz-progress-bar{background:var(--blue);border-radius:99p
 .side-build{margin:0 12px 6px;font-size:.75rem;color:#8fa6c4;word-break:break-all}
 
 /* v0.11: zoeken, account, rapporten */
-.side-search{margin:0 8px 10px}
+.side-search{margin:0 0 12px}
 .side-search input{width:100%;margin:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff}
 .side-search input::placeholder{color:#b9c9e0}
 .side-account{color:#fff;text-decoration:none}
@@ -800,3 +800,5 @@ form[data-autosubmit] select { max-width: 360px; }
 .is-fail .robot-box { border-color: var(--bad); }
 @keyframes robot-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .is-busy .robot-tick { animation: none; } }
+/* Zoekveld in de menubalk even breed als de geselecteerde pagina (zelfde inspringing en afronding) */
+.sidebar .side-search input { box-sizing: border-box; width: 100%; border-radius: 9px; }
