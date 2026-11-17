@@ -1,0 +1,16 @@
+# Statische analyse (level 5): php phpstan.phar analyse  — draait ook in GitHub Actions bij elke push naar dev/main.
+# app/views/ valt erbuiten: templates krijgen hun variabelen via render() (extract), wat PHPStan niet kan volgen.
+parameters:
+    level: 5
+    phpVersion: 80100
+    paths:
+        - app
+        - public
+        - tools
+        - db/migrations
+    excludePaths:
+        - app/views
+    bootstrapFiles:
+        - tests/phpstan/bootstrap.php
+        - app/helpers.php
+    treatPhpDocTypesAsCertain: false

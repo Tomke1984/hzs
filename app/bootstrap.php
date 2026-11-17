@@ -47,6 +47,18 @@ header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style
 session_cache_limiter(''); // PHP stuurt anders overal 'no-store'; we bepalen dat zelf
 header('Cache-Control: no-cache');
 session_name('hzs_session');
+// Eigen sessiemap: op shared hosting is de standaardmap (/tmp) vaak gedeeld met andere klanten, en PHP ruimt daar
+// sessies al na 24 minuten op (gc_maxlifetime 1440) terwijl de app 12 uur belooft.
+$sessDir = (string) config('session_path', APP_ROOT . '/storage/sessions');
+if (is_dir($sessDir) || @mkdir($sessDir, 0700, true)) {
+    if (is_writable($sessDir)) {
+        session_save_path($sessDir);
+    }
+}
+ini_set('session.gc_maxlifetime', '43200');
+ini_set('session.gc_probability', '1');
+ini_set('session.gc_divisor', '200');
+ini_set('session.use_strict_mode', '1');
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',

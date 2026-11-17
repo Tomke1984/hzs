@@ -150,8 +150,8 @@ final class UserController
         if (!$existing && $password === '') {
             $errors[] = 'Een wachtwoord is verplicht voor een nieuwe gebruiker.';
         }
-        if ($password !== '' && strlen($password) < 10) {
-            $errors[] = 'Het wachtwoord moet minstens 10 tekens bevatten.';
+        if ($password !== '' && ($problem = PasswordPolicy::problem($password, [$user['email'], $user['display_name']]))) {
+            $errors[] = $problem;
         }
         if (!$roles) {
             $errors[] = 'Kies minstens één rol.';

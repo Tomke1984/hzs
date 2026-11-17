@@ -8,3 +8,9 @@ public/uploads/*
 storage/stats.salt
 storage/stats-error.log
 storage/coverage-last-run
+storage/sessions/*
+!storage/sessions/.gitkeep
+storage/backup/*
+!storage/backup/.gitkeep
+storage/app.key
+storage/backup-last-run

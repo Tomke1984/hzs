@@ -127,6 +127,7 @@ final class CoverageController
             $do = 'many';
         }
 
+        $msg ??= '';
         switch ($do) {
             case 'many':
                 break;
@@ -413,7 +414,7 @@ final class CoverageController
 
     public static function settings(): void
     {
-        $groups = Database::all("SELECT id, name, min_trainers, share_token, color FROM `groups` WHERE is_active = 1 ORDER BY name");
+        $groups = Database::all("SELECT id, name, min_trainers, share_token, share_expires, color FROM `groups` WHERE is_active = 1 ORDER BY name");
         foreach ($groups as &$g) {
             $g['trainers'] = array_column(Database::all(
                 'SELECT u.display_name FROM group_trainers gt JOIN users u ON u.id = gt.user_id WHERE gt.group_id = ? AND u.is_active = 1 ORDER BY u.display_name',
@@ -462,7 +463,9 @@ final class CoverageController
             abort(400, 'Enkel voor competitiegroepen.');
         }
         $off = input('do') === 'remove';
-        Database::exec('UPDATE `groups` SET share_token = ? WHERE id = ?', [$off ? null : bin2hex(random_bytes(16)), $gid]);
+        Database::exec('UPDATE `groups` SET share_token = ?, share_expires = ? WHERE id = ?', $off
+            ? [null, null, $gid]
+            : [bin2hex(random_bytes(16)), date('Y-m-d', strtotime('+' . share_link_days() . ' days')), $gid]);
         audit($off ? 'SHARE_OFF' : 'SHARE_ON', 'group', $gid);
         flash('success', $off ? 'De deellink werkt niet meer.' : 'Nieuwe deellink gemaakt. Een vorige link van deze groep werkt niet meer.');
         redirect(url('coverage_settings') . '#delen');
@@ -484,9 +487,12 @@ final class CoverageController
         header('X-Robots-Tag: noindex, nofollow');
         header('Cache-Control: no-store');
         $t = (string) ($_GET['t'] ?? '');
-        $g = preg_match('/^[a-f0-9]{32}$/', $t) ? Database::one("SELECT id, name, color FROM `groups` WHERE share_token = ? AND category = 'COMPETITION' AND is_active = 1", [$t]) : null;
+        $g = preg_match('/^[a-f0-9]{32}$/', $t) ? Database::one("SELECT id, name, color, share_expires FROM `groups` WHERE share_token = ? AND category = 'COMPETITION' AND is_active = 1", [$t]) : null;
         if (!$g) {
             abort(404, 'Deze link werkt niet (meer). Vraag een nieuwe link aan de trainer of coördinator.');
+        }
+        if ($g['share_expires'] !== null && $g['share_expires'] < today()) {
+            abort(410, 'Deze link is verlopen. Vraag een nieuwe link aan de trainer of coördinator.');
         }
         $rows = Database::all(
             "SELECT a.title, a.starts_at, a.ends_at, a.location, a.status, a.status_note, t.code AS type_code, t.name AS type_name

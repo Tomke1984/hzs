@@ -19,6 +19,7 @@
       <input type="text" readonly value="<?= e($ical) ?>" aria-label="Agenda-link">
     </label>
     <p class="small"><a href="<?= e(preg_replace('#^https?://#', 'webcal://', $ical)) ?>">Direct toevoegen aan je agenda-app</a> · Google Agenda: “Andere agenda’s” → “Via URL” en plak de link.</p>
+    <p class="small muted">De link vervalt vanzelf als je agenda-app hem <?= ical_idle_days() ?> dagen niet meer opvraagt.</p>
     <div class="actions">
       <form method="post" action="<?= e(url('account_ical')) ?>" data-confirm="Een nieuwe link maken? De oude link werkt dan niet meer.">
         <?= csrf_field() ?><button class="btn btn-ghost btn-small" type="submit">Nieuwe link maken</button>

@@ -138,8 +138,12 @@ final class ActivityController
         if ($canRegister && Auth::can('members.medical')) {
             foreach ($roster as $m) {
                 if (in_array((int) $m['id'], $registrable, true) && ($m['medical_note'] || $m['emergency_name'] || $m['emergency_phone'])) {
+                    $m['medical_note'] = Crypto::decrypt($m['medical_note']);
                     $medical[] = $m;
                 }
+            }
+            if (array_filter(array_column($medical, 'medical_note'))) {
+                audit_medical_view('activity', (int) $activity['id']);
             }
         }
 
@@ -206,7 +210,7 @@ final class ActivityController
             $activity = [
                 'id' => 0, 'type_id' => $type, 'title' => '', 'description' => '', 'location' => '',
                 'starts_local' => $date . 'T18:00', 'ends_local' => $date . 'T19:00',
-                'audience' => 'GROUPS', 'status' => 'PLANNED', 'is_public' => 0, 'signup_capacity' => null, 'min_trainers' => null,
+                'audience' => 'GROUPS', 'status' => 'PLANNED', 'min_trainers' => null,
             ];
             $selected = [];
         }
@@ -230,8 +234,6 @@ final class ActivityController
             'ends_local' => input('ends_at'),
             'audience' => input('audience'),
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
-            'is_public' => 0,
-            'signup_capacity' => null,
             'min_trainers' => input('min_trainers'),
         ];
         $rawGroups = $_POST['group_ids'] ?? [];
@@ -290,8 +292,8 @@ final class ActivityController
         $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds, $minTrainers) {
             if ($id) {
                 Database::exec(
-                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=?, is_public=?, signup_capacity=? WHERE id=?',
-                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], $activity['status'], $activity['is_public'], $activity['signup_capacity'], $id]
+                    'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=? WHERE id=?',
+                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], $activity['status'], $id]
                 );
                 Database::exec('DELETE FROM activity_groups WHERE activity_id = ?', [$id]);
                 // Individueel gewijzigd: de reeks overschrijft deze training niet meer.
@@ -301,9 +303,9 @@ final class ActivityController
                 }
             } else {
                 $id = Database::insert(
-                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at, is_public, signup_capacity)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], 'PLANNED', Auth::user()['id'], now(), $activity['is_public'], $activity['signup_capacity']]
+                    'INSERT INTO activities (type_id, title, description, location, starts_at, ends_at, audience, status, created_by, created_at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)',
+                    [$activity['type_id'], $activity['title'], $desc, $loc, $start, $end, $activity['audience'], 'PLANNED', Auth::user()['id'], now()]
                 );
             }
             foreach ($groupIds as $gid) {

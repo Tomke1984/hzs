@@ -87,6 +87,7 @@ final class T
             self::exec('DROP INDEX ' . $r['name']);
         }
         self::exec('DROP TABLE IF EXISTS app_meta');
+        self::exec('DROP TABLE IF EXISTS schema_migrations');
     }
 
     public static function pdo(): PDO

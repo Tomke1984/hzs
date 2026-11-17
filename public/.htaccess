@@ -7,3 +7,7 @@ DirectoryIndex index.php
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.php [L,QSA]
 </IfModule>
+# Compressie: ongeveer 70% minder data voor HTML, CSS en JavaScript (vooral merkbaar op mobiel).
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript image/svg+xml text/calendar
+</IfModule>

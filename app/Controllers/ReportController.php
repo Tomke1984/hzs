@@ -67,8 +67,8 @@ final class ReportController
         );
         $members = [];
         foreach ($rows as $r) {
-            $m = &$members[$r['id']];
-            $m ??= ['id' => (int) $r['id'], 'name' => $r['first_name'] . ' ' . $r['last_name'], 'group' => $r['group_name'] ?? '—', 'present' => 0, 'absent' => 0, 'last' => null, 'streak' => 0, 'streakOpen' => true];
+            $id = (int) $r['id'];
+            $m = $members[$id] ?? ['id' => $id, 'name' => $r['first_name'] . ' ' . $r['last_name'], 'group' => $r['group_name'] ?? '—', 'present' => 0, 'absent' => 0, 'last' => null, 'streak' => 0, 'streakOpen' => true];
             if ($r['status'] === 'PRESENT') {
                 $m['present']++;
                 $m['last'] ??= $r['starts_at'];
@@ -79,22 +79,20 @@ final class ReportController
                     $m['streak']++;
                 }
             }
-            unset($m);
+            $members[$id] = $m;
         }
-        foreach ($members as &$m) {
+        foreach ($members as $id => $m) {
             $reg = $m['present'] + $m['absent'];
-            $m['pct'] = $reg ? (int) round($m['present'] * 100 / $reg) : null;
-            $m['flag'] = $m['streak'] >= 3 ? $m['streak'] . ' keer na elkaar afwezig' : ($reg >= 3 && $m['present'] === 0 ? 'nog niet aanwezig geweest' : '');
+            $members[$id]['pct'] = $reg ? (int) round($m['present'] * 100 / $reg) : null;
+            $members[$id]['flag'] = $m['streak'] >= 3 ? $m['streak'] . ' keer na elkaar afwezig' : ($reg >= 3 && $m['present'] === 0 ? 'nog niet aanwezig geweest' : '');
         }
-        unset($m);
         $byGroup = [];
         foreach ($members as $m) {
-            $g = &$byGroup[$m['group']];
-            $g ??= ['members' => 0, 'present' => 0, 'absent' => 0];
+            $g = $byGroup[$m['group']] ?? ['members' => 0, 'present' => 0, 'absent' => 0];
             $g['members']++;
             $g['present'] += $m['present'];
             $g['absent'] += $m['absent'];
-            unset($g);
+            $byGroup[$m['group']] = $g;
         }
         ksort($byGroup);
         $sort = (string) ($_GET['sort'] ?? 'name');

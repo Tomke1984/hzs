@@ -152,4 +152,5 @@ if ($permission !== 'public') {
 }
 
 Coverage::autoRemind(); // mail als er binnenkort een trainer ontbreekt (hooguit één keer per uur, na het antwoord)
+Backup::auto();         // back-up van de database (hooguit één keer per dag, na het antwoord)
 $class::$action();

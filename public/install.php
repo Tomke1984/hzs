@@ -20,8 +20,8 @@ function installer_blocked(): bool
 function page(string $title, string $body): void
 {
     echo '<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-        . '<title>' . e($title) . ' · HZS Clubapp</title><link rel="icon" type="image/png" href="assets/logo.png"><link rel="stylesheet" href="assets/style.css"><script src="assets/app.js" defer></script></head><body>'
-        . '<header class="topbar"><div class="wrap bar"><span class="brand"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp · Installatie</span></span></div></header>'
+        . '<title>' . e($title) . ' · HZS Clubapp</title><link rel="icon" type="image/png" href="' . e(asset('logo.png')) . '"><link rel="stylesheet" href="' . e(asset('style.css')) . '"><script src="' . e(asset('app.js')) . '" defer></script></head><body>'
+        . '<header class="topbar"><div class="wrap bar"><span class="brand"><img class="logo" src="' . e(asset('logo.png')) . '" alt="HZS" width="52" height="46"><span>Clubapp · Installatie</span></span></div></header>'
         . '<main class="wrap">' . $body . '</main></body></html>';
     exit;
 }
@@ -63,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($v['admin_email'], FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'E-mailadres van de beheerder is ongeldig.';
     }
-    if (strlen($pw) < 10) {
-        $errors[] = 'Het wachtwoord moet minstens 10 tekens bevatten.';
+    if ($problem = PasswordPolicy::problem($pw, [$v['admin_email'], $v['admin_name']])) {
+        $errors[] = $problem;
     }
     if ($pw !== $pw2) {
         $errors[] = 'De wachtwoorden komen niet overeen.';
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dbExport = $v['driver'] === 'mysql'
                 ? "[\n        'driver' => 'mysql',\n        'host' => " . var_export($v['host'], true) . ",\n        'port' => " . (int) $v['port'] . ",\n        'name' => " . var_export($v['name'], true) . ",\n        'user' => " . var_export($v['user'], true) . ",\n        'pass' => " . var_export($dbPass, true) . ",\n    ]"
                 : "[\n        'driver' => 'sqlite',\n        'path' => " . ($dbPath === $defaultDbPath ? "__DIR__ . '/storage/data/clubapp.sqlite'" : var_export($dbPath, true)) . ",\n    ]";
-            $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . ($v['driver'] === 'sqlite' ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n];\n";
+            $configPhp = "<?php\nreturn [\n    'app_name' => 'HZS Clubapp',\n    'timezone' => 'Europe/Brussels',\n    'debug' => " . ($v['driver'] === 'sqlite' ? 'true' : 'false') . ",\n    'cookie_secure' => false,\n    'db' => " . $dbExport . ",\n    // Sleutel voor versleutelde velden (medische opmerking, 2FA). Bewaar een kopie veilig: zonder sleutel zijn die velden onleesbaar.\n    'app_key' => " . var_export(Crypto::newKey(), true) . ",\n];\n";
 
             $written = @file_put_contents(APP_ROOT . '/config.php', $configPhp) !== false;
             @chmod(APP_ROOT . '/config.php', 0640);

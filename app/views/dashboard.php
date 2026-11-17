@@ -3,6 +3,12 @@
 <?php if (!empty($dbExposed)): ?>
 <div class="alert alert-error"><strong>Beveiliging:</strong> het databasebestand staat binnen de webmap van de server. Als de webserver <code>.htaccess</code> negeert, kan iemand de hele ledendatabase downloaden. Verplaats het bestand naar een map buiten de webmap en pas <code>db.path</code> in <code>config.php</code> aan (zie README, “Database buiten de webmap”).</div>
 <?php endif; ?>
+<?php if (!empty($backupOverdue)): ?>
+<div class="alert alert-error"><strong>Back-up:</strong> de laatste geslaagde back-up van de database is ouder dan 2 dagen (of er is er nog geen). Controleer of de map <code><?= e(Backup::dir()) ?></code> schrijfbaar is, of draai <code>php tools/backup.php</code>.</div>
+<?php endif; ?>
+<?php if (!empty($keyInFile)): ?>
+<div class="alert alert-info"><strong>Sleutel:</strong> medische opmerkingen en 2FA-geheimen worden versleuteld met de sleutel in <code>storage/app.key</code>. Zet die sleutel als <code>'app_key'</code> in <code>config.php</code> en bewaar een kopie veilig, apart van de back-ups: zonder sleutel zijn die gegevens onleesbaar (zie README, “Versleuteling”).</div>
+<?php endif; ?>
 <?php if ($noTfa): ?>
 <div class="alert alert-info">Je account heeft toegang tot persoonsgegevens van minderjarigen. <a href="<?= e(url('account')) ?>#2fa">Zet tweestapsverificatie aan →</a></div>
 <?php endif; ?>

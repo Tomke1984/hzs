@@ -39,6 +39,7 @@
         <a class="btn btn-small btn-ghost" href="<?= e($link) ?>" target="_blank" rel="noopener">Bekijken</a>
         <form method="post" action="<?= e(url('coverage_share')) ?>" data-confirm="Nieuwe link maken? De huidige link van <?= e($g['name']) ?> werkt dan niet meer."><?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>"><button class="btn btn-small btn-ghost" type="submit">Nieuwe link</button></form>
         <form method="post" action="<?= e(url('coverage_share')) ?>"><?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>"><input type="hidden" name="do" value="remove"><button class="btn btn-small btn-ghost" type="submit">Uitzetten</button></form>
+        <?php if ($g['share_expires']): ?><span class="small <?= $g['share_expires'] < today() ? 'text-bad' : 'muted' ?>"><?= $g['share_expires'] < today() ? 'Verlopen op ' : 'Geldig tot ' ?><?= e(fmt_date($g['share_expires'])) ?></span><?php endif; ?>
       <?php else: ?>
         <form method="post" action="<?= e(url('coverage_share')) ?>"><?= csrf_field() ?><input type="hidden" name="group_id" value="<?= (int) $g['id'] ?>"><button class="btn btn-small" type="submit">Deellink maken</button></form>
       <?php endif; ?>

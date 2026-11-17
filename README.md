@@ -49,6 +49,24 @@ Gebruik je SQLite op de server, zet het databasebestand dan **buiten de webmap**
 
 Staat het bestand toch binnen de webmap, dan hangt de bescherming enkel af van `.htaccess` (werkt niet op nginx of met `AllowOverride None`). De app toont beheerders dan een rode waarschuwing op het overzicht. Als extra verdediging weigeren `.htaccess`-bestanden in de hoofdmap (gevoelige bestanden) en in `db/`, `docs/`, `storage/` en `tools/` alles, ook zonder `mod_rewrite`. **Niet** in `app/`: `/app` is ook het adres van de app, en Apache zou dan elke pagina onder `/app` weigeren (*Forbidden*).
 
+### Back-up en terugzetten
+
+De app maakt zelf een **back-up**, hooguit één keer per dag (na een bezoek, zonder cron), en bewaart ze 14 dagen: SQLite als `hzs-…sqlite.gz` in de map `backup/` naast het databasebestand, MySQL als `hzs-…sql.gz` in `storage/backup/`. Beheerders krijgen een rode melding als de laatste geslaagde back-up ouder is dan 2 dagen. Instellingen: `backup` in `config.php` (map, bewaartermijn, `auto`). Met cron: `php tools/backup.php` elke nacht en `'backup' => ['auto' => false]`; `php tools/backup.php --list` toont de back-ups.
+
+Kopieer de back-ups af en toe naar een andere plek (bv. je eigen computer via FTP): een back-up op dezelfde server helpt niet als die server stuk gaat.
+
+Terugzetten (SQLite): zet de app even offline, pak het bestand uit (`gunzip hzs-….sqlite.gz`), zet het in de plaats van het databasebestand (`db.path`) en verwijder eventuele `-wal`/`-shm`-bestanden ernaast. MySQL: pak uit en importeer het `.sql`-bestand in phpMyAdmin.
+
+### Versleuteling
+
+De **medische opmerking** en het **2FA-geheim** staan versleuteld in de database (libsodium). Wie enkel de database (of een back-up) in handen krijgt, kan ze niet lezen. De sleutel staat in `config.php` (`app_key`, nieuwe installaties) of, bij een bestaande installatie, in `storage/app.key` (eenmalig automatisch aangemaakt; beheerders krijgen dan de raad hem naar `config.php` te verplaatsen).
+
+**Bewaar een kopie van de sleutel veilig en apart van de back-ups.** Zonder sleutel zijn die velden onleesbaar, ook in een back-up. Wie medische info bekijkt (behalve de ouder of het lid zelf), komt in de auditlog (`VIEW_MEDICAL`, hooguit één regel per dag per lid).
+
+### Oude gegevens van verwijderde onderdelen
+
+Een database van vóór v0.13 kan nog tabellen van verwijderde onderdelen bevatten (website, lidgeld, inschrijvingen, zwemtest, …), met persoonsgegevens. Of die gewist moeten worden, beslist het bestuur (AVG). `php tools/legacy-data.php` toont ze; `--export` bewaart alles als JSON in de back-upmap; `--export --drop` exporteert en wist daarna de tabellen.
+
 ## Wat zit erin
 
 Sinds v0.13 is de Clubapp **minimaal**: enkel de app met login, en sinds v0.14 enkel voor de **competitie** (geen zwemschool, zwemblokken of indeling per lid meer; bestaande zwemschoolgroepen worden bij de update verwijderd, de leden blijven bestaan zonder groep). De startpagina (`/`) stuurt naar *Aanmelden*. De publieke website, het websitebeheer, statistieken, lidgeld, inschrijvingen, de zwemtestwachtlijst, het contactformulier, de nieuwsbrief, de fotogalerij, online inschrijven voor activiteiten, wedstrijddeelname en -resultaten, capaciteit/wachtlijst en CSV-exports zijn verwijderd (de code staat nog in de Git-geschiedenis, tag/commit van v0.12). Leesbare adressen: `/aanmelden`, `/activeren`, `/wachtwoord-vergeten` en de app onder `/app` (`/app/kalender`, `/app/leden/12`, …). Op Apache is `mod_rewrite` nodig (regel in `public/.htaccess`).
@@ -109,20 +127,30 @@ app/Auth.php            login, sessie, permissiecontrole
 app/Scope.php           centrale gegevensscope per rol (alle queries lopen hier via)
 app/Controllers/        Auth, Account, Dashboard, Member, Group, Activity, Series, User, Invite, Report (aanwezigheden,
                         auditlog, zoeken), Mail (bericht sturen), Coverage (trainersplanning)
-app/Installer.php       installatie, migraties (enkel als de schemaversie in app_meta achterloopt), indexen, referentiedata
+app/Installer.php       installatie, oude ingebouwde upgrades, indexen, referentiedata; boot() bij elk verzoek (één kleine query)
+app/Migrator.php        genummerde migraties uit db/migrations/ (tabel schema_migrations)
+app/Backup.php          dagelijkse back-up (SQLite/MySQL), waarschuwing bij een te oude back-up
+app/Crypto.php          versleuteling van gevoelige velden (medische opmerking, 2FA-geheim)
+app/PasswordPolicy.php  wachtwoordregels (lengte, veelgebruikte wachtwoorden, naam/e-mail)
+app/Purge.php           definitief verwijderen van leden en gebruikers (lijst van alle verwijzingen)
 app/Coverage.php        trainersplanning competitie: bezetting per activiteit, tekorten, herinneringsmails
 app/views/              PHP-templates met escaping via e()
-db/schema.sql           schema voor SQLite en MySQL (portable tokens {{PK}}/{{ENGINE}})
+db/schema.sql           volledig, actueel schema voor een nieuwe installatie (SQLite en MySQL, tokens {{PK}}/{{ENGINE}})
+db/migrations/          genummerde upgrades voor bestaande databases (NNN_naam.php, idempotent)
 docs/                   functionele en technische analyse
 tests/e2e/              end-to-end tests (php tests/e2e/run.php)
-tools/                  coverage-reminders.php (herinneringen via cron), seed-demo.php (demodata), sync-scripts
+tools/                  backup.php, coverage-reminders.php (cron), legacy-data.php (oude tabellen), seed-demo.php, sync-scripts
+.github/workflows/      CI: syntax, PHPStan (level 5) en de e2e-suite bij elke push naar dev en main
 ```
 
 Beveiliging: `password_hash`, sessieregeneratie bij login, CSRF-token op elke POST, prepared statements, uitvoer-escaping, CSP-header zonder inline scripts, permissiecheck per route, geen fysieke deletes van historische kerngegevens.
 Login-throttling (5 pogingen per 15 minuten), sessie-timeout van 12 uur zonder activiteit en ten laatste 7 dagen na het aanmelden, HSTS en secure cookie bij HTTPS en `no-store` voor app-pagina's zijn ingebouwd. Een nieuw wachtwoord (zelf, via reset of door de beheerder) of het uitzetten van 2FA meldt alle andere sessies van die gebruiker af (`users.session_version`).
-Snelheid: indexen op de veelgebruikte kolommen, SQLite in WAL-modus, en de upgrades lopen enkel als de schemaversie in `app_meta` lager is dan de code (normaal één kleine query per verzoek). Nog te doen voor productie: HSTS op serverniveau, back-ups, concrete bewaartermijnen voor ledengegevens en verwerkersovereenkomsten met hosting en mail (het privacybeleid staat op de clubwebsite; zet de link in `privacy_url`).
+Sessies staan in een eigen map (`storage/sessions`, niet de gedeelde `/tmp` van de hosting) met een levensduur van 12 uur. *Wachtwoord vergeten*: hooguit 3 mails per uur per account en 10 aanvragen per uur per IP-adres; de mail vertrekt na het antwoord, zodat de responstijd niet verraadt of een adres een account heeft. Wachtwoorden: minstens 10 tekens, geen veelgebruikt wachtwoord, reeks of iets dat op je naam/e-mail lijkt; hashes worden bij het aanmelden bijgewerkt als PHP een sterkere standaard krijgt. De deellink weekplanning is 365 dagen geldig; een iCal-link vervalt na 180 dagen zonder gebruik (`links` in `config.php`).
+Snelheid: indexen op de veelgebruikte kolommen, SQLite in WAL-modus, upgrades enkel als de database achterloopt (normaal één kleine query per verzoek), CSS/JS met `?v=<wijzigingsdatum>` en een jaar cache, en gzip-compressie (`public/.htaccess`). Nog te doen voor productie: HSTS op serverniveau, concrete bewaartermijnen voor ledengegevens en verwerkersovereenkomsten met hosting en mail (het privacybeleid staat op de clubwebsite; zet de link in `privacy_url`).
 
 ## Tips voor ontwikkelaars
+- **Schemawijziging?** Pas `db/schema.sql` aan (nieuwe installaties) én voeg een migratie toe in `db/migrations/` met het volgende nummer, bv. `017_kolom_x.php`, die een functie teruggeeft. Schrijf ze idempotent met `Migrator::addColumn()` / `dropColumn()`: ze loopt ook na een verse installatie. Nieuwe tabel met een verwijzing naar een lid of gebruiker? Zet ze in `Purge` (de test `v24_onderhoud` faalt anders).
+- **Statische analyse lokaal:** `curl -sSLO https://github.com/phpstan/phpstan/releases/download/2.3.6/phpstan.phar && php phpstan.phar analyse` (instellingen in `phpstan.neon`).
 - Beheerders zien onderaan het menu klein de branch en commit die draait (bv. `dev 29b3a79`), handig om te controleren of een update binnen is.
 - De CSP verbiedt inline stijl: gebruik CSS-klassen of SVG-attributen, geen `style="…"`.
 
@@ -134,7 +162,9 @@ php tests/e2e/run.php v12_trainersplanning  # één suite
 KEEP=1 php tests/e2e/run.php smoke          # tijdelijke map (database, mails, serverlog) bewaren
 ```
 
-Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, 2FA voor bestuur, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan) en `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie).
+Elke suite draait in een verse tijdelijke kopie met SQLite en demodata tegen `php -S`; je eigen `config.php` en database blijven onaangeroerd. Suites: `smoke` (alle hoofdpagina's per rol zonder serverfout), `v12_trainersplanning`, `v15_verwijderen`, `v18_ux`, `v19_beveiliging` (schemaversie, indexen, WAL, database in de webmap, sessies afmelden, 2FA voor bestuur, secure cookie), `v22_ouders` (ouders passen gegevens van hun kind aan), `v23_ux2` (afmelden met reden na de tik, rollende week, noodcontact, kalender, deelnemerslijst, consistentie) en `v24_onderhoud` (sessiemap, back-up, wachtwoord vergeten, wachtwoordregels, vervallende links, cache-busting, versleuteling, migraties, Purge-bewaking, oude tabellen).
+
+Op GitHub draaien bij elke push naar `dev` of `main` automatisch de syntaxcontrole, PHPStan en alle suites (tabblad *Actions*; groen vinkje of rood kruisje bij de commit).
 
 ## Werkwijze met GitHub
 

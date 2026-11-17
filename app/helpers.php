@@ -193,6 +193,39 @@ function is_https(): bool
         || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 }
 
+/**
+ * Logt dat iemand medische info bekeek (hooguit één keer per dag per gebruiker en lid/activiteit, om de auditlog leesbaar te houden).
+ */
+function audit_medical_view(string $entity, int $id): void
+{
+    $key = $entity . ':' . $id;
+    if (($_SESSION['medical_seen'][$key] ?? '') === today()) {
+        return;
+    }
+    $_SESSION['medical_seen'][$key] = today();
+    audit('VIEW_MEDICAL', $entity, $id);
+}
+
+/** Hoe lang een deellink weekplanning geldig is (config links.share_days, standaard 365 dagen). */
+function share_link_days(): int
+{
+    return max(7, (int) config('links.share_days', 365));
+}
+
+/** Na hoeveel dagen zonder gebruik een iCal-link vervalt (config links.ical_idle_days, standaard 180). */
+function ical_idle_days(): int
+{
+    return max(30, (int) config('links.ical_idle_days', 180));
+}
+
+/** Adres van een bestand in public/assets met de wijzigingsdatum erachter, zodat browsers het lang mogen bewaren
+ *  en na een update toch meteen de nieuwe versie ophalen. */
+function asset(string $file): string
+{
+    $mtime = @filemtime(APP_ROOT . '/public/assets/' . $file);
+    return 'assets/' . $file . ($mtime ? '?v=' . $mtime : '');
+}
+
 function now(): string
 {
     return date('Y-m-d H:i:s');

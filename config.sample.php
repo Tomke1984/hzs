@@ -37,6 +37,18 @@ return [
     // Trainersplanning competitie: hoeveel dagen vooraf een mail vertrekt als er nog een trainer ontbreekt, en of de app
     // dat zelf doet (hooguit één keer per uur, bij een bezoek). Met een cron-taak: auto_remind false + tools/coverage-reminders.php.
     'coverage' => ['remind_days' => 3, 'auto_remind' => true],
+    // Back-up van de database: standaard automatisch hooguit één keer per dag (na een bezoek), 14 dagen bewaard.
+    // Map leeg = naast het SQLite-bestand (map "backup"), bij MySQL storage/backup. Met cron: auto false + tools/backup.php.
+    'backup' => ['auto' => true, 'dir' => '', 'keep_days' => 14],
+    // Deellink weekplanning: dagen geldig. iCal-link: vervalt na zoveel dagen zonder gebruik.
+    'links' => ['share_days' => 365, 'ical_idle_days' => 180],
+    // Sleutel voor versleutelde velden (medische opmerking, 2FA-geheim): base64 van 32 bytes, bv. via
+    //   php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+    // Leeg = de app maakt eenmalig storage/app.key aan. Bewaar een kopie van de sleutel veilig, APART van de back-ups:
+    // zonder sleutel zijn die velden onleesbaar.
+    'app_key' => '',
+    // Map voor sessiebestanden (standaard storage/sessions; niet de gedeelde /tmp van de hosting).
+    // 'session_path' => '/home/<account>/hzs-data/sessions',
 
     'db' => [
         // 'sqlite' = geen installatie nodig (lokaal testen), 'mysql' = shared hosting

@@ -1,5 +1,5 @@
 <div class="card narrow">
-  <img class="login-logo" src="assets/logo.png" alt="Hasseltse Zwemvereniging Spartacus" width="109" height="96">
+  <img class="login-logo" src="<?= e(asset('logo.png')) ?>" alt="Hasseltse Zwemvereniging Spartacus" width="109" height="96">
   <h1 class="center">Wachtwoord vergeten</h1>
   <?php if ($sent): ?>
     <p class="alert alert-success">Bestaat er een account met dit e-mailadres, dan krijg je zo meteen een mail met een link om een nieuw wachtwoord te kiezen. Controleer ook je ongewenste mail.</p>

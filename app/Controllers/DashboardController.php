@@ -224,7 +224,9 @@ final class DashboardController
     /** Beheer: tweestapsverificatie nog niet aan. */
     private static function office(): array
     {
-        $o = ['noTfa' => false, 'dbExposed' => Auth::hasRole('ADMIN') && db_inside_webroot()];
+        $o = ['noTfa' => false, 'dbExposed' => Auth::hasRole('ADMIN') && db_inside_webroot(),
+            'backupOverdue' => Auth::hasRole('ADMIN') && Backup::isOverdue(),
+            'keyInFile' => Auth::hasRole('ADMIN') && (string) config('app_key', '') === '' && is_file(APP_ROOT . '/storage/app.key')];
         $u = Auth::user();
         $o['noTfa'] = (Auth::hasRole('ADMIN') || Auth::hasRole('BOARD')) && !(int) Database::val('SELECT totp_enabled FROM users WHERE id = ?', [$u['id']]);
         return $o;

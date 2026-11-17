@@ -1,5 +1,5 @@
 <div class="card narrow">
-  <img class="login-logo" src="assets/logo.png" alt="Hasseltse Zwemvereniging Spartacus" width="109" height="96">
+  <img class="login-logo" src="<?= e(asset('logo.png')) ?>" alt="Hasseltse Zwemvereniging Spartacus" width="109" height="96">
   <?php if (!$found): ?>
     <h1 class="center">Link niet meer geldig</h1>
     <p>Deze link is verlopen of al gebruikt. Vraag een nieuwe aan via <a href="<?= e(url('forgot')) ?>">Wachtwoord vergeten</a>.</p>

@@ -5,7 +5,18 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Niets: `dev` en `main` zijn gelijk._
+_v0.24 – Onderhoud, back-up en beveiliging (review senior developer, ronde 2) – commit `COMMIT`_
+
+- **Niet meer "willekeurig" afgemeld:** sessies staan in een eigen map (`storage/sessions`) in plaats van de gedeelde `/tmp` van de hosting, waar PHP ze al na 24 minuten kon opruimen.
+- **Dagelijkse back-up:** de app maakt zelf elke dag een back-up (na een bezoek, geen cron nodig), bewaart ze 14 dagen naast het databasebestand en toont beheerders een rode melding als de laatste ouder is dan 2 dagen. Ook via `php tools/backup.php`. Terugzetten: zie README.
+- **Versleuteling:** medische opmerkingen en 2FA-geheimen staan versleuteld in de database. Bestaande gegevens worden bij de update versleuteld. De sleutel komt bij een bestaande installatie in `storage/app.key`; beheerders krijgen de raad hem naar `config.php` te verplaatsen en **apart te bewaren** (zonder sleutel zijn die gegevens onleesbaar). Wie medische info bekijkt, komt in de auditlog.
+- **Wachtwoord vergeten:** hooguit 3 mails per uur per account en 10 aanvragen per uur per toestel; de responstijd verraadt niet meer of een adres een account heeft.
+- **Wachtwoordregels:** geen veelgebruikte wachtwoorden, reeksen of iets dat op je naam/e-mail lijkt (nog steeds minstens 10 tekens). Oudere wachtwoordhashes worden bij het aanmelden bijgewerkt.
+- **Links vervallen:** een deellink weekplanning is 365 dagen geldig (in de instellingen staat tot wanneer); een iCal-link vervalt na 180 dagen zonder gebruik.
+- **Sneller op mobiel:** CSS en JavaScript blijven een jaar in de cache (nieuwe versie na een update toch meteen), en pagina's worden gecomprimeerd.
+- **Onderhoud:** genummerde migraties (`db/migrations/`), oude kolommen van verwijderde onderdelen opgeruimd, een test die bewaakt dat bij definitief verwijderen geen enkele tabel vergeten wordt, en `tools/legacy-data.php` om oude tabellen van verwijderde onderdelen te exporteren en te wissen (beslissing van het bestuur).
+- **CI:** GitHub controleert bij elke push naar `dev` en `main` de syntax, voert PHPStan (level 5) uit en draait alle e2e-tests.
+- Tests: nieuwe suite `v24_onderhoud` (57 controles), 583 in totaal.
 
 ## Op main
 

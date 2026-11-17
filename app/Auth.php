@@ -50,13 +50,24 @@ final class Auth
         $since = date('Y-m-d H:i:s', time() - self::WINDOW_SECONDS);
         Database::exec('DELETE FROM login_attempts WHERE created_at < ?', [date('Y-m-d H:i:s', time() - 86400)]);
         $byEmail = (int) Database::val('SELECT COUNT(*) FROM login_attempts WHERE email = ? AND created_at > ?', [strtolower($email), $since]);
-        $byIp = (int) Database::val('SELECT COUNT(*) FROM login_attempts WHERE ip = ? AND created_at > ?', [self::ip(), $since]);
+        $byIp = (int) Database::val("SELECT COUNT(*) FROM login_attempts WHERE ip = ? AND created_at > ? AND email NOT LIKE 'forgot:%'", [self::ip(), $since]);
         return $byEmail >= self::MAX_FAILS_PER_EMAIL || $byIp >= self::MAX_FAILS_PER_IP;
     }
 
     public static function recordFailure(string $email): void
     {
         Database::exec('INSERT INTO login_attempts (email, ip, created_at) VALUES (?,?,?)', [substr(strtolower($email), 0, 190), self::ip(), now()]);
+    }
+
+    /** "Wachtwoord vergeten": hooguit 10 aanvragen per uur per IP-adres. Telt de aanvraag meteen mee. */
+    public static function forgotThrottled(string $email): bool
+    {
+        $n = (int) Database::val("SELECT COUNT(*) FROM login_attempts WHERE ip = ? AND email LIKE 'forgot:%' AND created_at > ?", [self::ip(), date('Y-m-d H:i:s', time() - 3600)]);
+        if ($n >= 10) {
+            return true;
+        }
+        Database::exec('INSERT INTO login_attempts (email, ip, created_at) VALUES (?,?,?)', [substr('forgot:' . strtolower($email), 0, 190), self::ip(), now()]);
+        return false;
     }
 
     private static function ip(): string
@@ -74,6 +85,10 @@ final class Auth
             return false;
         }
         Database::exec('DELETE FROM login_attempts WHERE email = ?', [strtolower($email)]);
+        if (password_needs_rehash($u['password_hash'], PASSWORD_DEFAULT)) {
+            // nieuwere PHP met een sterkere standaard (of hogere kost): hash meteen bijwerken
+            Database::exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $u['id']]);
+        }
         if ((int) ($u['totp_enabled'] ?? 0) === 1 && !empty($u['totp_secret'])) {
             // Wachtwoord klopt, maar de tweede stap (code uit de authenticator-app) moet nog volgen.
             $_SESSION['pending_uid'] = (int) $u['id'];

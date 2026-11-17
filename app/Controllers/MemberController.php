@@ -149,6 +149,11 @@ final class MemberController
         // Ouder of volwassen lid zelf: ziet en wijzigt de eigen gegevens (contact, adres, noodgegevens).
         $canEditOwn = !Auth::can('members.write') && Guardianship::canEditOwn((int) Auth::user()['id'], $member);
 
+        // Medische info is een bijzonder persoonsgegeven: wie ze bekijkt (behalve de ouder of het lid zelf) komt in de auditlog.
+        if (Auth::can('members.medical') && !$canEditOwn && ($member['medical_note'] ?? '') !== '') {
+            audit_medical_view('member', (int) $member['id']);
+        }
+
         render('members/show', [
             'canEditOwn' => $canEditOwn,
             'showMedical' => Auth::can('members.medical') || $canEditOwn,
@@ -255,7 +260,7 @@ final class MemberController
                 [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], $statusReason, $statusDate, $id]
             );
             if ($canMedical) {
-                Database::exec('UPDATE members SET emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?', [$nullable($data['emergency_name']), $nullable($data['emergency_phone']), $nullable($data['medical_note']), $id]);
+                Database::exec('UPDATE members SET emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?', [$nullable($data['emergency_name']), $nullable($data['emergency_phone']), Crypto::encrypt($nullable($data['medical_note'])), $id]);
             }
             audit('UPDATE', 'member', $id);
             flash('success', 'Lid bijgewerkt.');
@@ -263,7 +268,7 @@ final class MemberController
             $id = Database::insert(
                 'INSERT INTO members (member_no, first_name, last_name, birth_date, email, phone, street, postal_code, city, status, created_at, status_reason, status_date, emergency_name, emergency_phone, medical_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                 [self::nextMemberNo(), $data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']), $nullable($data['postal_code']), $nullable($data['city']), $data['status'], now(), $statusReason, $data['status'] === 'INACTIVE' ? $statusDate : null,
-                    $canMedical ? $nullable($data['emergency_name']) : null, $canMedical ? $nullable($data['emergency_phone']) : null, $canMedical ? $nullable($data['medical_note']) : null]
+                    $canMedical ? $nullable($data['emergency_name']) : null, $canMedical ? $nullable($data['emergency_phone']) : null, $canMedical ? Crypto::encrypt($nullable($data['medical_note'])) : null]
             );
             audit('CREATE', 'member', $id);
             flash('success', Guardianship::isMinor($nullable($data['birth_date']))
@@ -329,7 +334,7 @@ final class MemberController
         Database::exec(
             'UPDATE members SET first_name=?, last_name=?, birth_date=?, email=?, phone=?, street=?, postal_code=?, city=?, emergency_name=?, emergency_phone=?, medical_note=? WHERE id=?',
             [$data['first_name'], $data['last_name'], $nullable($data['birth_date']), $nullable($data['email']), $nullable($data['phone']), $nullable($data['street']),
-                $nullable($data['postal_code']), $nullable($data['city']), $nullable($data['emergency_name']), $nullable($data['emergency_phone']), $nullable($data['medical_note']), $member['id']]
+                $nullable($data['postal_code']), $nullable($data['city']), $nullable($data['emergency_name']), $nullable($data['emergency_phone']), Crypto::encrypt($nullable($data['medical_note'])), $member['id']]
         );
         audit('UPDATE_OWN', 'member', (int) $member['id'], $changed ? 'gewijzigd: ' . implode(', ', $changed) : 'geen wijzigingen');
         flash('success', $changed ? 'Gegevens opgeslagen.' : 'Er was niets gewijzigd.');
@@ -343,6 +348,7 @@ final class MemberController
         if (!$member || !Guardianship::canEditOwn((int) Auth::user()['id'], $member)) {
             abort(404, 'Dit lid bestaat niet of je kan de gegevens niet aanpassen.');
         }
+        $member['medical_note'] = Crypto::decrypt($member['medical_note'] ?? null); // versleuteld bewaard
         return $member;
     }
 
@@ -377,6 +383,7 @@ final class MemberController
         if (!$member || !Scope::canSeeMember((int) $member['id'])) {
             abort(404, 'Dit lid bestaat niet of je hebt er geen toegang toe.');
         }
+        $member['medical_note'] = Crypto::decrypt($member['medical_note'] ?? null); // versleuteld bewaard
         return $member;
     }
 }

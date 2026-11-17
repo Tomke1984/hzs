@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS members (
   status_date VARCHAR(10) NULL,
   emergency_name VARCHAR(120) NULL,
   emergency_phone VARCHAR(40) NULL,
-  medical_note VARCHAR(500) NULL,
+  medical_note TEXT NULL,
   photo_consent TINYINT NOT NULL DEFAULT 0
 ){{ENGINE}};
 
@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS users (
   is_active TINYINT NOT NULL DEFAULT 1,
   created_at VARCHAR(19) NOT NULL,
   ical_token VARCHAR(40) NULL,
-  totp_secret VARCHAR(64) NULL,
+  ical_last_used VARCHAR(10) NULL,
+  totp_secret VARCHAR(255) NULL,
   totp_enabled TINYINT NOT NULL DEFAULT 0,
   session_version INT NOT NULL DEFAULT 0,
   FOREIGN KEY (member_id) REFERENCES members(id)
@@ -90,13 +91,10 @@ CREATE TABLE IF NOT EXISTS `groups` (
   description VARCHAR(255) NULL,
   category VARCHAR(20) NOT NULL DEFAULT 'COMPETITION',
   is_active TINYINT NOT NULL DEFAULT 1,
-  goals TEXT NULL,
   color INT NULL,
-  capacity INT NULL,
-  fee_cents INT NULL,
-  next_group_id INT NULL,
   min_trainers INT NULL,
   share_token VARCHAR(40) NULL,
+  share_expires VARCHAR(10) NULL,
   CHECK (category IN ('SWIM_SCHOOL','COMPETITION'))
 ){{ENGINE}};
 
@@ -141,8 +139,6 @@ CREATE TABLE IF NOT EXISTS activities (
   series_id INT NULL,
   is_custom TINYINT NOT NULL DEFAULT 0,
   status_note VARCHAR(200) NULL,
-  is_public TINYINT NOT NULL DEFAULT 0,
-  signup_capacity INT NULL,
   min_trainers INT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
@@ -188,10 +184,8 @@ CREATE TABLE IF NOT EXISTS activity_series (
   start_date VARCHAR(10) NOT NULL,
   end_date VARCHAR(10) NOT NULL,
   is_active TINYINT NOT NULL DEFAULT 1,
-  is_public TINYINT NOT NULL DEFAULT 0,
   created_by INT NULL,
   created_at VARCHAR(19) NOT NULL,
-  capacity INT NULL,
   FOREIGN KEY (type_id) REFERENCES activity_types(id)
 ){{ENGINE}};
 
@@ -288,4 +282,9 @@ CREATE TABLE IF NOT EXISTS coverage_alerts (
 CREATE TABLE IF NOT EXISTS app_meta (
   k VARCHAR(40) NOT NULL PRIMARY KEY,
   v VARCHAR(200) NOT NULL
-){{ENGINE}}
+){{ENGINE}};
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  name VARCHAR(100) NOT NULL PRIMARY KEY,
+  applied_at VARCHAR(19) NOT NULL
+){{ENGINE}};

@@ -6,20 +6,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#064ca2">
 <title><?= e($title ? $title . ' · ' : '') ?><?= e(config('app_name', 'HZS Clubapp')) ?></title>
-<link rel="icon" type="image/png" href="assets/logo.png">
-<link rel="stylesheet" href="assets/style.css">
-<script src="assets/app.js" defer></script>
+<link rel="icon" type="image/png" href="<?= e(asset('logo.png')) ?>">
+<link rel="stylesheet" href="<?= e(asset('style.css')) ?>">
+<script src="<?= e(asset('app.js')) ?>" defer></script>
 </head>
 <body class="<?= Auth::user() ? 'has-sidebar' : 'guest' ?>">
 <?php $user = Auth::user(); ?>
-<noscript><link rel="stylesheet" href="assets/nojs.css"></noscript>
+<noscript><link rel="stylesheet" href="<?= e(asset('nojs.css')) ?>"></noscript>
 <?php if ($user): ?>
 <header class="app-topbar">
-  <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
+  <a class="brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="<?= e(asset('logo.png')) ?>" alt="" width="52" height="46"><span>Clubapp</span></a>
 </header>
 <div class="app-shell">
   <aside class="sidebar" id="sidebar">
-    <a class="brand side-brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="assets/logo.png" alt="" width="52" height="46"><span>Clubapp</span></a>
+    <a class="brand side-brand" href="<?= e(url('dashboard')) ?>"><img class="logo" src="<?= e(asset('logo.png')) ?>" alt="" width="52" height="46"><span>Clubapp</span></a>
     <form class="side-search" method="get" action="<?= e(url('search')) ?>" role="search">
       <input type="search" name="q" placeholder="Zoeken…" aria-label="Zoeken in de app" maxlength="60" value="<?= e((string) ($_GET['r'] ?? '') === 'search' ? (string) ($_GET['q'] ?? '') : '') ?>">
     </form>
@@ -36,7 +36,7 @@
 <?php else: ?>
 <header class="topbar">
   <div class="wrap bar">
-    <a class="brand" href="<?= e(url('login')) ?>"><img class="logo" src="assets/logo.png" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
+    <a class="brand" href="<?= e(url('login')) ?>"><img class="logo" src="<?= e(asset('logo.png')) ?>" alt="HZS" width="52" height="46"><span>Clubapp</span></a>
   </div>
 </header>
 <?php endif; ?>

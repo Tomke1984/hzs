@@ -783,3 +783,4 @@ details.parents-collapsed > summary.add-link::-webkit-details-marker { display: 
 .up-list .up-absence { grid-column: 2; }
 form[data-autosubmit] select { max-width: 360px; }
 .link-btn { background: none; border: 0; padding: 8px 4px; color: var(--blue); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.text-bad { color: var(--bad); }

@@ -109,7 +109,6 @@ final class SeriesController
             'start_date' => input('start_date'),
             'end_date' => input('end_date'),
             'is_active' => $id ? (input('is_active') === '1' ? 1 : 0) : 1,
-            'is_public' => 0,
         ];
         $raw = $_POST['group_ids'] ?? [];
         $selected = is_array($raw) ? array_values(array_unique(array_map('intval', $raw))) : [];
@@ -152,7 +151,6 @@ final class SeriesController
         } elseif ((strtotime($s['end_date']) - strtotime(max($s['start_date'], today()))) / 86400 > SeriesService::MAX_DAYS) {
             $errors[] = 'De einddatum mag maximaal ongeveer 2 jaar na vandaag liggen.';
         }
-        $capacity = null;
         if (!$selected) {
             $errors[] = 'Kies minstens één groep.';
         } elseif ((int) Database::val('SELECT COUNT(*) FROM `groups` WHERE is_active = 1 AND id IN (' . Scope::in($selected) . ')', $selected) !== count($selected)) {
@@ -166,18 +164,18 @@ final class SeriesController
 
         $desc = $s['description'] === '' ? null : $s['description'];
         $loc = $s['location'] === '' ? null : $s['location'];
-        $id = Database::tx(function () use ($id, $s, $desc, $loc, $slots, $selected, $capacity) {
+        $id = Database::tx(function () use ($id, $s, $desc, $loc, $slots, $selected) {
             if ($id) {
                 Database::exec(
-                    'UPDATE activity_series SET type_id=?, title=?, description=?, location=?, start_date=?, end_date=?, is_active=?, is_public=?, capacity=? WHERE id=?',
-                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], $s['is_active'], $s['is_public'], $capacity, $id]
+                    'UPDATE activity_series SET type_id=?, title=?, description=?, location=?, start_date=?, end_date=?, is_active=? WHERE id=?',
+                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], $s['is_active'], $id]
                 );
                 Database::exec('DELETE FROM activity_series_slots WHERE series_id = ?', [$id]);
                 Database::exec('DELETE FROM activity_series_groups WHERE series_id = ?', [$id]);
             } else {
                 $id = Database::insert(
-                    'INSERT INTO activity_series (type_id, title, description, location, start_date, end_date, is_active, is_public, created_by, created_at, capacity) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], 1, $s['is_public'], Auth::user()['id'], now(), $capacity]
+                    'INSERT INTO activity_series (type_id, title, description, location, start_date, end_date, is_active, created_by, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
+                    [$s['type_id'], $s['title'], $desc, $loc, $s['start_date'], $s['end_date'], 1, Auth::user()['id'], now()]
                 );
             }
             foreach ($slots as $sl) {
@@ -286,7 +284,6 @@ final class SeriesController
             $n = Database::exec("UPDATE activities SET location=?, is_custom=1 WHERE $sql", array_merge([$v['location']], $p));
             $msg = 'Locatie aangepast voor %d activiteiten.';
         }
-        $n = is_int($n) ? $n : 0;
         audit('BULK', 'activity_series', null, json_encode($v + ['count' => $n]));
         flash('success', sprintf($msg, $n));
         redirect(url('series'));

@@ -24,12 +24,12 @@ final class AccountController
 
     public static function password(): void
     {
-        $u = Database::one('SELECT id, password_hash FROM users WHERE id = ?', [Auth::user()['id']]);
+        $u = Database::one('SELECT id, email, display_name, password_hash FROM users WHERE id = ?', [Auth::user()['id']]);
         $new = (string) ($_POST['new_password'] ?? '');
         if (!password_verify((string) ($_POST['current_password'] ?? ''), $u['password_hash'])) {
             flash('error', 'Je huidige wachtwoord klopt niet.');
-        } elseif (mb_strlen($new) < 10) {
-            flash('error', 'Het nieuwe wachtwoord moet minstens 10 tekens hebben.');
+        } elseif ($problem = PasswordPolicy::problem($new, [$u['email'], $u['display_name']])) {
+            flash('error', $problem);
         } elseif ($new !== (string) ($_POST['new_password2'] ?? '')) {
             flash('error', 'De twee nieuwe wachtwoorden komen niet overeen.');
         } else {
@@ -44,7 +44,7 @@ final class AccountController
     public static function icalReset(): void
     {
         $token = bin2hex(random_bytes(20));
-        Database::exec('UPDATE users SET ical_token = ? WHERE id = ?', [input('do') === 'remove' ? null : $token, Auth::user()['id']]);
+        Database::exec('UPDATE users SET ical_token = ?, ical_last_used = ? WHERE id = ?', input('do') === 'remove' ? [null, null, Auth::user()['id']] : [$token, today(), Auth::user()['id']]);
         flash('success', input('do') === 'remove' ? 'Je agenda-link is uitgeschakeld.' : 'Je persoonlijke agenda-link is aangemaakt. Een eerdere link werkt niet meer.');
         redirect(url('account') . '#agenda');
     }
@@ -68,7 +68,7 @@ final class AccountController
             self::page($secret);
             return;
         }
-        Database::exec('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [$secret, Auth::user()['id']]);
+        Database::exec('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [Crypto::encrypt($secret), Auth::user()['id']]);
         unset($_SESSION['totp_setup']);
         audit('2FA_ON', 'user', (int) Auth::user()['id']);
         flash('success', 'Tweestapsverificatie staat aan. Bij het volgende aanmelden vragen we de code uit je app.');
@@ -94,8 +94,16 @@ final class AccountController
     {
         $t = (string) ($_GET['t'] ?? '');
         $u = preg_match('/^[a-f0-9]{40}$/', $t)
-            ? Database::one('SELECT id, email, display_name, member_id, is_active FROM users WHERE ical_token = ?', [$t])
+            ? Database::one('SELECT id, email, display_name, member_id, is_active, ical_last_used FROM users WHERE ical_token = ?', [$t])
             : null;
+        // Een link die lang niet meer opgevraagd werd (bv. van een oud toestel), vervalt vanzelf.
+        if ($u && $u['ical_last_used'] !== null && $u['ical_last_used'] < date('Y-m-d', strtotime('-' . ical_idle_days() . ' days'))) {
+            Database::exec('UPDATE users SET ical_token = NULL, ical_last_used = NULL WHERE id = ?', [$u['id']]);
+            $u = null;
+        }
+        if ($u && $u['ical_last_used'] !== today()) {
+            Database::exec('UPDATE users SET ical_last_used = ? WHERE id = ?', [today(), $u['id']]);
+        }
         if (!$u || (int) $u['is_active'] !== 1) {
             http_response_code(404);
             header('Content-Type: text/plain; charset=utf-8');

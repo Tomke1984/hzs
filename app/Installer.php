@@ -46,7 +46,10 @@ final class Installer
         }
     }
 
-    /** Schemaversie van deze release. De database onthoudt welke versie ze heeft (tabel app_meta). */
+    /**
+     * Versie van de oude, ingebouwde upgrades in migrate() (bevroren op 15). Nieuwe schemawijzigingen komen
+     * vanaf v0.24 als genummerd bestand in db/migrations/ (zie Migrator).
+     */
     public const SCHEMA = 15;
 
     /** Indexen voor de zoekopdrachten die veel lopen (kalender, scope, aanmelden, tokens). naam => [tabel, kolommen] */
@@ -85,15 +88,25 @@ final class Installer
             // tabel bestaat nog niet (oudere database): migrate() maakt ze aan
         }
         $ref = self::referenceFingerprint();
-        if ((int) ($meta['schema'] ?? 0) >= self::SCHEMA && ($meta['reference'] ?? '') === $ref) {
+        $latest = Migrator::latest();
+        if ((int) ($meta['schema'] ?? 0) >= self::SCHEMA && ($meta['reference'] ?? '') === $ref && ($meta['migration'] ?? '') === $latest) {
             return;
         }
         if ((int) ($meta['schema'] ?? 0) < self::SCHEMA) {
             self::migrate();
         }
+        if (($meta['migration'] ?? '') !== $latest) {
+            try {
+                Database::val('SELECT 1 FROM schema_migrations LIMIT 1');
+            } catch (Throwable $e) {
+                self::createSchema(); // tabel schema_migrations (databases van voor v0.24)
+            }
+            Migrator::run();
+        }
         self::syncReferenceData();
         self::setMeta('schema', (string) self::SCHEMA);
         self::setMeta('reference', $ref);
+        self::setMeta('migration', $latest);
     }
 
     private static function referenceFingerprint(): string
@@ -152,10 +165,8 @@ final class Installer
         }
         $cols = [
             ['activities', 'series_id', 'INT NULL'], ['activities', 'is_custom', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'status_note', 'VARCHAR(200) NULL'],
-            ['activities', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activities', 'signup_capacity', 'INT NULL'], ['activities', 'min_trainers', 'INT NULL'],
-            ['activity_series', 'is_public', 'TINYINT NOT NULL DEFAULT 0'], ['activity_series', 'capacity', 'INT NULL'],
-            ['groups', 'color', 'INT NULL'], ['groups', 'category', "VARCHAR(20) NOT NULL DEFAULT 'COMPETITION'"], ['groups', 'goals', 'TEXT NULL'],
-            ['groups', 'capacity', 'INT NULL'], ['groups', 'fee_cents', 'INT NULL'], ['groups', 'next_group_id', 'INT NULL'],
+            ['activities', 'min_trainers', 'INT NULL'],
+            ['groups', 'color', 'INT NULL'], ['groups', 'category', "VARCHAR(20) NOT NULL DEFAULT 'COMPETITION'"],
             ['groups', 'min_trainers', 'INT NULL'], ['groups', 'share_token', 'VARCHAR(40) NULL'],
             ['members', 'street', 'VARCHAR(120) NULL'], ['members', 'postal_code', 'VARCHAR(10) NULL'], ['members', 'city', 'VARCHAR(80) NULL'],
             ['members', 'status_reason', 'VARCHAR(60) NULL'], ['members', 'status_date', 'VARCHAR(10) NULL'],

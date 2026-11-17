@@ -197,7 +197,7 @@ final class Coverage
     /** Aantal trainers nodig: eigen instelling van de activiteit, anders het hoogste minimum van de competitiegroepen (standaard 1). */
     public static function required(array $activity, array $groups): int
     {
-        if (isset($activity['min_trainers']) && $activity['min_trainers'] !== null && $activity['min_trainers'] !== '') {
+        if (isset($activity['min_trainers']) && $activity['min_trainers'] !== '') {
             return max(0, (int) $activity['min_trainers']);
         }
         $n = 1;

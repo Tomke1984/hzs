@@ -59,7 +59,7 @@ final class AuthController
             return;
         }
         $u = Database::one('SELECT id, totp_secret, is_active FROM users WHERE id = ?', [$uid]);
-        if (!$u || (int) $u['is_active'] !== 1 || !Totp::verify((string) $u['totp_secret'], (string) ($_POST['code'] ?? ''))) {
+        if (!$u || (int) $u['is_active'] !== 1 || !Totp::verify((string) Crypto::decrypt($u['totp_secret']), (string) ($_POST['code'] ?? ''))) {
             Auth::recordFailure($key);
             http_response_code(401);
             flash('error', 'Deze code klopt niet. Een code is 30 seconden geldig: probeer de volgende.');
@@ -80,20 +80,36 @@ final class AuthController
     public static function forgot(): void
     {
         $email = strtolower(input('email'));
+        if (Auth::forgotThrottled($email)) {
+            http_response_code(429);
+            flash('error', 'Te veel aanvragen vanaf dit toestel. Probeer het over een uur opnieuw.');
+            render('auth/forgot', ['sent' => false, 'email' => $email], 'Wachtwoord vergeten');
+            return;
+        }
         $u = filter_var($email, FILTER_VALIDATE_EMAIL)
             ? Database::one('SELECT id, email, display_name, password_hash, is_active FROM users WHERE email = ?', [$email])
             : null;
         if ($u && (int) $u['is_active'] === 1) {
-            // Maximaal één mail per minuut per account (tegen mailspam naar een ander).
-            $recent = (int) Database::val('SELECT COUNT(*) FROM user_tokens WHERE user_id = ? AND created_at > ?', [$u['id'], date('Y-m-d H:i:s', time() - 60)]);
-            if (!$recent) {
-                if (Invites::isPending($u)) {
-                    Invites::sendInvite((int) $u['id'], 'Je account staat klaar, maar is nog niet geactiveerd.');
-                } else {
-                    $link = Invites::link(Invites::createToken((int) $u['id'], 'RESET'));
-                    [$subject, $body] = Invites::resetMessage($u, $link);
-                    Mailer::send($u['email'], $subject, $body);
-                }
+            // Hooguit 3 mails per uur per account (tegen mailspam naar iemand anders).
+            $recent = (int) Database::val('SELECT COUNT(*) FROM user_tokens WHERE user_id = ? AND created_at > ?', [$u['id'], date('Y-m-d H:i:s', time() - 3600)]);
+            if ($recent < 3) {
+                // De mail vertrekt pas na het antwoord: zo verraadt de responstijd niet of het adres een account heeft.
+                register_shutdown_function(function () use ($u): void {
+                    if (function_exists('fastcgi_finish_request')) {
+                        @fastcgi_finish_request();
+                    }
+                    try {
+                        if (Invites::isPending($u)) {
+                            Invites::sendInvite((int) $u['id'], 'Je account staat klaar, maar is nog niet geactiveerd.');
+                        } else {
+                            $link = Invites::link(Invites::createToken((int) $u['id'], 'RESET'));
+                            [$subject, $body] = Invites::resetMessage($u, $link);
+                            Mailer::send($u['email'], $subject, $body);
+                        }
+                    } catch (Throwable $e) {
+                        error_log('Wachtwoord vergeten, mail: ' . $e->getMessage());
+                    }
+                });
             }
         }
         render('auth/forgot', ['sent' => true, 'email' => $email], 'Wachtwoord vergeten');
@@ -128,8 +144,8 @@ final class AuthController
         } elseif (mb_strlen($name) > 120) {
             $errors[] = 'Naam is te lang.';
         }
-        if (mb_strlen($password) < 10) {
-            $errors[] = 'Het wachtwoord moet minstens 10 tekens hebben.';
+        if ($problem = PasswordPolicy::problem($password, [$found['email'], $name !== '' ? $name : $found['display_name']])) {
+            $errors[] = $problem;
         }
         if ($password !== $again) {
             $errors[] = 'De twee wachtwoorden komen niet overeen.';
