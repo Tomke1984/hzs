@@ -5,14 +5,18 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_v0.27 – Database terugzetten via de installer – commit `2b8acaf`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.27.0 – 2026-11-17 – `775e260` – database terugzetten via de installer
+
+#### v0.27 – Database terugzetten via de installer – commit `2b8acaf`
 
 - **Lokale gegevens naar de server zonder SSH:** `install.php` heeft onderaan *Of: bestaande database terugzetten*. Laad een SQLite-database van je computer (`clubapp.sqlite`) of een back-up van de app (`hzs-….sqlite.gz`) op; je meldt daarna aan met je bestaande accounts.
 - Controles: echt een SQLite-database, niet beschadigd, minstens één gebruiker; staan er versleutelde medische gegevens in, dan is de `app_key` van de oorspronkelijke installatie verplicht én wordt nagekeken of die klopt. Een database met gebruikers wordt nooit overschreven; na het terugzetten is de installer vergrendeld en wordt de database bij het eerste bezoek bijgewerkt.
 - Een nieuwe `config.php` van de installer staat op de server nu meteen op `debug => false` (enkel lokaal `true`).
 - Tests: nieuwe suite `v27_terugzetten` (15 controles), 628 in totaal; ook getest met FrankenPHP (Railpack) en `HZS_CONFIG`.
-
-## Op main
 
 ### v0.26.0 – 2026-11-17 – `ceda951` – draaien op Coolify met Railpack, zoekveld menubalk
 
