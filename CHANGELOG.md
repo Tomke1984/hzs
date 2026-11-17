@@ -5,20 +5,26 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Vinkje "Ik ben geen robot" in plaats van de rekenvraag – commit `07d6f63`_
+_Niets: `dev` en `main` zijn gelijk._
+
+## Op main
+
+### v0.25.0 – 2026-11-17 – `3f03beb` – vinkje "Ik ben geen robot" in plaats van tweestapsverificatie
+
+**Let op bij de update:** de tweestapsverificatie verdwijnt voor iedereen (de geheimen worden uit de database gewist); bij het aanmelden staat voortaan het vinkje *Ik ben geen robot*. Neem eerst een back-up van de database.
+
+#### Vinkje "Ik ben geen robot" in plaats van de rekenvraag – commit `07d6f63`
 
 - Bij *Aanmelden* en *Wachtwoord vergeten* staat nu een vinkje **Ik ben geen robot** in plaats van de rekenvraag. Een klik en de browser controleert (meestal minder dan een seconde, met een draaiend icoontje en daarna een groen vinkje). Vergeet je het vinkje, dan gebeurt de controle vanzelf bij *Aanmelden*.
 - Achter de schermen lost de browser een kleine rekenopgave op die per poging verandert (proof of work, zoals ALTCHA): voor een mens onzichtbaar, voor een bot die duizenden pogingen wil doen duur. Nog altijd zonder externe dienst, cookies van derden of sleutels, en werkt ook zonder HTTPS. Zonder JavaScript verschijnt de rekenvraag als reserve.
 - Tests: `v25_captcha` herschreven (25 controles); in een echte browser nagekeken (vinkje 0,4 s, aanmelden zonder eerst aan te vinken werkt ook).
 
-_v0.25 – Controlevraag in plaats van tweestapsverificatie – commit `601a62c`_
+#### v0.25 – Controlevraag in plaats van tweestapsverificatie – commit `601a62c`
 
 - **Tweestapsverificatie is weg:** niemand moet nog een code uit een authenticator-app invullen, ook beheerders en bestuur niet. Het scherm in *Mijn account*, de knop op de gebruikersfiche en de melding op het overzicht zijn verdwenen. De bewaarde 2FA-geheimen worden bij de update uit de database gewist (migratie 017).
 - **Controlevraag (captcha)** bij *Aanmelden* en *Wachtwoord vergeten*: een eenvoudige rekenvraag zoals *Hoeveel is drie plus 5?* (antwoord in cijfers). Daarnaast een verborgen veld dat enkel bots invullen en een minimumtijd van 2 seconden. Zonder externe dienst (geen Google of Cloudflare, geen cookies van derden, geen sleutels nodig). Een fout antwoord telt niet als fout wachtwoord; de limiet van 5 foute wachtwoorden per 15 minuten blijft.
 - Instelling `security.require_2fa_admin` in `config.php` is niet meer nodig (mag blijven staan, wordt genegeerd).
 - Tests: nieuwe suite `v25_captcha` (23 controles); aanmelden in de tests beantwoordt de controlevraag.
-
-## Op main
 
 ### v0.24.0 – 2026-11-17 – `bf8a873` – back-up, versleuteling, sessies, wachtwoordregels, migraties en CI
 
