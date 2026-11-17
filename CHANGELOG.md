@@ -5,7 +5,7 @@ Zodra `dev` naar `main` gaat (enkel na goedkeuring), verhuizen die regels naar e
 
 ## Op dev (nog niet op main)
 
-_Vinkje "Ik ben geen robot" in plaats van de rekenvraag – commit `HASH`_
+_Vinkje "Ik ben geen robot" in plaats van de rekenvraag – commit `07d6f63`_
 
 - Bij *Aanmelden* en *Wachtwoord vergeten* staat nu een vinkje **Ik ben geen robot** in plaats van de rekenvraag. Een klik en de browser controleert (meestal minder dan een seconde, met een draaiend icoontje en daarna een groen vinkje). Vergeet je het vinkje, dan gebeurt de controle vanzelf bij *Aanmelden*.
 - Achter de schermen lost de browser een kleine rekenopgave op die per poging verandert (proof of work, zoals ALTCHA): voor een mens onzichtbaar, voor een bot die duizenden pogingen wil doen duur. Nog altijd zonder externe dienst, cookies van derden of sleutels, en werkt ook zonder HTTPS. Zonder JavaScript verschijnt de rekenvraag als reserve.
