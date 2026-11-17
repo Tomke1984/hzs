@@ -6,6 +6,10 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Mailinstellingen: duidelijker bij PHP mail() in Coolify_
+
+- PHP mail() werkt niet in een container (Coolify/Docker heeft geen mailprogramma). De optie zegt dat nu in Coolify, en een mislukte testmail met PHP mail() raadt SMTP aan in plaats van te vragen server en poort te controleren.
+
 _v0.28.0-dev – Deploytest_
 
 - Geen wijziging aan de app: deze push dient enkel om te controleren dat de database en instellingen op hzs-dev een nieuwe deploy overleven (volume op `/app/storage`).

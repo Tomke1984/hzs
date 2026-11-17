@@ -60,7 +60,10 @@ final class MailSettingsController
         audit('MAIL_TEST', 'settings', 0, $ok ? 'ok' : 'mislukt');
         flash($ok ? 'success' : 'error', $ok
             ? "Testmail verstuurd naar $to. Kijk ook in je ongewenste mail."
-            : 'Testmail mislukt' . (Mailer::$lastError ? ': ' . Mailer::$lastError : '.') . ' Controleer server, poort, beveiliging, gebruiker en wachtwoord.');
+            : 'Testmail mislukt' . (Mailer::$lastError ? ': ' . Mailer::$lastError : '.')
+                . (Mailer::driver() === 'mail'
+                    ? ' Op deze server is geen mailprogramma beschikbaar (zoals in Coolify/Docker): kies SMTP met de gegevens van je mailprovider.'
+                    : ' Controleer server, poort, beveiliging, gebruiker en wachtwoord.'));
         redirect(url('mail_settings'));
     }
 }

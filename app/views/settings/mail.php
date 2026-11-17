@@ -15,7 +15,7 @@
   <fieldset>
     <legend>Manier van versturen</legend>
     <label class="check"><input type="radio" name="driver" value="smtp" <?= $d === 'smtp' ? 'checked' : '' ?>> SMTP via je mailserver <span class="muted small">(aanbevolen: komt het best aan)</span></label>
-    <label class="check"><input type="radio" name="driver" value="mail" <?= $d === 'mail' ? 'checked' : '' ?>> PHP mail() van de server <span class="muted small">(eenvoudig op shared hosting; belandt vaker in ongewenste mail)</span></label>
+    <label class="check"><input type="radio" name="driver" value="mail" <?= $d === 'mail' ? 'checked' : '' ?>> PHP mail() van de server <span class="muted small">(<?= APP_ROOT === '/app' ? 'werkt <strong>niet</strong> in Coolify/Docker: kies SMTP' : 'eenvoudig op shared hosting; belandt vaker in ongewenste mail' ?>)</span></label>
     <label class="check"><input type="radio" name="driver" value="log" <?= $d === 'log' ? 'checked' : '' ?>> Testmodus <span class="muted small">(niets versturen; enkel lokaal testen)</span></label>
   </fieldset>
   <div class="grid2">
