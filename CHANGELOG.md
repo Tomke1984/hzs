@@ -6,6 +6,12 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
+_v0.28.0-dev – Training aanmaken: ook trainers kiezen in plaats van aantal_
+
+- Ook bij een **training** vraagt het formulier niet meer hoeveel trainers er nodig zijn. Je vinkt aan **welke trainers** er zijn, net als bij een wedstrijd. Bij een nieuwe training staan de trainers van de gekozen groep(en) al aangevinkt; vink extra trainers aan of vink een groepstrainer uit (die staat dan als *afgemeld – niet ingepland*). Bij wijzigen zie je wie er nu op staat.
+- Niemand aangevinkt = *trainer gezocht* in de trainersplanning. Het minimum per groep (Trainersplanning → Instellingen) blijft gelden; een eigen aantal per activiteit bestaat niet meer.
+- Tests: 9 extra controles in `v28_trainersplanning2`.
+
 _v0.28.0-dev – Wedstrijd aanmaken: meteen trainers kiezen_
 
 - Bij een nieuwe of gewijzigde **wedstrijd** vraagt het formulier niet meer hoeveel trainers er nodig zijn, maar kies je meteen **welke trainers meegaan** (vinkjes). Uitvinken haalt een trainer weg; wie op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. Niemand aangevinkt = *trainer gezocht* in de trainersplanning.

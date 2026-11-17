@@ -234,15 +234,12 @@ final class ActivityController
             'ends_local' => input('ends_at'),
             'audience' => input('audience'),
             'status' => $id ? input('status', 'PLANNED') : 'PLANNED',
-            'min_trainers' => input('min_trainers'),
         ];
-        $isMeet = Database::val('SELECT code FROM activity_types WHERE id = ?', [$activity['type_id']]) === 'COMPETITION';
-        // Wedstrijd: geen aantal trainers vragen, wel meteen kiezen wie meegaat (trainersplanning).
+        $typeCode = Database::val('SELECT code FROM activity_types WHERE id = ?', [$activity['type_id']]);
+        $withTrainers = in_array($typeCode, ['TRAINING', 'COMPETITION'], true);
+        // Training en wedstrijd: geen aantal trainers vragen, wel meteen kiezen wie er is (trainersplanning).
         $pool = Coverage::pool();
-        $trainerIds = $isMeet ? array_values(array_intersect(array_unique(array_map('intval', (array) ($_POST['trainer_ids'] ?? []))), array_keys($pool))) : [];
-        if ($isMeet) {
-            $activity['min_trainers'] = '';
-        }
+        $trainerIds = $withTrainers ? array_values(array_intersect(array_unique(array_map('intval', (array) ($_POST['trainer_ids'] ?? []))), array_keys($pool))) : [];
         $rawGroups = $_POST['group_ids'] ?? [];
         $selected = is_array($rawGroups) ? array_values(array_unique(array_map('intval', $rawGroups))) : [];
 
@@ -278,25 +275,21 @@ final class ActivityController
                 }
             }
         }
-        if ($activity['min_trainers'] !== '' && (!ctype_digit($activity['min_trainers']) || (int) $activity['min_trainers'] > 9)) {
-            $errors[] = 'Het aantal trainers nodig is een getal van 0 tot 9 (leeg = volgens de groep).';
-        }
         if (!in_array($activity['status'], ['PLANNED', 'CANCELLED'], true)) {
             $errors[] = 'Status is ongeldig.';
         }
 
         if ($errors) {
             http_response_code(422);
-            self::renderForm($activity, $selected, $errors, $id ? 'Activiteit wijzigen' : 'Nieuwe activiteit', $isMeet ? $trainerIds : null);
+            self::renderForm($activity, $selected, $errors, $id ? 'Activiteit wijzigen' : 'Nieuwe activiteit', $withTrainers ? $trainerIds : null);
             return;
         }
 
         $groupIds = $activity['audience'] === 'GROUPS' ? $selected : [];
         $desc = $activity['description'] === '' ? null : $activity['description'];
         $loc = $activity['location'] === '' ? null : $activity['location'];
-        $minTrainers = $activity['min_trainers'] === '' ? null : (int) $activity['min_trainers'];
 
-        $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds, $minTrainers) {
+        $id = Database::tx(function () use ($id, $activity, $start, $end, $desc, $loc, $groupIds) {
             if ($id) {
                 Database::exec(
                     'UPDATE activities SET type_id=?, title=?, description=?, location=?, starts_at=?, ends_at=?, audience=?, status=? WHERE id=?',
@@ -318,12 +311,13 @@ final class ActivityController
             foreach ($groupIds as $gid) {
                 Database::exec('INSERT INTO activity_groups (activity_id, group_id) VALUES (?,?)', [$id, $gid]);
             }
-            Database::exec('UPDATE activities SET min_trainers = ? WHERE id = ?', [$minTrainers, $id]);
+            // Het aantal trainers vraagt het formulier niet meer: het minimum van de groep geldt (wedstrijd: 1).
+            Database::exec('UPDATE activities SET min_trainers = NULL WHERE id = ?', [$id]);
             return $id;
         });
 
         audit($activity['id'] ? 'UPDATE' : 'CREATE', 'activity', $id);
-        $note = $isMeet ? self::syncMeetTrainers((int) $id, $trainerIds, $pool) : '';
+        $note = $withTrainers ? self::syncTrainers((int) $id, $trainerIds, $pool, input('trainers_sync') === '1') : '';
         flash('success', ($activity['id'] ? 'Activiteit bijgewerkt.' : 'Activiteit aangemaakt.') . $note);
         redirect(url('activity', ['id' => $id]));
     }
@@ -384,14 +378,15 @@ final class ActivityController
     }
 
     /**
-     * Trainers die meegaan naar een wedstrijd, gekozen in het formulier: aangevinkt = ingepland, uitgevinkt = weg.
-     * Wie op dat moment al op een andere wedstrijd staat, wordt overgeslagen. Geeft een extra zin voor de melding.
+     * Trainers gekozen in het formulier (training of wedstrijd): aangevinkt = ingepland. Met $sync (het formulier
+     * toonde de huidige bezetting) gaat wie uitgevinkt is eraf: een groepstrainer als afgemeld ("Niet ingepland"),
+     * een extra trainer weg. Wie op dat moment al elders staat, wordt overgeslagen. Geeft een extra zin voor de melding.
      */
-    private static function syncMeetTrainers(int $id, array $want, array $pool): string
+    private static function syncTrainers(int $id, array $want, array $pool, bool $sync): string
     {
         $a = Coverage::one($id);
         if (!$a) {
-            return ''; // geen wedstrijd van de competitie (bv. geschrapt)
+            return ''; // hoort niet bij de trainersplanning (bv. geschrapt of geen competitiegroep)
         }
         $have = [];
         foreach ($a['trainers'] as $t) {
@@ -406,25 +401,50 @@ final class ActivityController
                 $skipped[] = $c;
                 continue;
             }
-            Coverage::set($id, $uid, 'ASSIGNED');
+            Coverage::isDefault($a, $uid) ? Coverage::set($id, $uid, null) : Coverage::set($id, $uid, 'ASSIGNED');
             $added[] = $pool[$uid];
+            sort($added);
         }
         $removed = [];
-        foreach (array_diff($have, $want) as $uid) {
-            Coverage::set($id, $uid, null);
+        foreach ($sync ? array_diff($have, $want) : [] as $uid) {
+            Coverage::isDefault($a, $uid) ? Coverage::set($id, $uid, 'ABSENT', 'Niet ingepland') : Coverage::set($id, $uid, null);
             $removed[] = $pool[$uid] ?? '';
         }
         if ($added || $removed) {
-            audit('COVERAGE_ASSIGN', 'activity', $id, trim(($added ? 'mee: ' . implode(', ', $added) : '') . ($removed ? ' weg: ' . implode(', ', array_filter($removed)) : '')));
+            audit('COVERAGE_ASSIGN', 'activity', $id, trim(($added ? 'erbij: ' . implode(', ', $added) : '') . ($removed ? ' eraf: ' . implode(', ', array_filter($removed)) : '')));
         }
-        $msg = $added ? ' ' . nl_list($added) . (count($added) === 1 ? ' gaat' : ' gaan') . ' mee.' : '';
+        $isMeet = $a['type_code'] === 'COMPETITION';
+        $msg = $added && $isMeet ? ' ' . nl_list($added) . (count($added) === 1 ? ' gaat' : ' gaan') . ' mee.' : ($added ? ' Ingepland: ' . nl_list($added) . '.' : '');
         if ($skipped) {
             $msg .= ' Niet ingepland: ' . implode(' ', $skipped);
         }
-        if (!$want && !$skipped) {
-            $msg .= ' Er gaat nog geen trainer mee: dat kan later in de trainersplanning.';
+        $after = Coverage::one($id);
+        if ($after && $after['missing'] > 0 && $after['ends_at'] > now()) {
+            $msg .= $after['present'] === 0
+                ? ' Er ' . ($isMeet ? 'gaat' : 'is') . ' nog geen trainer' . ($isMeet ? ' mee' : '') . ': die staat als trainer gezocht in de trainersplanning.'
+                : ' Er is nog een trainer nodig: die staat als trainer gezocht in de trainersplanning.';
         }
         return $msg;
+    }
+
+    /** Wie nu op de activiteit staat (niet afgemeld). @return int[] */
+    private static function presentTrainers(int $id): array
+    {
+        $a = $id ? Coverage::one($id) : null;
+        if (!$a) {
+            return [];
+        }
+        return array_values(array_map(fn($t) => $t['id'], array_filter($a['trainers'], fn($t) => !$t['absent'])));
+    }
+
+    /** Groepen per trainer (om bij een nieuwe training de groepstrainers voor te vinken). @return array<int,int[]> */
+    private static function trainerGroups(): array
+    {
+        $out = [];
+        foreach (Database::all('SELECT gt.user_id, gt.group_id FROM group_trainers gt JOIN `groups` g ON g.id = gt.group_id WHERE g.is_active = 1') as $r) {
+            $out[(int) $r['user_id']][] = (int) $r['group_id'];
+        }
+        return $out;
     }
 
     private static function renderForm(array $activity, array $selected, array $errors, string $title, ?array $trainerIds = null): void
@@ -435,8 +455,8 @@ final class ActivityController
             'errors' => $errors,
             'types' => Database::all('SELECT id, code, name FROM activity_types ORDER BY id'),
             'pool' => Coverage::pool(),
-            'trainerIds' => $trainerIds ?? ($activity['id'] ? array_map('intval', array_column(Database::all(
-                "SELECT user_id FROM activity_trainers WHERE activity_id = ? AND status = 'ASSIGNED'", [(int) $activity['id']]), 'user_id')) : []),
+            'trainerIds' => $trainerIds ?? self::presentTrainers((int) $activity['id']),
+            'trainerGroups' => self::trainerGroups(),
             'groups' => Database::all('SELECT id, name, category FROM `groups` WHERE is_active = 1 ORDER BY category, name'),
         ], $title);
     }

@@ -67,15 +67,36 @@
     });
   })();
 
-  // Activiteit: velden enkel voor het gekozen type (wedstrijd: trainers kiezen; training: aantal trainers nodig)
+  // Activiteit: trainers kiezen bij training en wedstrijd. Bij een nieuwe training staan de trainers van de gekozen
+  // groep(en) voorgevinkt (tot je zelf iets aanvinkt of uitvinkt).
   (function () {
     var sel = document.querySelector('[data-type-select]');
     if (!sel) { return; }
-    var sync = function () {
-      var opt = sel.options[sel.selectedIndex];
-      var code = opt ? opt.getAttribute('data-code') : '';
-      document.querySelectorAll('[data-for-type]').forEach(function (el) { el.hidden = el.getAttribute('data-for-type') !== code; });
+    var box = document.querySelector('[data-trainer-picks]');
+    var isNew = box && !box.querySelector('input[name=trainers_sync]');
+    var code = function () { var o = sel.options[sel.selectedIndex]; return o ? o.getAttribute('data-code') : ''; };
+    var prefill = function () {
+      if (!isNew) { return; }
+      var groups = [];
+      if ((document.querySelector('input[name=audience]:checked') || {}).value === 'GROUPS') {
+        document.querySelectorAll('input[name="group_ids[]"]:checked').forEach(function (g) { groups.push(g.value); });
+      }
+      box.querySelectorAll('input[name="trainer_ids[]"]').forEach(function (c) {
+        if (c.hasAttribute('data-touched')) { return; }
+        c.checked = code() === 'TRAINING' && (c.getAttribute('data-groups') || '').split(' ').some(function (g) { return groups.indexOf(g) !== -1; });
+      });
     };
+    var sync = function () {
+      document.querySelectorAll('[data-for-type]').forEach(function (el) { el.hidden = el.getAttribute('data-for-type').split(' ').indexOf(code()) === -1; });
+      prefill();
+    };
+    if (isNew) {
+      var h = document.createElement('input');
+      h.type = 'hidden'; h.name = 'trainers_sync'; h.value = '1';
+      box.appendChild(h);
+      box.addEventListener('change', function (ev) { if (ev.target.name === 'trainer_ids[]') { ev.target.setAttribute('data-touched', ''); } });
+      document.querySelectorAll('input[name="group_ids[]"], input[name=audience]').forEach(function (g) { g.addEventListener('change', prefill); });
+    }
     sel.addEventListener('change', sync);
     sync();
   })();

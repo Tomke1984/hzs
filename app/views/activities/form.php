@@ -57,21 +57,17 @@
 
 
   <?php $typeCode = ''; foreach ($types as $t) { if ((int) $t['id'] === (int) $activity['type_id']) { $typeCode = $t['code']; } } ?>
-  <fieldset data-for-type="COMPETITION"<?= $typeCode === 'COMPETITION' ? '' : ' hidden' ?>>
-    <legend>Trainers die meegaan <span class="muted small">(wedstrijd)</span></legend>
+  <fieldset data-for-type="TRAINING COMPETITION"<?= in_array($typeCode, ['TRAINING', 'COMPETITION'], true) ? '' : ' hidden' ?> data-trainer-picks>
+    <legend>Trainers</legend>
+    <?php if ($activity['id']): ?><input type="hidden" name="trainers_sync" value="1"><?php endif; ?>
     <?php if (!$pool): ?><p class="muted small">Er zijn nog geen trainers van de competitie.</p><?php endif; ?>
     <div class="check-cols">
       <?php foreach ($pool as $pid => $pname): ?>
-        <label class="check"><input type="checkbox" name="trainer_ids[]" value="<?= (int) $pid ?>"<?= in_array((int) $pid, $trainerIds, true) ? ' checked' : '' ?>> <?= e($pname) ?></label>
+        <label class="check"><input type="checkbox" name="trainer_ids[]" value="<?= (int) $pid ?>" data-groups="<?= e(implode(' ', $trainerGroups[$pid] ?? [])) ?>"<?= in_array((int) $pid, $trainerIds, true) ? ' checked' : '' ?>> <?= e($pname) ?></label>
       <?php endforeach; ?>
     </div>
-    <p class="muted small">Niemand aangevinkt? Dan staat de wedstrijd als <em>trainer gezocht</em> in de trainersplanning.</p>
+    <p class="muted small">Bij een training staan de trainers van de groep al aangevinkt. Niemand aangevinkt? Dan staat ze als <em>trainer gezocht</em> in de trainersplanning.</p>
   </fieldset>
-
-  <label data-for-type="TRAINING"<?= $typeCode === 'TRAINING' ? '' : ' hidden' ?>>Aantal trainers nodig (trainersplanning competitie)
-    <input name="min_trainers" inputmode="numeric" maxlength="1" value="<?= e((string) ($activity['min_trainers'] ?? '')) ?>" placeholder="volgens de groep">
-    <span class="muted small">Leeg = het minimum van de groep (standaard 1).</span>
-  </label>
 
   <?php if ($activity['id']): ?>
   <label>Status
