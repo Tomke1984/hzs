@@ -6,29 +6,35 @@ Sinds v0.28 staan er geen commitnummers meer bij: het versienummer staat in het 
 
 ## Op dev (nog niet op main)
 
-_v0.28.0-dev – Fix: trainers kiezen was onzichtbaar_
+_(niets)_
+
+## Op main
+
+### v0.28.0 – 2026-11-18 – trainersplanning gebruiksvriendelijker, accounts voor leden en kinderen, mailinstellingen in de app
+
+#### Fix: trainers kiezen was onzichtbaar
 
 - Na de vorige update gebruikte de browser op hzs-dev nog de oude JavaScript bij de nieuwe pagina, die daardoor het blok *Trainers* verborg (ook bij wedstrijden). Het blok gebruikt nu een ander kenmerk, zodat oude JavaScript er niet meer aan kan komen.
 - CSS en JavaScript worden niet meer een jaar bewaard: de browser vraagt telkens even na of er een nieuwe versie is (antwoord 304 als er niets veranderde). Zo lopen oude scripts en nieuwe pagina's nooit meer door elkaar, ook niet achter een proxy of cache. Het logo mag wel een jaar in de cache (Caddyfile en `public/assets/.htaccess`).
 
-_v0.28.0-dev – Training aanmaken: ook trainers kiezen in plaats van aantal_
+#### Training aanmaken: ook trainers kiezen in plaats van aantal
 
 - Ook bij een **training** vraagt het formulier niet meer hoeveel trainers er nodig zijn. Je vinkt aan **welke trainers** er zijn, net als bij een wedstrijd. Bij een nieuwe training staan de trainers van de gekozen groep(en) al aangevinkt; vink extra trainers aan of vink een groepstrainer uit (die staat dan als *afgemeld – niet ingepland*). Bij wijzigen zie je wie er nu op staat.
 - Niemand aangevinkt = *trainer gezocht* in de trainersplanning. Het minimum per groep (Trainersplanning → Instellingen) blijft gelden; een eigen aantal per activiteit bestaat niet meer.
 - Tests: 9 extra controles in `v28_trainersplanning2`.
 
-_v0.28.0-dev – Wedstrijd aanmaken: meteen trainers kiezen_
+#### Wedstrijd aanmaken: meteen trainers kiezen
 
 - Bij een nieuwe of gewijzigde **wedstrijd** vraagt het formulier niet meer hoeveel trainers er nodig zijn, maar kies je meteen **welke trainers meegaan** (vinkjes). Uitvinken haalt een trainer weg; wie op dat moment al op een andere wedstrijd staat, wordt overgeslagen met een melding. Niemand aangevinkt = *trainer gezocht* in de trainersplanning.
 - Het veld *Aantal trainers nodig* staat enkel nog bij een **training**; bij een clubactiviteit staat geen van beide. Een wedstrijd heeft minstens één trainer nodig.
 - Tests: 6 extra controles in `v28_trainersplanning2`.
 
-_v0.28.0-dev – Fix: nieuwe opmaak verscheen niet na een deploy_
+#### Fix: nieuwe opmaak verscheen niet na een deploy
 
 - Het raster van de trainersplanning stond op hzs-dev zonder opmaak: de browser gebruikte nog de oude CSS. De versie in het adres van CSS en JavaScript kwam van de wijzigingsdatum van het bestand, en die is in een container-build (Coolify/Railpack) bij elke deploy dezelfde. Nu komt de versie uit de inhoud van het bestand: na elke wijziging laadt de browser meteen de nieuwe versie.
 - Test in `v24_onderhoud` aangepast.
 
-_v0.28.0-dev – Trainersplanning gebruiksvriendelijker_
+#### Trainersplanning gebruiksvriendelijker
 
 - **Mijn trainingen** (standaard voor trainers): je komende trainingen en wedstrijden (6 weken) als grote kaarten, elk met één knop **Ik kan niet**. Die opent een paneel onderaan: reden met één tik (Ziek, Werk, Op reis, Familie of zelf typen), dan **wie neemt over** (enkel collega's die op dat moment vrij zijn) of **Vraag het aan de groep**. Afgemeld? Dan zie je of er al een vervanger is, met *Toch wel* om het terug te draaien.
 - **Vraag het aan de groep:** elke vrije collega krijgt een persoonlijke mail *Kan jij overnemen?* met een knop **Ik neem over**, zonder aan te melden. Wie eerst klikt, staat ingepland; wie te laat is, ziet wie al overneemt. Wie het vroeg, krijgt een mail. Openen van de link verandert niets (mailscanners), pas de knop.
@@ -38,53 +44,51 @@ _v0.28.0-dev – Trainersplanning gebruiksvriendelijker_
 - Week en Lijst blijven bestaan; de keuze wordt onthouden. *Nog geen vervanger* bij het gewone afmelden vraagt het nu ook meteen aan de vrije collega's.
 - Migratie `019`: tabel `coverage_offers`. Tests: nieuwe suite `v28_trainersplanning2` (36 controles).
 
-_v0.28.0-dev – Beheerder maakt accounts zonder uitnodiging_
+#### Beheerder maakt accounts zonder uitnodiging
 
 - Overal waar de app een account maakt, kan de **beheerder** nu zelf een wachtwoord invullen in plaats van een uitnodiging te sturen: ouder uitnodigen (op de pagina van een kind), eigen account voor een kind, het vinkje *eigen account* bij een meerderjarig lid, en *Account aanmaken met wachtwoord (geen mail)*. Dan vertrekt er geen mail en kan de gebruiker meteen aanmelden; geef het wachtwoord zelf door. Leeg laten = uitnodiging per mail zoals voorheen.
 - Bij een account dat de uitnodiging nog niet gebruikte, staat in de gebruikersfiche dat je ook zelf een wachtwoord kan instellen.
 - Ouders kunnen voor hun kind enkel een uitnodiging sturen, geen wachtwoord instellen.
 - Tests: 12 extra controles in `v28_accounts`.
 
-_v0.28.0-dev – Mailinstellingen: duidelijker bij PHP mail() in Coolify_
+#### Mailinstellingen: duidelijker bij PHP mail() in Coolify
 
 - PHP mail() werkt niet in een container (Coolify/Docker heeft geen mailprogramma). De optie zegt dat nu in Coolify, en een mislukte testmail met PHP mail() raadt SMTP aan in plaats van te vragen server en poort te controleren.
 
-_v0.28.0-dev – Deploytest_
+#### Deploytest
 
 - Geen wijziging aan de app: deze push dient enkel om te controleren dat de database en instellingen op hzs-dev een nieuwe deploy overleven (volume op `/app/storage`).
 
-_v0.28.0-dev – Waarschuwing als er geen blijvende opslag is (Coolify)_
+#### Waarschuwing als er geen blijvende opslag is (Coolify)
 
 - Draait de app in een container (Coolify/Railpack) zonder volume op `/app/storage`, dan toont de installer een rode waarschuwing *Geen blijvende opslag*: de database en instellingen zouden bij de volgende deploy verdwijnen (en dan kom je telkens opnieuw op de installatiepagina). Ook de beheerder ziet die melding op het overzicht.
 - Tests: 3 extra controles in `v26_deploy`.
 
-_v0.28.0-dev – Mailinstellingen in de app; duidelijk als er geen mail vertrekt_
+#### Mailinstellingen in de app; duidelijk als er geen mail vertrekt
 
 - **Waarom kwam de uitnodiging niet aan?** Een installatie via de installer staat standaard in **testmodus** voor mail: er wordt niets verstuurd (zoals op hzs-dev). Dat stond enkel in `config.php`, wat op Coolify lastig aan te passen is.
 - **Nieuw: *Mailinstellingen*** in het menu (beheerder): kies SMTP (aanbevolen), PHP mail() of testmodus, vul afzender en SMTP-gegevens in (wachtwoord versleuteld bewaard) en stuur een **testmail** – lukt het niet, dan zie je de foutmelding van de mailserver. Gaat voor op `config.php`.
 - Staat de app op een server in testmodus, dan krijgt de beheerder op het overzicht een rode melding *Mail staat in testmodus*. Elke uitnodiging zegt in testmodus duidelijk dat er **geen** mail vertrok, met de link om zelf door te geven.
 - Migratie `018`: tabel `settings`. Tests: 10 extra controles in `v28_accounts`.
 
-_v0.28.0-dev – Fix: hzs-dev vroeg telkens opnieuw om te installeren_
+#### Fix: hzs-dev vroeg telkens opnieuw om te installeren
 
 - **Oorzaak:** zonder de omgevingsvariabele `HZS_CONFIG` schreef de installer `config.php` in de app-map. In Coolify is die map na elke nieuwe deploy (bij elke push naar `dev`) weer leeg, terwijl de database op het blijvende volume (`/app/storage`) bleef staan. Gevolg: na elke deploy weer de installatiepagina.
 - **Oplossing:** een nieuwe installatie schrijft `config.php` nu naar `storage/config.php` (in Coolify het volume; op Apache-hosting afgeschermd), tenzij `HZS_CONFIG` gezet is of er al een `config.php` in de projectmap staat. De installer toont bovenaan waar de instellingen komen en controleert dat de app ze terugvindt.
 - **Herstellen zonder gegevensverlies:** staat er al een database met gebruikers maar ontbreekt `config.php`, dan toont de installer *Bestaande database gevonden* met één knop **Instellingen herstellen** (met de sleutel uit `storage/app.key`, of vul ze in). Een nieuwe installatie over een bestaande database kan niet meer.
 - Tests: 9 extra controles in `v26_deploy`, `v27_terugzetten` aangepast.
 
-_v0.28.0-dev – Eigen accounts voor leden en kinderen_
+#### Eigen accounts voor leden en kinderen
 
 - **Meerderjarige leden krijgen automatisch een account:** bij een nieuw of gewijzigd lid van 18+ met e-mailadres staat het vinkje *eigen account aanmaken en uitnodiging sturen* standaard aan. Het lid krijgt meteen een uitnodiging om een wachtwoord te kiezen en ziet daarna de eigen kalender en groep.
 - **Eigen account voor een kind:** op de pagina van een minderjarig kind kan de ouder (of de beheerder) een eigen account aanvragen met het e-mailadres van het kind zelf. Het kind ziet dan de eigen kalender en groep en kan **enkel het eigen e-mailadres en telefoonnummer** aanpassen. Naam, geboortedatum, adres, noodgegevens en afmelden blijven bij de ouders (het kind ziet *Vraag je ouder om je af te melden*). De ouder kan het account ook weer verwijderen; het lid blijft bestaan.
 - Tests: nieuwe suite `v28_accounts` (33 controles).
 
-_v0.28.0-dev – Versienummer in plaats van commitnummer_
+#### Versienummer in plaats van commitnummer
 
 - Beheerders zien onderaan in de menubalk nu het **versienummer** (bv. *v0.28.0*) in plaats van branch en commitnummer. Het komt uit het nieuwe bestand `VERSION` en werkt dus ook op de hosting (daar staat geen `.git`-map, zodat er tot nu toe niets verscheen).
 - De CHANGELOG vermeldt vanaf nu enkel nog versienummers, geen commitnummers.
 - Tests: 4 extra controles in `v25_captcha`.
-
-## Op main
 
 ### v0.27.0 – 2026-11-17 – `775e260` – database terugzetten via de installer
 
